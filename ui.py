@@ -92,7 +92,6 @@ class FPSCounter(Label):
 
     def update(self, event):
         if event.type == EVENT_SEC:
-            print(self.frames)
             self.set_text(f'FPS: {self.frames}')
             self.frames = 0
 

@@ -3,8 +3,9 @@ from pygame import Color
 from pygame.rect import Rect
 from pygame.time import Clock
 
+from client import ClientGameWindow
 from constants import SCREEN_SIZE, EVENT_SEC, EVENT_UPDATE
-from ui import UIElement, FPSCounter
+from ui import UIElement
 
 
 class Main:
@@ -44,13 +45,7 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode(SCREEN_SIZE)
 
-    elem = UIElement(Rect(0, 0, SCREEN_SIZE[0], SCREEN_SIZE[1]), Color('aquamarine3'))
-
-    fps_font = pygame.font.Font('src/fonts/arial.ttf', 20)
-
-    sub_elem = UIElement(Rect(50, 50, 50, 50), None)
-    sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
-    elem.append_child(sub_elem)
+    elem = ClientGameWindow(Rect(0, 0, SCREEN_SIZE[0], SCREEN_SIZE[1]), Color('aquamarine3'))
 
     m = Main(elem, screen)
     m.loop()
