@@ -1,0 +1,20 @@
+{
+  "minimap": {
+    "bounds": [50, 150, 150, 150],
+    "color": ["dimgray"],
+    "mark_size": 10,
+    "mark_color": ["aquamarine"]
+  },
+  "world": {
+    "size": 800
+  },
+  "screen": {
+    "size": [800, 450]
+  },
+  "camera": {
+    "min_speed": 1,
+    "max_speed": 10,
+    "step_slower": 0.05,
+    "step_faster": 0.05
+  }
+}

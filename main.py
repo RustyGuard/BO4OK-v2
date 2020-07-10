@@ -4,7 +4,8 @@ from pygame.rect import Rect
 from pygame.time import Clock
 
 from client import ClientGameWindow
-from constants import SCREEN_SIZE, EVENT_SEC, EVENT_UPDATE
+from config import config
+from constants import EVENT_SEC, EVENT_UPDATE
 from ui import UIElement
 
 
@@ -25,11 +26,13 @@ class Main:
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
+                    self.main_element.shutdown()
                     print('Exit')
                     return
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_ESCAPE:
                         print('Exit')
+                        self.main_element.shutdown()
                         return
 
                 self.main_element.update(event)
@@ -43,9 +46,9 @@ class Main:
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode(SCREEN_SIZE)
+    screen = pygame.display.set_mode(config['screen']['size'])
 
-    elem = ClientGameWindow(Rect(0, 0, SCREEN_SIZE[0], SCREEN_SIZE[1]), Color('aquamarine3'))
+    elem = ClientGameWindow(Rect(0, 0, config['screen']['size'][0], config['screen']['size'][1]), Color('aquamarine3'))
 
     m = Main(elem, screen)
     m.loop()

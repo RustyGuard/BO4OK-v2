@@ -14,6 +14,7 @@ class UIElement:
         self.absolute_bounds = bounds.copy()
         self.color = color
         self.childs = []
+        self.enabled = True
         self.parent = None
 
     def update_bounds(self):
@@ -42,14 +43,15 @@ class UIElement:
 
     def update(self, event):
         for elem in self.childs:
-            if elem.update(event):
+            if elem.enabled and elem.update(event):
                 return True
         return False
 
     def render(self, screen):
         self.draw(screen)
         for elem in self.childs:
-            elem.render(screen)
+            if elem.enabled:
+                elem.render(screen)
 
     def draw(self, screen):
         if self.color is not None:
@@ -59,6 +61,9 @@ class UIElement:
         self.childs.append(child)
         child.parent = self
         child.update_bounds()
+
+    def shutdown(self):
+        pass
 
 
 class Label(UIElement):

@@ -8,9 +8,10 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
-from constants import SCREEN_SIZE, EVENT_UPDATE
+from config import config
 from main import Main
 from ui import UIElement, FPSCounter
+from core import Game, Camera, Minimap
 
 
 def connection_function(sock: socket.socket, connection_list):
@@ -18,6 +19,7 @@ def connection_function(sock: socket.socket, connection_list):
     while True:
         conn, addr = sock.accept()
         connection_list[next_id] = (conn, addr)
+        print(f'Connection with id {next_id} opened')
         next_id += 1
 
 
@@ -30,6 +32,7 @@ def send_function(connection_list, task_conn):
                 client[0].send(task.encode('utf8'))
             except Exception:
                 to_remove.append(i)
+                print(f'Connection with id {i} closed')
         for i in to_remove:
             connection_list.pop(i)
 
@@ -51,43 +54,44 @@ class ServerGameWindow(UIElement):
         manager = Manager()
         self.connection_list = manager.dict()
         self.connection_process = Process(target=connection_function, args=(self.sock, self.connection_list))
+        self.connection_process.daemon = True
         self.connection_process.start()
 
         self.parent_conn, self.child_conn = Pipe()
         self.send_process = Process(target=send_function, args=(self.connection_list, self.child_conn))
+        self.send_process.daemon = True
         self.send_process.start()
 
-        self.box = Rect(50, 50, 50, 50)
-        self.box_color = Color('blue')
-        self.colors = ['aquamarine', 'cornflowerblue', 'cornsilk', 'chartreuse', 'coral']
-        self.velocity = [2, 2]
+        self.game = Game(Game.Side.SERVER, send_connection=self.parent_conn)
+        self.camera = Camera(self.game)
+
+        self.append_child(Minimap(self.game, self.camera))
 
     def update(self, event):
-        if event.type == EVENT_UPDATE:
-            self.box.move_ip(*self.velocity)
-            if self.box.right >= self.relative_bounds.right or self.box.left <= self.relative_bounds.left:
-                self.velocity[0] = -self.velocity[0]
-                self.box_color = Color(random.choice(self.colors))
-                self.parent_conn.send(f'2~{self.box_color.r}~{self.box_color.g}~{self.box_color.b}')
-            if self.box.bottom >= self.relative_bounds.bottom or self.box.top <= self.relative_bounds.top:
-                self.velocity[1] = -self.velocity[1]
-                self.box_color = Color(random.choice(self.colors))
-                self.parent_conn.send(f'2~{self.box_color.r}~{self.box_color.g}~{self.box_color.b}')
-
-            self.parent_conn.send(f'1~{self.box.x}~{self.box.y}')
+        self.camera.update(event)
+        self.game.update(event)
 
         return super().update(event)
 
     def draw(self, screen):
         super().draw(screen)
-        pygame.draw.rect(screen, self.box_color, self.box)
+        for unit in self.game.sprites:
+            unit.draw(screen, self.camera)
+        self.camera.draw_center(screen)
+
+    def shutdown(self):
+        print('Shutdown')
+        self.connection_process.terminate()
+        self.send_process.terminate()
+        self.parent_conn.close()
+        self.sock.close()
 
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode(SCREEN_SIZE)
+    screen = pygame.display.set_mode(config['screen']['size'])
 
-    elem = ServerGameWindow(Rect(0, 0, SCREEN_SIZE[0], SCREEN_SIZE[1]), Color('bisque'))
+    elem = ServerGameWindow(Rect(0, 0, *config['screen']['size']), Color('bisque'))
 
     m = Main(elem, screen)
     m.loop()
