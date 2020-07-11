@@ -110,16 +110,19 @@ class Game:
         SERVER = auto()
         CLIENT = auto()
 
-    def __init__(self, side: Side, **kwargs):
+    def __init__(self, side: Side, send_connection, **kwargs):
         self.side = side
         self.sprites = Group()
         self.world_size = config['world']['size']
         self.world_rect = Rect(-self.world_size, -self.world_size, self.world_size * 2, self.world_size * 2)
+        self.send_connection = send_connection
+        self.camera = Camera(self)
         if self.side == Game.Side.SERVER:
-            self.send_connection: PipeConnection = kwargs['send_connection']
+            self.new_connections = kwargs['new_connections']
             self.next_sync = 10
 
     def update(self, event):
+        self.camera.update(event)
         self.sprites.update(event)
 
         if self.side == Game.Side.SERVER:
@@ -131,6 +134,17 @@ class Game:
                 if self.next_sync <= 0:
                     self.next_sync = 10
                     self.sync()
+            elif event.type == EVENT_UPDATE:
+                if self.new_connections:
+                    self.sync(True)
+        elif self.side == Game.Side.CLIENT:
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.send_connection.send(f'1~{int(event.pos[0] - self.camera.offset_x)}~{int(event.pos[1] - self.camera.offset_y)}')
+
+    def draw(self, screen):
+        for unit in self.sprites:
+            unit.draw(screen, self.camera)
+        self.camera.draw_center(screen)
 
     def find_with_id(self, unit_id: int):
         for u in self.sprites:
@@ -138,47 +152,64 @@ class Game:
                 return u
 
     @side_only(Side.SERVER)
-    def sync(self):
+    def sync(self, to_new_connections=False):
         print('Sync')
         for unit in self.sprites:
-            self.send_connection.send(f'2~<class_id>~{unit.unit_id}~{unit.pos_x}~{unit.pos_y}')
+            send_msg = f'2~<class_id>~{unit.unit_id}~{unit.pos_x}~{unit.pos_y}'
+            if to_new_connections:
+                for conn in self.new_connections:
+                    conn[1].send((send_msg + ';').encode('utf8'))
+            else:
+                self.send_connection.send(send_msg)
+        if to_new_connections:
+            print('self.new_connections', self.new_connections)
+            while self.new_connections:
+                self.new_connections.pop()
 
     @side_only(Side.SERVER)
-    def create_entity(self):
-        u = Unit(self, random.randint(-self.world_size, self.world_size), random.randint(-self.world_size, self.world_size))
+    def create_entity(self, pos=None):
+        if not pos:
+            pos = (random.randint(-self.world_size, self.world_size),
+                   random.randint(-self.world_size, self.world_size))
+        u = Unit(self, pos[0], pos[1])
         self.sprites.add(u)
         self.send_connection.send(f'1~<class_id>~{u.unit_id}~{u.pos_x}~{u.pos_y}')
 
-    @side_only(Side.CLIENT)
-    def handle_command(self, command, args):
-        if command == '1':
-            print('1', args)
-            u = Unit(self, int(args[2]), int(args[3]))
-            u.unit_id = int(args[1])
-            self.sprites.add(u)
-
-        elif command == '2':
-            print('2', args)
-            u = self.find_with_id(int(args[1]))
-            if u is not None:
-                u.pos_x = int(args[2])
-                u.pos_y = int(args[3])
-                u.rect.center = u.pos_x, u.pos_y
-            else:
+    def handle_command(self, command, args, sender=None):
+        if self.side == Game.Side.CLIENT:
+            if command == '1':
+                print('1', args)
                 u = Unit(self, int(args[2]), int(args[3]))
                 u.unit_id = int(args[1])
                 self.sprites.add(u)
-        else:
-            print('Unexpected command', args)
+
+            elif command == '2':
+                print('2', args)
+                u = self.find_with_id(int(args[1]))
+                if u is not None:
+                    u.pos_x = int(args[2])
+                    u.pos_y = int(args[3])
+                    u.rect.center = u.pos_x, u.pos_y
+                else:
+                    u = Unit(self, int(args[2]), int(args[3]))
+                    u.unit_id = int(args[1])
+                    self.sprites.add(u)
+            else:
+                print('Unexpected command', args)
+        elif self.side == Game.Side.SERVER:
+            if command == '1':
+                print('1', args)
+                self.create_entity((int(args[0]), int(args[1])))
+            else:
+                print('Unexpected command', args)
 
 
 class Minimap(UIElement):
-    def __init__(self, game: Game, camera: Camera):
+    def __init__(self, game: Game):
         self.game = game
-        self.camera = camera
         self.mark_size = config['minimap']['mark_size']
         self.mark_color = Color(*config['minimap']['mark_color'])
-        super().__init__(Rect(*config['minimap']['bounds']), Color(*config['minimap']['color']))
+        super().__init__(Rect(*config['minimap']['bounds']), None)
 
     def draw(self, screen):
         super().draw(screen)
@@ -190,15 +221,12 @@ class Minimap(UIElement):
             pygame.draw.ellipse(screen, self.mark_color, mark_rect)
 
         camera_rect = Rect(
-            (self.game.world_size - self.camera.offset_x) * self.world_ratio_width,
-            (self.game.world_size - self.camera.offset_y) * self.world_ratio_height,
+            (self.game.world_size - self.game.camera.offset_x) * self.world_ratio_width,
+            (self.game.world_size - self.game.camera.offset_y) * self.world_ratio_height,
             config['screen']['size'][0] * self.world_ratio_width,
             config['screen']['size'][1] * self.world_ratio_height
         )
         pygame.draw.rect(screen, Color('yellow'), camera_rect.move(self.absolute_bounds.x, self.absolute_bounds.y), 1)
-
-        pygame.draw.rect(screen, Color('green'), self.game.world_rect.move(self.camera.offset_x, self.camera.offset_y),
-                         2)
 
     def worldpos_to_minimap(self, x, y):
         return (x + self.game.world_size) * self.world_ratio_width, \

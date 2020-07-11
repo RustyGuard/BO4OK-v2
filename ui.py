@@ -105,3 +105,12 @@ class FPSCounter(Label):
     def draw(self, screen):
         super().draw(screen)
         self.frames += 1
+
+
+class UIImage(UIElement):
+    def __init__(self, bounds, image_path):
+        super().__init__(bounds, None)
+        self.image = pygame.image.load(image_path)
+
+    def draw(self, screen):
+        screen.blit(self.image, self.absolute_bounds.topleft)

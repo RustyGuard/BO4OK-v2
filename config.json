@@ -1,7 +1,6 @@
 {
   "minimap": {
-    "bounds": [50, 150, 150, 150],
-    "color": ["dimgray"],
+    "bounds": [45, 142, 249, 247],
     "mark_size": 10,
     "mark_color": ["aquamarine"]
   },
