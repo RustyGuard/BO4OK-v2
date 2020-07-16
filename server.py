@@ -14,6 +14,8 @@ from main import Main
 from ui import UIElement, FPSCounter, UIImage
 from core import Game, Minimap
 
+from mod_loader import mod_loader
+
 
 def connection_function(sock: socket.socket, connection_list, new_connections, receive_list):
     next_id = 0
@@ -65,9 +67,11 @@ def send_function(connection_list, task_conn):
 
 class ServerGameWindow(UIElement):
     def __init__(self, rect: Rect, color: Optional[Color]):
+        mod_loader.import_mods()
+
         super().__init__(rect, color)
 
-        fps_font = Font('src/fonts/arial.ttf', 20)
+        fps_font = Font('assets/fonts/arial.ttf', 20)
 
         sub_elem = UIElement(Rect(50, 50, 50, 50), None)
         sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
@@ -91,10 +95,13 @@ class ServerGameWindow(UIElement):
         self.send_process.daemon = True
         self.send_process.start()
 
-        self.game = Game(Game.Side.SERVER, send_connection=self.parent_conn, new_connections=self.new_connections)
+        self.game = Game(Game.Side.SERVER, mod_loader,
+                         send_connection=self.parent_conn,
+                         new_connections=self.new_connections)
+
+        self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
 
         self.minimap = Minimap(self.game)
-        self.minimap_elem = UIImage(Rect(0, 62, 0, 0), 'src/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
 
         self.append_child(self.minimap_elem)

@@ -1,0 +1,48 @@
+{
+	"name": "Default",
+	"version": "beta-0.1",
+	"entities": {
+		"warrior": {
+			"base": "fighter",
+			"tags": [
+				"unit"
+			],
+			"max_health": 300,
+			"damage": 50,
+			"texture": {
+				"__path__": "warrior/soldier/{team}.png"
+			}
+		},
+		"archer": {
+			"base": "fighter",
+			"tags": [
+				"unit"
+			],
+			"max_health": 150,
+			"texture": {
+				"__path__": "warrior/archer/{team}.png"
+			}
+		},
+		"arrow": {
+			"base": "twist_entity",
+			"tags": [
+				"projectile",
+				"invincible"
+			],
+			"damage": 30,
+			"texture": {
+				"__path__": "warrior/archer/arrow.png"
+			}
+		},
+		"fortress": {
+			"base": "building",
+			"tags": [
+				"building"
+			],
+			"max_health": 2000,
+			"texture": {
+				"__path__": "building/fortress/{team}.png"
+			}
+		}
+	}
+}

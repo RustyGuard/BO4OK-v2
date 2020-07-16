@@ -2,13 +2,13 @@ import socket
 from multiprocessing import Process, Manager, Pipe
 from typing import Optional
 
-import pygame
 from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
 from config import config
 from constants import EVENT_UPDATE
+from mod_loader import mod_loader
 from ui import UIElement, FPSCounter, UIImage
 from core import Game, Minimap
 
@@ -45,10 +45,12 @@ def send_function(conn, task_conn):
 
 class ClientGameWindow(UIElement):
     def __init__(self, rect: Rect, color: Optional[Color]):
+        mod_loader.import_mods()
+
         super().__init__(rect, color)
         config.reload()
 
-        fps_font = Font('src/fonts/arial.ttf', 20)
+        fps_font = Font('assets/fonts/arial.ttf', 20)
 
         sub_elem = UIElement(Rect(50, 50, 50, 50), None)
         sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
@@ -68,10 +70,10 @@ class ClientGameWindow(UIElement):
         self.send_process.daemon = True
         self.send_process.start()
 
-        self.game = Game(Game.Side.CLIENT, self.parent_conn)
+        self.game = Game(Game.Side.CLIENT, mod_loader, self.parent_conn)
 
         self.minimap = Minimap(self.game)
-        self.minimap_elem = UIImage(Rect(0, 62, 0, 0), 'src/sprite/minimap.png')
+        self.minimap_elem = UIImage(Rect(0, 62, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
 
         self.append_child(self.minimap_elem)

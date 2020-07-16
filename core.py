@@ -1,8 +1,8 @@
+import json
+import os
 import random
-from builtins import print
 from enum import Enum, auto
 from functools import wraps
-from multiprocessing.connection import PipeConnection
 
 import pygame
 from pygame import Color
@@ -16,8 +16,8 @@ from ui import UIElement
 
 class Camera:
     def __init__(self, game):
-        self.offset_x = 0
-        self.offset_y = 0
+        self.offset_x = config['screen']['size'][0] / 2
+        self.offset_y = config['screen']['size'][1] / 2
         self.game = game
         self.speed = 1
 
@@ -67,11 +67,14 @@ class Camera:
 class Unit(Sprite):
     next_id = 0
 
-    def __init__(self, game, x, y):
+    def __init__(self, game, name, x, y):
+        self.name = name
         self.rect = Rect(0, 0, 50, 50)
         self.game = game
+        self.cls_dict = self.game.mod_loader.entities[name]
         self.pos_x = x
         self.pos_y = y
+        self.texture = pygame.image.load(self.cls_dict['texture'].format(team='green'))
         self.rect.center = self.pos_x, self.pos_y
         if game.side == Game.Side.SERVER:
             self.unit_id = Unit.next_id
@@ -88,8 +91,9 @@ class Unit(Sprite):
         self.rect.center = self.pos_x, self.pos_y
 
     def draw(self, screen, camera):
-        pygame.draw.rect(screen, Color('red'), self.rect.move(camera.offset_x, camera.offset_y))
-        pygame.draw.rect(screen, Color('black'), self.rect.move(camera.offset_x, camera.offset_y), 2)
+        screen.blit(self.texture, self.rect.move(camera.offset_x, camera.offset_y))
+        # pygame.draw.rect(screen, Color('red'), self.rect.move(camera.offset_x, camera.offset_y))
+        # pygame.draw.rect(screen, Color('black'), self.rect.move(camera.offset_x, camera.offset_y), 2)
 
 
 def side_only(side):
@@ -110,7 +114,8 @@ class Game:
         SERVER = auto()
         CLIENT = auto()
 
-    def __init__(self, side: Side, send_connection, **kwargs):
+    def __init__(self, side: Side, mod_loader, send_connection, **kwargs):
+        self.mod_loader = mod_loader
         self.side = side
         self.sprites = Group()
         self.world_size = config['world']['size']
@@ -129,7 +134,7 @@ class Game:
             if event.type == EVENT_SEC:
                 self.next_sync -= 1
                 if random.randint(0, 100) < 25:
-                    self.create_entity()
+                    self.create_entity('warrior')
                     print('Created')
                 if self.next_sync <= 0:
                     self.next_sync = 10
@@ -139,7 +144,8 @@ class Game:
                     self.sync(True)
         elif self.side == Game.Side.CLIENT:
             if event.type == pygame.MOUSEBUTTONUP:
-                self.send_connection.send(f'1~{int(event.pos[0] - self.camera.offset_x)}~{int(event.pos[1] - self.camera.offset_y)}')
+                self.send_connection.send(
+                    f'1~{int(event.pos[0] - self.camera.offset_x)}~{int(event.pos[1] - self.camera.offset_y)}')
 
     def draw(self, screen):
         for unit in self.sprites:
@@ -155,7 +161,7 @@ class Game:
     def sync(self, to_new_connections=False):
         print('Sync')
         for unit in self.sprites:
-            send_msg = f'2~<class_id>~{unit.unit_id}~{unit.pos_x}~{unit.pos_y}'
+            send_msg = f'2~{unit.name}~{unit.unit_id}~{unit.pos_x}~{unit.pos_y}'
             if to_new_connections:
                 for conn in self.new_connections:
                     conn[1].send((send_msg + ';').encode('utf8'))
@@ -167,19 +173,19 @@ class Game:
                 self.new_connections.pop()
 
     @side_only(Side.SERVER)
-    def create_entity(self, pos=None):
+    def create_entity(self, name, pos=None):
         if not pos:
             pos = (random.randint(-self.world_size, self.world_size),
                    random.randint(-self.world_size, self.world_size))
-        u = Unit(self, pos[0], pos[1])
+        u = Unit(self, name, pos[0], pos[1])
         self.sprites.add(u)
-        self.send_connection.send(f'1~<class_id>~{u.unit_id}~{u.pos_x}~{u.pos_y}')
+        self.send_connection.send(f'1~{name}~{u.unit_id}~{u.pos_x}~{u.pos_y}')
 
     def handle_command(self, command, args, sender=None):
         if self.side == Game.Side.CLIENT:
             if command == '1':
                 print('1', args)
-                u = Unit(self, int(args[2]), int(args[3]))
+                u = Unit(self, args[0], int(args[2]), int(args[3]))
                 u.unit_id = int(args[1])
                 self.sprites.add(u)
 
@@ -191,7 +197,7 @@ class Game:
                     u.pos_y = int(args[3])
                     u.rect.center = u.pos_x, u.pos_y
                 else:
-                    u = Unit(self, int(args[2]), int(args[3]))
+                    u = Unit(self, args[0], int(args[2]), int(args[3]))
                     u.unit_id = int(args[1])
                     self.sprites.add(u)
             else:
@@ -199,7 +205,7 @@ class Game:
         elif self.side == Game.Side.SERVER:
             if command == '1':
                 print('1', args)
-                self.create_entity((int(args[0]), int(args[1])))
+                self.create_entity('archer', (int(args[0]), int(args[1])))
             else:
                 print('Unexpected command', args)
 
@@ -242,3 +248,53 @@ class Minimap(UIElement):
 
     def minimap_to_worldpos(self, x, y):
         raise Exception('Not supported')
+
+
+class ModLoader:
+    def __init__(self):
+        self.funcs = {}
+        self.entities = {}
+        self.mod_dict = {}
+
+    def mod_load_list(self):
+        return os.listdir('mods')
+
+    def decode_json(self, dct, mod_name):
+        if value := dct.get('__func__'):
+            return self.funcs[value]
+        if value := dct.get('__path__'):
+            return f'mods/{mod_name}/assets/{value}'
+        return dct
+
+    def import_mods(self):
+        mods = self.mod_load_list()
+
+        print('Mod loader function importing...')
+        for m in mods:
+            __import__(f'mods.{m}')
+        print('Mod loader function import ended')
+
+        for m in mods:
+            self.load_mod(m)
+
+        print('Mods installed:')
+        for name, version in self.mod_dict.items():
+            print(f'{name=}, {version=}')
+        print('Mod initialization completed')
+
+    def load_mod(self, name):
+        with open(f'mods/{name}/init.json', mode='r', encoding='utf8') as json_file:
+            mod_json = json.load(json_file, object_hook=lambda x: self.decode_json(x, name))
+        self.mod_dict[mod_json['name']] = mod_json['version']
+        try:
+            self.entities.update(mod_json['entities'])
+        except KeyError:
+            pass
+
+    def load_func(self, name):
+        def load_func_dec(func):
+            print(f'Found function "{name}": {func.__name__}')
+            self.funcs[name] = func
+            return func
+
+        return load_func_dec
