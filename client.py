@@ -1,5 +1,8 @@
+import json
+import random
 import socket
 from multiprocessing import Process, Manager, Pipe
+from string import ascii_letters
 from typing import Optional
 
 from pygame import Color
@@ -43,13 +46,10 @@ def send_function(conn, task_conn):
             return
 
 
-class ClientGameWindow(UIElement):
+class WaitForServerWindow(UIElement):
     def __init__(self, rect: Rect, color: Optional[Color]):
-        mod_loader.import_mods()
-
         super().__init__(rect, color)
-        config.reload()
-
+        self.main = None
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
         sub_elem = UIElement(Rect(50, 50, 50, 50), None)
@@ -70,7 +70,52 @@ class ClientGameWindow(UIElement):
         self.send_process.daemon = True
         self.send_process.start()
 
-        self.game = Game(Game.Side.CLIENT, mod_loader, self.parent_conn)
+        self.parent_conn.send(f'nick~{"".join(random.sample(list(ascii_letters), 5))}')
+
+    def update(self, event):
+        if event.type == EVENT_UPDATE:
+            while self.receive_list:
+                msg = self.receive_list.pop(0).split('~')
+                print(msg)
+                if msg[0] == 'start':
+                    nicks = {}
+                    for i in msg[1:]:
+                        sock_id, nick = i.split('=')
+                        nicks[int(sock_id)] = nick
+                    self.start(nicks)
+                    return
+        super().update(event)
+
+    def start(self, nicks):
+        print(nicks)
+        w = ClientGameWindow(self.relative_bounds, self.color, self.sock, self.receive_list, self.socket_process,
+                             self.parent_conn, self.child_conn, self.send_process, nicks)
+        self.main.main_element = w
+
+
+class ClientGameWindow(UIElement):
+    def __init__(self, rect: Rect, color: Optional[Color], sock, receive_list, socket_process, parent_conn, child_conn,
+                 send_process, nicks):
+        super().__init__(rect, color)
+
+        self.sock = sock
+        self.receive_list = receive_list
+        self.socket_process = socket_process
+        self.parent_conn = parent_conn
+        self.child_conn = child_conn
+        self.send_process = send_process
+
+        mod_loader.import_mods()
+
+        config.reload()
+
+        fps_font = Font('assets/fonts/arial.ttf', 20)
+
+        sub_elem = UIElement(Rect(50, 50, 50, 50), None)
+        sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
+        self.append_child(sub_elem)
+
+        self.game = Game(Game.Side.CLIENT, mod_loader, self.parent_conn, nicks)
 
         self.minimap = Minimap(self.game)
         self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')

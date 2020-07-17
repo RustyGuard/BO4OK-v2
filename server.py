@@ -64,12 +64,11 @@ def send_function(connection_list, task_conn):
             connection_list.pop(i)
 
 
-class ServerGameWindow(UIElement):
+class WaitForPlayersWindow(UIElement):
     def __init__(self, rect: Rect, color: Optional[Color]):
-        mod_loader.import_mods()
-
         super().__init__(rect, color)
-
+        self.main = None
+        self.nicks = {}
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
         sub_elem = UIElement(Rect(50, 50, 50, 50), None)
@@ -94,9 +93,49 @@ class ServerGameWindow(UIElement):
         self.send_process.daemon = True
         self.send_process.start()
 
-        self.game = Game(Game.Side.SERVER, mod_loader,
-                         send_connection=self.parent_conn,
-                         new_connections=self.new_connections)
+    def update(self, event):
+        super().update(event)
+        if event.type == EVENT_UPDATE:
+            while self.receive_list:
+                sock_id, msg = self.receive_list.pop(0)
+                msg = msg.split('~')
+                print(msg)
+                if msg[0] == 'nick':
+                    self.nicks[sock_id] = msg[1]
+                if len(self.nicks) >= 2:
+                    self.start()
+                    return
+
+    def start(self):
+        self.connection_process.terminate()
+        self.parent_conn.send(f'start~{"~".join([f"{i}={j}" for i, j in self.nicks.items()])}')
+        w = ServerGameWindow(self.relative_bounds, self.color, self.sock, self.connection_list, self.receive_list,
+                             self.parent_conn, self.child_conn, self.send_process, self.nicks)
+        w.main = self.main
+        self.main.main_element = w
+
+
+class ServerGameWindow(UIElement):
+    def __init__(self, rect: Rect, color: Optional[Color], sock, connection_list, receive_list, parent_conn, child_conn,
+                 send_process, nicks):
+        mod_loader.import_mods()
+
+        super().__init__(rect, color)
+
+        fps_font = Font('assets/fonts/arial.ttf', 20)
+
+        sub_elem = UIElement(Rect(50, 50, 50, 50), None)
+        sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
+        self.append_child(sub_elem)
+
+        self.sock = sock
+        self.connection_list = connection_list
+        self.receive_list = receive_list
+        self.child_conn = child_conn
+        self.parent_conn = parent_conn
+        self.send_process = send_process
+
+        self.game = Game(Game.Side.SERVER, mod_loader, self.parent_conn, nicks, connection_list=self.connection_list)
 
         self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
 
@@ -125,7 +164,6 @@ class ServerGameWindow(UIElement):
 
     def shutdown(self):
         print('Shutdown')
-        self.connection_process.terminate()
         self.send_process.terminate()
         self.parent_conn.close()
         self.sock.close()
@@ -135,7 +173,7 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode(config['screen']['size'])
 
-    elem = ServerGameWindow(Rect(0, 0, *config['screen']['size']), Color('bisque'))
+    elem = WaitForPlayersWindow(Rect(0, 0, *config['screen']['size']), Color('bisque'))
 
     m = Main(elem, screen)
     m.loop()

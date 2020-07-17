@@ -14,6 +14,15 @@ class Main:
         self.main_element = main_element
         self.screen = screen
 
+    @property
+    def main_element(self):
+        return self._main_element
+
+    @main_element.setter
+    def main_element(self, value):
+        self._main_element = value
+        value.main = self
+
     def loop(self):
         clock = Clock()
 
@@ -51,7 +60,6 @@ def main():
     elem = MainMenu(Rect((0, 0), config['screen']['size']), Color('aquamarine3'))
 
     m = Main(elem, screen)
-    elem.main = m
     m.loop()
 
 

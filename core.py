@@ -299,7 +299,7 @@ class Game:
         PLACE_UNIT = '1'
         SET_TARGET_MOVE = '2'
 
-    def __init__(self, side: Side, mod_loader, send_connection, **kwargs):
+    def __init__(self, side: Side, mod_loader, send_connection, nicks, connection_list=None):
         self.mod_loader = mod_loader
         self.side = side
         self.sprites = Group()
@@ -308,8 +308,8 @@ class Game:
         self.send_connection = send_connection
         self.camera = Camera(self)
         if self.side == Game.Side.SERVER:
-            self.new_connections = kwargs['new_connections']
             self.next_sync = 10
+            self.connection_list = connection_list
 
     def update(self, event):
         self.camera.update(event)
@@ -324,9 +324,6 @@ class Game:
                 if self.next_sync <= 0:
                     self.next_sync = 10
                     self.sync()
-            elif event.type == EVENT_UPDATE:
-                if self.new_connections:
-                    self.sync(True)
         elif self.side == Game.Side.CLIENT:
             if event.type == pygame.MOUSEBUTTONUP:
                 for unit in self.sprites:
@@ -353,19 +350,11 @@ class Game:
         self.send_connection.send(f'{Game.ClientCommands.TARGET_CHANGE}~{unit.unit_id}~{unit.encode_target()}')
 
     @side_only(Side.SERVER)
-    def sync(self, to_new_connections=False):
+    def sync(self):
         print('Sync')
         for unit in self.sprites:
             send_msg = f'{Game.ClientCommands.UPDATE}~{unit.name}~{unit.unit_id}~{"~".join(map(str, unit.get_update_args()))}'
-            if to_new_connections:
-                for conn in self.new_connections:
-                    conn[1].send((send_msg + ';').encode('utf8'))
-            else:
-                self.send_connection.send(send_msg)
-        if to_new_connections:
-            print('self.new_connections', self.new_connections)
-            while self.new_connections:
-                self.new_connections.pop()
+            self.send_connection.send(send_msg)
 
     @side_only(Side.SERVER)
     def create_unit(self, name, pos=None):
