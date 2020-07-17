@@ -73,7 +73,7 @@ class ClientGameWindow(UIElement):
         self.game = Game(Game.Side.CLIENT, mod_loader, self.parent_conn)
 
         self.minimap = Minimap(self.game)
-        self.minimap_elem = UIImage(Rect(0, 62, 0, 0), 'assets/sprite/minimap.png')
+        self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
 
         self.append_child(self.minimap_elem)

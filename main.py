@@ -3,9 +3,9 @@ from pygame import Color
 from pygame.rect import Rect
 from pygame.time import Clock
 
-from client import ClientGameWindow
 from config import config
 from constants import EVENT_SEC, EVENT_UPDATE
+from main_menu import MainMenu
 from ui import UIElement
 
 
@@ -48,9 +48,10 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode(config['screen']['size'])
 
-    elem = ClientGameWindow(Rect(0, 0, config['screen']['size'][0], config['screen']['size'][1]), Color('aquamarine3'))
+    elem = MainMenu(Rect((0, 0), config['screen']['size']), Color('aquamarine3'))
 
     m = Main(elem, screen)
+    elem.main = m
     m.loop()
 
 

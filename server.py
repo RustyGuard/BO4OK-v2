@@ -1,4 +1,3 @@
-import random
 import socket
 from multiprocessing import Process, Manager, Pipe
 from typing import Optional
@@ -78,7 +77,7 @@ class ServerGameWindow(UIElement):
         self.append_child(sub_elem)
 
         self.sock = socket.socket()
-        self.sock.bind(('', 9090))
+        self.sock.bind((config['server']['ip'], config['server']['port']))
         self.sock.listen(1)
 
         manager = Manager()
@@ -105,6 +104,9 @@ class ServerGameWindow(UIElement):
         self.minimap_elem.append_child(self.minimap)
 
         self.append_child(self.minimap_elem)
+        self.game.create_unit('warrior', (0, 0))
+        self.game.create_unit('fortress', (500, 0))
+        self.game.create_unit('fortress', (-500, 0))
 
     def update(self, event):
         self.game.update(event)

@@ -9,6 +9,11 @@
 			],
 			"max_health": 300,
 			"damage": 50,
+			"delay_time": 150,
+			"agr_range": 1000,
+			"attack_range": 3,
+			"speed": 4,
+			"angle_speed": 5,
 			"texture": {
 				"__path__": "warrior/soldier/{team}.png"
 			}
@@ -19,6 +24,11 @@
 				"unit"
 			],
 			"max_health": 150,
+			"delay_time": 150,
+			"agr_range": 1000,
+			"attack_range": 3,
+			"speed": 4,
+			"angle_speed": 7,
 			"texture": {
 				"__path__": "warrior/archer/{team}.png"
 			}
@@ -30,19 +40,23 @@
 				"invincible"
 			],
 			"damage": 30,
+			"speed": 4,
 			"texture": {
 				"__path__": "warrior/archer/arrow.png"
 			}
 		},
 		"fortress": {
-			"base": "building",
+			"base": "producing_building",
 			"tags": [
 				"building"
 			],
 			"max_health": 2000,
 			"texture": {
 				"__path__": "building/fortress/{team}.png"
-			}
+			},
+			"valid_types": [
+				"archer"
+			]
 		}
 	}
 }

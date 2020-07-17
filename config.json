@@ -1,19 +1,33 @@
 {
-  "minimap": {
-    "bounds": [45, 142, 249, 247],
-    "mark_size": 10,
-    "mark_color": ["aquamarine"]
-  },
-  "world": {
-    "size": 800
-  },
-  "screen": {
-    "size": [800, 450]
-  },
-  "camera": {
-    "min_speed": 1,
-    "max_speed": 10,
-    "step_slower": 0.05,
-    "step_faster": 0.05
-  }
+	"minimap": {
+		"bounds": [
+			45,
+			142,
+			249,
+			247
+		],
+		"mark_size": 10,
+		"mark_color": [
+			"aquamarine"
+		]
+	},
+	"world": {
+		"size": 2400
+	},
+	"screen": {
+		"size": [
+			1200,
+			675
+		]
+	},
+	"camera": {
+		"min_speed": 1,
+		"max_speed": 10,
+		"step_slower": 0.05,
+		"step_faster": 0.05
+	},
+	"server": {
+		"ip": "",
+		"port": 9090
+	}
 }

@@ -1,11 +1,11 @@
-from typing import Optional
+from typing import Optional, Callable
 
 import pygame
 from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
-from constants import EVENT_SEC
+from constants import EVENT_SEC, EVENT_UPDATE
 
 
 class UIElement:
@@ -49,7 +49,7 @@ class UIElement:
 
     def render(self, screen):
         self.draw(screen)
-        for elem in self.childs:
+        for elem in reversed(self.childs):
             if elem.enabled:
                 elem.render(screen)
 
@@ -114,3 +114,29 @@ class UIImage(UIElement):
 
     def draw(self, screen):
         screen.blit(self.image, self.absolute_bounds.topleft)
+
+
+class UIButton(UIElement):
+    def __init__(self, bounds, color, callback_func):
+        super().__init__(bounds, color)
+        self.callback_func: Callable = callback_func
+
+    def update(self, event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            if self.absolute_bounds.collidepoint(*event.pos):
+                self.callback_func()
+                return True
+
+
+class UIPopup(Label):
+    def __init__(self, bounds: Rect, color: Color, font: Font, text: str, lifetime: int):
+        super().__init__(bounds, color, font, text)
+        self.life_time = lifetime
+
+    def update(self, event):
+        if event.type == EVENT_UPDATE:
+            self.life_time -= 1
+            if self.life_time <= 0:
+                self.parent.childs.remove(self)
+                return
+        super().update(event)

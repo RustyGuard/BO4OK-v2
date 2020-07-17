@@ -1,11 +1,15 @@
 import json
+import math
 import os
 import random
 from enum import Enum, auto
 from functools import wraps
+from typing import Tuple, Any, Type
 
 import pygame
 from pygame import Color
+from pygame.font import Font
+from pygame.math import Vector2
 from pygame.rect import Rect
 from pygame.sprite import Group, Sprite
 
@@ -67,15 +71,16 @@ class Camera:
 class Unit(Sprite):
     next_id = 0
 
-    def __init__(self, game, name, x, y):
+    def __init__(self, game, name, x, y, team=-1):
         self.name = name
-        self.rect = Rect(0, 0, 50, 50)
         self.game = game
         self.cls_dict = self.game.mod_loader.entities[name]
-        self.pos_x = x
-        self.pos_y = y
+        self.pos = Vector2()
+        self.pos.xy = x, y
         self.texture = pygame.image.load(self.cls_dict['texture'].format(team='green'))
-        self.rect.center = self.pos_x, self.pos_y
+        self.rect: Rect = self.texture.get_rect()
+        self.rect.center = self.pos.x, self.pos.y
+        self.team = team
         if game.side == Game.Side.SERVER:
             self.unit_id = Unit.next_id
             Unit.next_id += 1
@@ -83,17 +88,186 @@ class Unit(Sprite):
 
     def update(self, event):
         pass
-        # self.move(0, 1)
 
     def move(self, x, y):
-        self.pos_x += x
-        self.pos_y += y
-        self.rect.center = self.pos_x, self.pos_y
+        self.pos.x += x
+        self.pos.y += y
+        self.rect.center = self.pos.x, self.pos.y
+
+    @property
+    def center(self):
+        return self.rect.center
+
+    @center.setter
+    def center(self, value):
+        self.pos.x = value[0]
+        self.pos.y = value[1]
+        self.rect.center = self.pos.x, self.pos.y
 
     def draw(self, screen, camera):
         screen.blit(self.texture, self.rect.move(camera.offset_x, camera.offset_y))
-        # pygame.draw.rect(screen, Color('red'), self.rect.move(camera.offset_x, camera.offset_y))
-        # pygame.draw.rect(screen, Color('black'), self.rect.move(camera.offset_x, camera.offset_y), 2)
+
+    def get_update_args(self):
+        return [int(self.pos.x), int(self.pos.y)]
+
+    def set_update_args(self, args):
+        self.center = int(args[0]), int(args[1])
+
+
+class TwistUnit(Unit):
+    def __init__(self, game, name, x, y, team=-1):
+        super().__init__(game, name, x, y, team)
+        self._angle = 0
+        self.rot_texture = self.texture
+        self.img_rect: Rect = self.rot_texture.get_rect()
+        self.angle = 0
+
+    def update(self, event):
+        super().update(event)
+
+    @property
+    def angle(self):
+        return self._angle
+
+    @angle.setter
+    def angle(self, value):
+        while value >= 360:
+            value -= 360
+        while value < 0:
+            value += 360
+        self._angle = value
+        self.update_image()
+
+    def move(self, x, y):
+        super().move(x, y)
+        self.img_rect.center = self.rect.center
+
+    def update_image(self):
+        self.rot_texture = pygame.transform.rotate(self.texture, -self._angle)
+        self.img_rect = self.rot_texture.get_rect()
+        self.img_rect.center = self.rect.center
+
+    def draw(self, screen, camera):
+        screen.blit(self.rot_texture, self.img_rect.move(camera.offset_x, camera.offset_y))
+
+    def get_update_args(self):
+        args = super().get_update_args()
+        args.append(int(self._angle))
+        return args
+
+    def set_update_args(self, args):
+        super().set_update_args(args)
+        self.angle = int(args[2])
+
+
+class Fighter(TwistUnit):
+    class Target(Enum):
+        NONE = 'none'
+        ATTACK = 'attack'
+        MOVE = 'move'
+
+    def __init__(self, game, name, x, y, team=-1):
+        super().__init__(game, name, x, y, team)
+        self.target_angle = 0
+        self.target: Tuple[Fighter.Target, Any] = (Fighter.Target.NONE, None)
+        self.delay = 0
+        self.delay_time = self.cls_dict['delay_time']
+        self.damage = self.cls_dict.get('damage', 0)
+        self.speed = self.cls_dict['speed']
+        self.angle_speed = self.cls_dict['angle_speed']
+        self.attack_range = self.cls_dict['attack_range']
+
+    def find_new_target(self):
+        pass
+
+    def update_delay(self):
+        if self.game.side is Game.Side.SERVER:
+            self.delay -= 1
+
+    def update(self, event):
+        if (event.type == EVENT_SEC) and (self.game.side is Game.Side.SERVER):
+            if self.target[0] is Fighter.Target.NONE:
+                self.find_new_target()
+        if event.type == EVENT_UPDATE:
+            if self.target[0] is Fighter.Target.ATTACK:
+                self.find_target_angle()
+                self.turn_around()
+                self.update_delay()
+                if self.is_close_to_target():
+                    self.single_attack()
+                else:
+                    self.move_to_angle()
+            elif self.target[0] == Fighter.Target.MOVE:
+                self.move_to_point()
+
+    def find_target_angle(self):
+        self.target_angle = int(math.degrees(math.atan2(self.target[1].y - self.pos.y, self.target[1].x - self.pos.x)))
+        if self.target_angle < 0:
+            self.target_angle += 360
+
+    def is_close_to_target(self):
+        pass
+
+    def turn_around(self):
+        angle_diff = self.target_angle - self.angle
+        if angle_diff == 0:
+            return
+
+        speed = min(self.angle_speed, abs(angle_diff))
+
+        if angle_diff < 0:
+            if abs(angle_diff) >= 180:
+                self.angle += speed
+            else:
+                self.angle -= speed
+        elif angle_diff > 0:
+            if abs(angle_diff) >= 180:
+                self.angle -= speed
+            else:
+                self.angle += speed
+
+    def single_attack(self):
+        pass
+
+    def move_to_angle(self):
+        self.move(math.cos(math.radians(self.angle)) * self.speed, math.sin(math.radians(self.angle)) * self.speed)
+
+    def move_to_point(self):
+        self.find_target_angle()
+        self.turn_around()
+        self.move_to_angle()
+        if self.game.side is Game.Side.SERVER:
+            if self.pos.distance_to(self.target[1]) <= 5:
+                self.game.set_target(self, (Fighter.Target.NONE, None))
+
+    def encode_target(self):
+        if self.target[0] is Fighter.Target.NONE:
+            return self.target[0].value
+
+        elif self.target[0] is Fighter.Target.MOVE:
+            return f'{self.target[0].value}_{self.target[1][0]}_{self.target[1][1]}'
+
+        elif self.target[0] is Fighter.Target.ATTACK:
+            return f'{self.target[0].value}_{self.target[1].unit_id}'
+
+    def decode_target(self, arg):
+        args = arg.split('_')
+
+        if args[0] == Fighter.Target.NONE.value:
+            return Fighter.Target.NONE, None
+
+        if args[0] == Fighter.Target.MOVE.value:
+            return Fighter.Target.MOVE, (Vector2(float(args[1]), float(args[2])))
+
+        if args[0] == Fighter.Target.ATTACK.value:
+            return Fighter.Target.ATTACK, self.game.find_with_id(int(args[1]))
+
+
+class ProducingBuilding(Unit):
+    def __init__(self, game, name, x, y, team=-1):
+        super().__init__(game, name, x, y, team)
+        self.units_tray = []
+        self.valid_types = self.cls_dict['valid_types']
 
 
 def side_only(side):
@@ -113,6 +287,17 @@ class Game:
     class Side(Enum):
         SERVER = auto()
         CLIENT = auto()
+
+    class ClientCommands:
+        """Команды, отправляемые клиенту"""
+        CREATE = '1'
+        UPDATE = '2'
+        TARGET_CHANGE = '3'
+
+    class ServerCommands:
+        """Команды, отправляемые серверу"""
+        PLACE_UNIT = '1'
+        SET_TARGET_MOVE = '2'
 
     def __init__(self, side: Side, mod_loader, send_connection, **kwargs):
         self.mod_loader = mod_loader
@@ -134,7 +319,7 @@ class Game:
             if event.type == EVENT_SEC:
                 self.next_sync -= 1
                 if random.randint(0, 100) < 25:
-                    self.create_entity('warrior')
+                    self.create_unit('warrior')
                     print('Created')
                 if self.next_sync <= 0:
                     self.next_sync = 10
@@ -144,8 +329,13 @@ class Game:
                     self.sync(True)
         elif self.side == Game.Side.CLIENT:
             if event.type == pygame.MOUSEBUTTONUP:
+                for unit in self.sprites:
+                    if isinstance(unit, Fighter):
+                        self.send_connection.send(
+                            f'{Game.ServerCommands.SET_TARGET_MOVE}~{unit.unit_id}~{int(event.pos[0] - self.camera.offset_x + random.randint(-75, 75))}~{int(event.pos[1] - self.camera.offset_y + random.randint(-75, 75))}')
+
                 self.send_connection.send(
-                    f'1~{int(event.pos[0] - self.camera.offset_x)}~{int(event.pos[1] - self.camera.offset_y)}')
+                    f'{Game.ServerCommands.PLACE_UNIT}~{"archer"}~{int(event.pos[0] - self.camera.offset_x)}~{int(event.pos[1] - self.camera.offset_y)}')
 
     def draw(self, screen):
         for unit in self.sprites:
@@ -158,10 +348,15 @@ class Game:
                 return u
 
     @side_only(Side.SERVER)
+    def set_target(self, unit, target: Tuple[Fighter.Target, Any]):
+        unit.target = target
+        self.send_connection.send(f'{Game.ClientCommands.TARGET_CHANGE}~{unit.unit_id}~{unit.encode_target()}')
+
+    @side_only(Side.SERVER)
     def sync(self, to_new_connections=False):
         print('Sync')
         for unit in self.sprites:
-            send_msg = f'2~{unit.name}~{unit.unit_id}~{unit.pos_x}~{unit.pos_y}'
+            send_msg = f'{Game.ClientCommands.UPDATE}~{unit.name}~{unit.unit_id}~{"~".join(map(str, unit.get_update_args()))}'
             if to_new_connections:
                 for conn in self.new_connections:
                     conn[1].send((send_msg + ';').encode('utf8'))
@@ -173,41 +368,53 @@ class Game:
                 self.new_connections.pop()
 
     @side_only(Side.SERVER)
-    def create_entity(self, name, pos=None):
+    def create_unit(self, name, pos=None):
         if not pos:
             pos = (random.randint(-self.world_size, self.world_size),
                    random.randint(-self.world_size, self.world_size))
-        u = Unit(self, name, pos[0], pos[1])
+        cls = self.get_base_class(name)
+        u = cls(self, name, pos[0], pos[1])
         self.sprites.add(u)
-        self.send_connection.send(f'1~{name}~{u.unit_id}~{u.pos_x}~{u.pos_y}')
+        self.send_connection.send(
+            f'{Game.ClientCommands.CREATE}~{u.name}~{u.unit_id}~{"~".join(map(str, u.get_update_args()))}')
+
+    @side_only(Side.CLIENT)
+    def load_unit(self, args):
+        cls = self.get_base_class(args[0])
+        u = cls(self, args[0], 0, 0)
+        u.unit_id = int(args[1])
+        u.set_update_args(args[2:])
+        self.sprites.add(u)
+
+    def get_base_class(self, name):
+        return self.mod_loader.bases[self.mod_loader.entities[name]['base']]
 
     def handle_command(self, command, args, sender=None):
         if self.side == Game.Side.CLIENT:
-            if command == '1':
-                print('1', args)
-                u = Unit(self, args[0], int(args[2]), int(args[3]))
-                u.unit_id = int(args[1])
-                self.sprites.add(u)
+            print(command, args)
+            if command == Game.ClientCommands.CREATE:
+                self.load_unit(args)
 
-            elif command == '2':
-                print('2', args)
-                u = self.find_with_id(int(args[1]))
-                if u is not None:
-                    u.pos_x = int(args[2])
-                    u.pos_y = int(args[3])
-                    u.rect.center = u.pos_x, u.pos_y
+            elif command == Game.ClientCommands.UPDATE:
+                unit = self.find_with_id(int(args[1]))
+                if unit is not None:
+                    unit.set_update_args(args[2:])
                 else:
-                    u = Unit(self, args[0], int(args[2]), int(args[3]))
-                    u.unit_id = int(args[1])
-                    self.sprites.add(u)
+                    self.load_unit(args)
+            elif command == Game.ClientCommands.TARGET_CHANGE:
+                unit = self.find_with_id(int(args[0]))
+                unit.target = unit.decode_target(args[1])
             else:
-                print('Unexpected command', args)
+                print('Unexpected command', command, args)
         elif self.side == Game.Side.SERVER:
-            if command == '1':
-                print('1', args)
-                self.create_entity('archer', (int(args[0]), int(args[1])))
+            print(command, args)
+            if command == Game.ServerCommands.PLACE_UNIT:
+                self.create_unit('archer', (int(args[1]), int(args[2])))
+            elif command == Game.ServerCommands.SET_TARGET_MOVE:
+                unit = self.find_with_id(int(args[0]))
+                self.set_target(unit, (Fighter.Target.MOVE, Vector2(float(args[1]), float(args[2]))))
             else:
-                print('Unexpected command', args)
+                print('Unexpected command', command, args)
 
 
 class Minimap(UIElement):
@@ -221,7 +428,7 @@ class Minimap(UIElement):
         super().draw(screen)
         mark_rect = Rect(self.absolute_bounds.x, self.absolute_bounds.y, self.mark_size, self.mark_size)
         for unit in self.game.sprites:
-            pos = self.worldpos_to_minimap(unit.pos_x, unit.pos_y)
+            pos = self.worldpos_to_minimap(unit.pos.x, unit.pos.y)
             mark_rect.centerx = self.absolute_bounds.x + pos[0]
             mark_rect.centery = self.absolute_bounds.y + pos[1]
             pygame.draw.ellipse(screen, self.mark_color, mark_rect)
@@ -255,6 +462,12 @@ class ModLoader:
         self.funcs = {}
         self.entities = {}
         self.mod_dict = {}
+        self.bases = {
+            'unit': Unit,
+            'twist_unit': TwistUnit,
+            'fighter': Fighter,
+            'producing_building': ProducingBuilding,
+        }
 
     def mod_load_list(self):
         return os.listdir('mods')
