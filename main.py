@@ -35,13 +35,15 @@ class Main:
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
-                    self.main_element.shutdown()
                     print('Exit')
+                    self.main_element.shutdown()
+                    print('Shutdowned')
                     return
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_ESCAPE:
                         print('Exit')
                         self.main_element.shutdown()
+                        print('Shutdowned')
                         return
 
                 self.main_element.update(event)

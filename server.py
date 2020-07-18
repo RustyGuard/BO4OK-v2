@@ -1,3 +1,4 @@
+import json
 import socket
 from multiprocessing import Process, Manager, Pipe
 from typing import Optional
@@ -102,13 +103,14 @@ class WaitForPlayersWindow(UIElement):
                 print(msg)
                 if msg[0] == 'nick':
                     self.nicks[sock_id] = msg[1]
-                if len(self.nicks) >= 2:
-                    self.start()
-                    return
+                if len(self.connection_list) >= 2:
+                    if all([(i in self.nicks) for i in self.connection_list]):
+                        self.start()
+                        return
 
     def start(self):
         self.connection_process.terminate()
-        self.parent_conn.send(f'start~{"~".join([f"{i}={j}" for i, j in self.nicks.items()])}')
+        self.parent_conn.send(f'start~{json.dumps(self.nicks)}')
         w = ServerGameWindow(self.relative_bounds, self.color, self.sock, self.connection_list, self.receive_list,
                              self.parent_conn, self.child_conn, self.send_process, self.nicks)
         w.main = self.main

@@ -78,10 +78,7 @@ class WaitForServerWindow(UIElement):
                 msg = self.receive_list.pop(0).split('~')
                 print(msg)
                 if msg[0] == 'start':
-                    nicks = {}
-                    for i in msg[1:]:
-                        sock_id, nick = i.split('=')
-                        nicks[int(sock_id)] = nick
+                    nicks = json.loads(msg[1])
                     self.start(nicks)
                     return
         super().update(event)
@@ -91,6 +88,13 @@ class WaitForServerWindow(UIElement):
         w = ClientGameWindow(self.relative_bounds, self.color, self.sock, self.receive_list, self.socket_process,
                              self.parent_conn, self.child_conn, self.send_process, nicks)
         self.main.main_element = w
+
+    def shutdown(self):
+        self.sock.close()
+        self.send_process.terminate()
+        self.socket_process.terminate()
+        self.parent_conn.close()
+        self.child_conn.close()
 
 
 class ClientGameWindow(UIElement):
@@ -138,5 +142,9 @@ class ClientGameWindow(UIElement):
         self.game.draw(screen)
 
     def shutdown(self):
-        self.socket_process.terminate()
         self.sock.close()
+        self.send_process.terminate()
+        self.socket_process.terminate()
+        self.parent_conn.close()
+        self.child_conn.close()
+        print('Closed')
