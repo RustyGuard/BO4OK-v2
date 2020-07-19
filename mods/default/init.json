@@ -48,14 +48,36 @@
 		"fortress": {
 			"base": "producing_building",
 			"tags": [
-				"building"
+				"building",
+				"buildable"
 			],
 			"max_health": 2000,
 			"texture": {
 				"__path__": "building/fortress/{team}.png"
 			},
+			"icon": {
+				"__path__": "building/fortress/{team}.png"
+			},
 			"valid_types": [
 				"archer"
+			]
+		},
+		"casern": {
+			"base": "producing_building",
+			"tags": [
+				"building",
+				"buildable"
+			],
+			"max_health": 1000,
+			"texture": {
+				"__path__": "building/casern/{team}.png"
+			},
+			"icon": {
+				"__path__": "building/casern/{team}.png"
+			},
+			"valid_types": [
+				"archer",
+				"warrior"
 			]
 		}
 	}

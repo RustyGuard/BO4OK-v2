@@ -13,7 +13,7 @@ from config import config
 from constants import EVENT_UPDATE
 from mod_loader import mod_loader
 from ui import UIElement, FPSCounter, UIImage
-from core import Game, Minimap
+from core import Game, Minimap, BuildMenu
 
 
 def listen(sock: socket.socket, submit_list):
@@ -78,15 +78,15 @@ class WaitForServerWindow(UIElement):
                 msg = self.receive_list.pop(0).split('~')
                 print(msg)
                 if msg[0] == 'start':
-                    nicks = json.loads(msg[1])
-                    self.start(nicks)
+                    nicks = json.loads(msg[2])
+                    self.start(int(msg[1]), nicks)
                     return
         super().update(event)
 
-    def start(self, nicks):
-        print(nicks)
+    def start(self, team_id, nicks):
+        print(team_id, nicks)
         w = ClientGameWindow(self.relative_bounds, self.color, self.sock, self.receive_list, self.socket_process,
-                             self.parent_conn, self.child_conn, self.send_process, nicks)
+                             self.parent_conn, self.child_conn, self.send_process, nicks, team_id)
         self.main.main_element = w
 
     def shutdown(self):
@@ -99,7 +99,7 @@ class WaitForServerWindow(UIElement):
 
 class ClientGameWindow(UIElement):
     def __init__(self, rect: Rect, color: Optional[Color], sock, receive_list, socket_process, parent_conn, child_conn,
-                 send_process, nicks):
+                 send_process, nicks, team_id):
         super().__init__(rect, color)
 
         self.sock = sock
@@ -119,13 +119,15 @@ class ClientGameWindow(UIElement):
         sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
         self.append_child(sub_elem)
 
-        self.game = Game(Game.Side.CLIENT, mod_loader, self.parent_conn, nicks)
+        self.game = Game(Game.Side.CLIENT, mod_loader, self.parent_conn, nicks, team_id)
 
         self.minimap = Minimap(self.game)
         self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
 
         self.append_child(self.minimap_elem)
+
+        self.append_child(BuildMenu(self.relative_bounds, self.game))
 
     def update(self, event):
         self.game.update(event)

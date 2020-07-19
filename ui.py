@@ -108,23 +108,26 @@ class FPSCounter(Label):
 
 
 class UIImage(UIElement):
-    def __init__(self, bounds, image_path):
+    def __init__(self, bounds, image_path, image=None):
         super().__init__(bounds, None)
-        self.image = pygame.image.load(image_path)
+        self.image = pygame.image.load(image_path) if (image_path is not None) else image
+        if bounds.width != 0 and bounds.height != 0:
+            self.image = pygame.transform.smoothscale(self.image, self.relative_bounds.size)
 
     def draw(self, screen):
         screen.blit(self.image, self.absolute_bounds.topleft)
 
 
 class UIButton(UIElement):
-    def __init__(self, bounds, color, callback_func):
+    def __init__(self, bounds, color, callback_func, *func_args):
         super().__init__(bounds, color)
         self.callback_func: Callable = callback_func
+        self.callback_args = func_args
 
     def update(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
             if self.absolute_bounds.collidepoint(*event.pos):
-                self.callback_func()
+                self.callback_func(*self.callback_args)
                 return True
 
 

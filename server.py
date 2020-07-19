@@ -1,4 +1,5 @@
 import json
+import random
 import socket
 from multiprocessing import Process, Manager, Pipe
 from typing import Optional
@@ -69,7 +70,7 @@ class WaitForPlayersWindow(UIElement):
     def __init__(self, rect: Rect, color: Optional[Color]):
         super().__init__(rect, color)
         self.main = None
-        self.nicks = {}
+        self.nicks = []
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
         sub_elem = UIElement(Rect(50, 50, 50, 50), None)
@@ -94,6 +95,15 @@ class WaitForPlayersWindow(UIElement):
         self.send_process.daemon = True
         self.send_process.start()
 
+    def is_all_nicks_sended(self):
+        for i in self.connection_list:
+            for n in self.nicks:
+                if i == n['team_id']:
+                    break
+            else:
+                return False
+        return True
+
     def update(self, event):
         super().update(event)
         if event.type == EVENT_UPDATE:
@@ -102,15 +112,24 @@ class WaitForPlayersWindow(UIElement):
                 msg = msg.split('~')
                 print(msg)
                 if msg[0] == 'nick':
-                    self.nicks[sock_id] = msg[1]
+                    self.nicks.append({
+                        'team_id': sock_id,
+                        'nick': msg[1]
+                    })
                 if len(self.connection_list) >= 2:
-                    if all([(i in self.nicks) for i in self.connection_list]):
+                    if self.is_all_nicks_sended():
                         self.start()
                         return
 
     def start(self):
         self.connection_process.terminate()
-        self.parent_conn.send(f'start~{json.dumps(self.nicks)}')
+        colors = ['aqua', 'blue', 'green', 'light_green', 'orange', 'pink', 'purple', 'red', 'yellow']
+        random.shuffle(colors)
+        for n in self.nicks:
+            n['color'] = colors.pop()
+        print(self.connection_list)
+        for i, j in self.connection_list.items():
+            j[0].send(f'start~{i}~{json.dumps(self.nicks)};'.encode('utf8'))
         w = ServerGameWindow(self.relative_bounds, self.color, self.sock, self.connection_list, self.receive_list,
                              self.parent_conn, self.child_conn, self.send_process, self.nicks)
         w.main = self.main
@@ -137,7 +156,7 @@ class ServerGameWindow(UIElement):
         self.parent_conn = parent_conn
         self.send_process = send_process
 
-        self.game = Game(Game.Side.SERVER, mod_loader, self.parent_conn, nicks, connection_list=self.connection_list)
+        self.game = Game(Game.Side.SERVER, mod_loader, self.parent_conn, nicks, -1, connection_list=self.connection_list)
 
         self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
 

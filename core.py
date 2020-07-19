@@ -4,7 +4,7 @@ import os
 import random
 from enum import Enum, auto
 from functools import wraps
-from typing import Tuple, Any, Type
+from typing import Tuple, Any, Type, Optional, List
 
 import pygame
 from pygame import Color
@@ -15,7 +15,7 @@ from pygame.sprite import Group, Sprite
 
 from config import config
 from constants import EVENT_UPDATE, EVENT_SEC
-from ui import UIElement
+from ui import UIElement, UIButton, UIImage
 
 
 class Camera:
@@ -71,13 +71,13 @@ class Camera:
 class Unit(Sprite):
     next_id = 0
 
-    def __init__(self, game, name, x, y, team=-1):
+    def __init__(self, game, name, x, y, team):
         self.name = name
         self.game = game
         self.cls_dict = self.game.mod_loader.entities[name]
         self.pos = Vector2()
         self.pos.xy = x, y
-        self.texture = pygame.image.load(self.cls_dict['texture'].format(team='green'))
+        self.texture = pygame.image.load(self.cls_dict['texture'].format(team=self.game.get_player(team).color_name))
         self.rect: Rect = self.texture.get_rect()
         self.rect.center = self.pos.x, self.pos.y
         self.team = team
@@ -283,6 +283,28 @@ def side_only(side):
     return side_only_dec
 
 
+class Player:
+    color_list = {
+        'aqua': Color('aquamarine'),
+        'blue': Color('blue'),
+        'green': Color('green'),
+        'light_green': Color('green2'),
+        'orange': Color('orange'),
+        'pink': Color('pink'),
+        'purple': Color('purple'),
+        'red': Color('red'),
+        'yellow': Color('yellow'),
+        'black': Color('black')
+    }
+
+    def __init__(self, game, team_id, color_name, nick):
+        self.game = game
+        self.team_id = team_id
+        self.color_name = color_name
+        self.color = Player.color_list[color_name]
+        self.nick = nick
+
+
 class Game:
     class Side(Enum):
         SERVER = auto()
@@ -299,7 +321,7 @@ class Game:
         PLACE_UNIT = '1'
         SET_TARGET_MOVE = '2'
 
-    def __init__(self, side: Side, mod_loader, send_connection, nicks, connection_list=None):
+    def __init__(self, side: Side, mod_loader, send_connection, players_list: List, current_team: int, connection_list=None):
         self.mod_loader = mod_loader
         self.side = side
         self.sprites = Group()
@@ -307,9 +329,27 @@ class Game:
         self.world_rect = Rect(-self.world_size, -self.world_size, self.world_size * 2, self.world_size * 2)
         self.send_connection = send_connection
         self.camera = Camera(self)
+
+        self.players = []
+        for player_info in players_list:
+            player = Player(self, player_info['team_id'], player_info['color'], player_info['nick'])
+            self.players.append(player)
+        self.players.append(Player(self, -1, 'black', 'Admin'))
+        self.current_team = current_team
+
         if self.side == Game.Side.SERVER:
             self.next_sync = 10
             self.connection_list = connection_list
+
+    @property
+    def current_player(self) -> Optional[Player]:
+        return self.get_player(self.current_team)
+
+    def get_player(self, team_id) -> Player:
+        for p in self.players:
+            if p.team_id == team_id:
+                return p
+        raise IndexError(f'No player with {team_id=}')
 
     def update(self, event):
         self.camera.update(event)
@@ -318,21 +358,9 @@ class Game:
         if self.side == Game.Side.SERVER:
             if event.type == EVENT_SEC:
                 self.next_sync -= 1
-                if random.randint(0, 100) < 25:
-                    self.create_unit('warrior')
-                    print('Created')
                 if self.next_sync <= 0:
                     self.next_sync = 10
                     self.sync()
-        elif self.side == Game.Side.CLIENT:
-            if event.type == pygame.MOUSEBUTTONUP:
-                for unit in self.sprites:
-                    if isinstance(unit, Fighter):
-                        self.send_connection.send(
-                            f'{Game.ServerCommands.SET_TARGET_MOVE}~{unit.unit_id}~{int(event.pos[0] - self.camera.offset_x + random.randint(-75, 75))}~{int(event.pos[1] - self.camera.offset_y + random.randint(-75, 75))}')
-
-                self.send_connection.send(
-                    f'{Game.ServerCommands.PLACE_UNIT}~{"archer"}~{int(event.pos[0] - self.camera.offset_x)}~{int(event.pos[1] - self.camera.offset_y)}')
 
     def draw(self, screen):
         for unit in self.sprites:
@@ -353,27 +381,29 @@ class Game:
     def sync(self):
         print('Sync')
         for unit in self.sprites:
-            send_msg = f'{Game.ClientCommands.UPDATE}~{unit.name}~{unit.unit_id}~{"~".join(map(str, unit.get_update_args()))}'
+            send_msg = f'{Game.ClientCommands.UPDATE}~{unit.name}~{unit.unit_id}~{unit.team}~{"~".join(map(str, unit.get_update_args()))}'
             self.send_connection.send(send_msg)
 
     @side_only(Side.SERVER)
-    def create_unit(self, name, pos=None):
-        if not pos:
-            pos = (random.randint(-self.world_size, self.world_size),
-                   random.randint(-self.world_size, self.world_size))
+    def create_unit(self, name, pos, team_id=-1):
         cls = self.get_base_class(name)
-        u = cls(self, name, pos[0], pos[1])
+        u = cls(self, name, pos[0], pos[1], team_id)
         self.sprites.add(u)
         self.send_connection.send(
-            f'{Game.ClientCommands.CREATE}~{u.name}~{u.unit_id}~{"~".join(map(str, u.get_update_args()))}')
+            f'{Game.ClientCommands.CREATE}~{u.name}~{u.unit_id}~{team_id}~{"~".join(map(str, u.get_update_args()))}')
 
     @side_only(Side.CLIENT)
     def load_unit(self, args):
         cls = self.get_base_class(args[0])
-        u = cls(self, args[0], 0, 0)
+        u = cls(self, args[0], 0, 0, int(args[2]))
         u.unit_id = int(args[1])
-        u.set_update_args(args[2:])
+        u.set_update_args(args[3:])
         self.sprites.add(u)
+
+    @side_only(Side.CLIENT)
+    def place_building(self, entity_name, pos):
+        self.send_connection.send(
+            f'{Game.ServerCommands.PLACE_UNIT}~{entity_name}~{int(pos[0] - self.camera.offset_x)}~{int(pos[1] - self.camera.offset_y)}')
 
     def get_base_class(self, name):
         return self.mod_loader.bases[self.mod_loader.entities[name]['base']]
@@ -387,7 +417,7 @@ class Game:
             elif command == Game.ClientCommands.UPDATE:
                 unit = self.find_with_id(int(args[1]))
                 if unit is not None:
-                    unit.set_update_args(args[2:])
+                    unit.set_update_args(args[3:])
                 else:
                     self.load_unit(args)
             elif command == Game.ClientCommands.TARGET_CHANGE:
@@ -398,7 +428,7 @@ class Game:
         elif self.side == Game.Side.SERVER:
             print(command, args)
             if command == Game.ServerCommands.PLACE_UNIT:
-                self.create_unit('archer', (int(args[1]), int(args[2])))
+                self.create_unit(args[0], (int(args[1]), int(args[2])), sender)
             elif command == Game.ServerCommands.SET_TARGET_MOVE:
                 unit = self.find_with_id(int(args[0]))
                 self.set_target(unit, (Fighter.Target.MOVE, Vector2(float(args[1]), float(args[2]))))
@@ -500,3 +530,48 @@ class ModLoader:
             return func
 
         return load_func_dec
+
+
+class BuildMenu(UIElement):
+    class BuildMenuItem:
+        def __init__(self, name, entity_json, game):
+            self.entity_json = entity_json
+            self.game = game
+            self.name = name
+            self.color = (random.randrange(0, 255), random.randrange(0, 255), random.randrange(0, 255))
+            self.icon = pygame.image.load(self.entity_json['icon'].format(team=self.game.current_player.color_name))
+
+    def __init__(self, bounds, game):
+        super().__init__(bounds, None)
+        self.selected = None
+        self.game = game
+        self.buildings = {}
+        i = 0
+        for name, entity in self.game.mod_loader.entities.items():
+            if 'buildable' in entity['tags']:
+                self.buildings[name] = BuildMenu.BuildMenuItem(name, entity, game)
+                btn = UIButton(Rect(0, i * 55 + 15, 50, 50), None, self.select, name)
+                btn.append_child(UIImage(Rect((0, 0), btn.relative_bounds.size), None, self.buildings[name].icon))
+                self.append_child(btn)
+                i += 1
+                print(name, entity)
+
+    def draw(self, screen):
+        if self.selected:
+            r = self.selected.icon.get_rect()
+            r.center = pygame.mouse.get_pos()
+            screen.blit(self.selected.icon, r)
+        super().draw(screen)
+
+    def update(self, event):
+        if super().update(event):
+            return True
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                if self.selected:
+                    self.game.place_building(self.selected.name, pygame.mouse.get_pos())
+                    return True
+        return False
+
+    def select(self, item_id):
+        self.selected = self.buildings[item_id] if (item_id is not None) else None
