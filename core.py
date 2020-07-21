@@ -15,7 +15,7 @@ from pygame.sprite import Group, Sprite
 
 from config import config
 from constants import EVENT_UPDATE, EVENT_SEC
-from ui import UIElement, UIButton, UIImage
+from ui import UIElement, UIButton, UIImage, Label
 
 
 class Camera:
@@ -297,12 +297,17 @@ class Player:
         'black': Color('black')
     }
 
-    def __init__(self, game, team_id, color_name, nick):
+    def __init__(self, game, player_info, ):
         self.game = game
-        self.team_id = team_id
-        self.color_name = color_name
-        self.color = Player.color_list[color_name]
-        self.nick = nick
+        self.team_id = player_info['team_id']
+        self.color_name = player_info['color']
+        self.color = Player.color_list[self.color_name]
+        self.nick = player_info['nick']
+        self.wood = player_info['wood']
+        self.money = player_info['money']
+        self.meat = player_info['meat']
+        self.base_meat = player_info['base_meat']
+        self.max_meat = player_info['base_meat']
 
 
 class Game:
@@ -315,13 +320,15 @@ class Game:
         CREATE = '1'
         UPDATE = '2'
         TARGET_CHANGE = '3'
+        RESOURCE_INFO = '4'
 
     class ServerCommands:
         """Команды, отправляемые серверу"""
         PLACE_UNIT = '1'
         SET_TARGET_MOVE = '2'
 
-    def __init__(self, side: Side, mod_loader, send_connection, players_list: List, current_team: int, connection_list=None):
+    def __init__(self, side: Side, mod_loader, send_connection, players_list: List, current_team: int,
+                 connection_list=None):
         self.mod_loader = mod_loader
         self.side = side
         self.sprites = Group()
@@ -332,9 +339,12 @@ class Game:
 
         self.players = []
         for player_info in players_list:
-            player = Player(self, player_info['team_id'], player_info['color'], player_info['nick'])
+            player = Player(self, player_info)
             self.players.append(player)
-        self.players.append(Player(self, -1, 'black', 'Admin'))
+        self.players.append(Player(self,
+                                   {'team_id': -1, 'color': 'black',
+                                    'nick': 'Admin', 'money': 50000,
+                                    'wood': 50000, 'meat': 0, 'base_meat': 50000}))
         self.current_team = current_team
 
         if self.side == Game.Side.SERVER:
@@ -342,7 +352,7 @@ class Game:
             self.connection_list = connection_list
 
     @property
-    def current_player(self) -> Optional[Player]:
+    def current_player(self) -> Player:
         return self.get_player(self.current_team)
 
     def get_player(self, team_id) -> Player:
@@ -575,3 +585,20 @@ class BuildMenu(UIElement):
 
     def select(self, item_id):
         self.selected = self.buildings[item_id] if (item_id is not None) else None
+
+
+class ResourceMenu(UIElement):
+    def __init__(self, player, bounds, font):
+        super().__init__(bounds, None)
+        self.money_count = Label(Rect(0, 0, 500, 500), Color('yellow'), font, '500')
+        self.append_child(self.money_count)
+        self.wood_count = Label(Rect(105, 0, 500, 500), Color('brown'), font, '5000')
+        self.append_child(self.wood_count)
+        self.meat_count = Label(Rect(220, 0, 500, 500), Color('red'), font, '0')
+        self.append_child(self.meat_count)
+        self.player = player
+
+    def update_values(self):
+        self.money_count.set_text(f'{self.player.money}')
+        self.wood_count.set_text(f'{self.player.wood}')
+        self.meat_count.set_text(f'{self.player.meat}/{self.player.max_meat}')

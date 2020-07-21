@@ -12,7 +12,11 @@
 		]
 	},
 	"world": {
-		"size": 2400
+		"size": 2400,
+		"start_wood": 1500,
+		"start_money": 2500,
+		"start_meat": 0,
+		"base_meat": 25
 	},
 	"screen": {
 		"size": [

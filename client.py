@@ -12,8 +12,8 @@ from pygame.rect import Rect
 from config import config
 from constants import EVENT_UPDATE
 from mod_loader import mod_loader
-from ui import UIElement, FPSCounter, UIImage
-from core import Game, Minimap, BuildMenu
+from ui import UIElement, FPSCounter, UIImage, Label
+from core import Game, Minimap, BuildMenu, ResourceMenu
 
 
 def listen(sock: socket.socket, submit_list):
@@ -124,6 +124,10 @@ class ClientGameWindow(UIElement):
         self.minimap = Minimap(self.game)
         self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
+
+        self.minimap_elem.append_child(ResourceMenu(self.game.current_player,
+                                                    Rect(45, 108, 0, 0),
+                                                    Font('assets/fonts/arial.ttf', 25)))
 
         self.append_child(self.minimap_elem)
 

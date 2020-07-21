@@ -127,6 +127,10 @@ class WaitForPlayersWindow(UIElement):
         random.shuffle(colors)
         for n in self.nicks:
             n['color'] = colors.pop()
+            n['money'] = config['world']['start_money']
+            n['wood'] = config['world']['start_wood']
+            n['meat'] = config['world']['start_meat']
+            n['base_meat'] = config['world']['base_meat']
         print(self.connection_list)
         for i, j in self.connection_list.items():
             j[0].send(f'start~{i}~{json.dumps(self.nicks)};'.encode('utf8'))
