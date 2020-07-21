@@ -111,7 +111,7 @@ class Unit(Sprite):
         return [int(self.pos.x), int(self.pos.y)]
 
     def set_update_args(self, args):
-        self.center = int(args[0]), int(args[1])
+        self.center = args[0], args[1]
 
 
 class TwistUnit(Unit):
@@ -157,7 +157,7 @@ class TwistUnit(Unit):
 
     def set_update_args(self, args):
         super().set_update_args(args)
-        self.angle = int(args[2])
+        self.angle = args[2]
 
 
 class Fighter(TwistUnit):
@@ -257,10 +257,10 @@ class Fighter(TwistUnit):
             return Fighter.Target.NONE, None
 
         if args[0] == Fighter.Target.MOVE.value:
-            return Fighter.Target.MOVE, (Vector2(float(args[1]), float(args[2])))
+            return Fighter.Target.MOVE, (Vector2(args[1], args[2]))
 
         if args[0] == Fighter.Target.ATTACK.value:
-            return Fighter.Target.ATTACK, self.game.find_with_id(int(args[1]))
+            return Fighter.Target.ATTACK, self.game.find_with_id(args[1])
 
 
 class ProducingBuilding(Unit):
@@ -317,15 +317,15 @@ class Game:
 
     class ClientCommands:
         """Команды, отправляемые клиенту"""
-        CREATE = '1'
-        UPDATE = '2'
-        TARGET_CHANGE = '3'
-        RESOURCE_INFO = '4'
+        CREATE = 1
+        UPDATE = 2
+        TARGET_CHANGE = 3
+        RESOURCE_INFO = 4
 
     class ServerCommands:
         """Команды, отправляемые серверу"""
-        PLACE_UNIT = '1'
-        SET_TARGET_MOVE = '2'
+        PLACE_UNIT = 1
+        SET_TARGET_MOVE = 2
 
     def __init__(self, side: Side, mod_loader, send_connection, players_list: List, current_team: int,
                  connection_list=None):
@@ -385,13 +385,13 @@ class Game:
     @side_only(Side.SERVER)
     def set_target(self, unit, target: Tuple[Fighter.Target, Any]):
         unit.target = target
-        self.send_connection.send(f'{Game.ClientCommands.TARGET_CHANGE}~{unit.unit_id}~{unit.encode_target()}')
+        self.send_connection.send([Game.ClientCommands.TARGET_CHANGE, unit.unit_id, unit.encode_target()])
 
     @side_only(Side.SERVER)
     def sync(self):
         print('Sync')
         for unit in self.sprites:
-            send_msg = f'{Game.ClientCommands.UPDATE}~{unit.name}~{unit.unit_id}~{unit.team}~{"~".join(map(str, unit.get_update_args()))}'
+            send_msg = [Game.ClientCommands.UPDATE, unit.name, unit.unit_id, unit.team, unit.get_update_args()]
             self.send_connection.send(send_msg)
 
     @side_only(Side.SERVER)
@@ -399,21 +399,20 @@ class Game:
         cls = self.get_base_class(name)
         u = cls(self, name, pos[0], pos[1], team_id)
         self.sprites.add(u)
-        self.send_connection.send(
-            f'{Game.ClientCommands.CREATE}~{u.name}~{u.unit_id}~{team_id}~{"~".join(map(str, u.get_update_args()))}')
+        self.send_connection.send([Game.ClientCommands.CREATE, u.name, u.unit_id, team_id, u.get_update_args()])
 
     @side_only(Side.CLIENT)
     def load_unit(self, args):
         cls = self.get_base_class(args[0])
-        u = cls(self, args[0], 0, 0, int(args[2]))
-        u.unit_id = int(args[1])
-        u.set_update_args(args[3:])
+        u = cls(self, args[0], 0, 0, args[2])
+        u.unit_id = args[1]
+        u.set_update_args(args[3])
         self.sprites.add(u)
 
     @side_only(Side.CLIENT)
     def place_building(self, entity_name, pos):
-        self.send_connection.send(
-            f'{Game.ServerCommands.PLACE_UNIT}~{entity_name}~{int(pos[0] - self.camera.offset_x)}~{int(pos[1] - self.camera.offset_y)}')
+        self.send_connection.send([Game.ServerCommands.PLACE_UNIT, entity_name,
+                                   int(pos[0] - self.camera.offset_x), int(pos[1] - self.camera.offset_y)])
 
     def get_base_class(self, name):
         return self.mod_loader.bases[self.mod_loader.entities[name]['base']]
@@ -425,23 +424,23 @@ class Game:
                 self.load_unit(args)
 
             elif command == Game.ClientCommands.UPDATE:
-                unit = self.find_with_id(int(args[1]))
+                unit = self.find_with_id(args[1])
                 if unit is not None:
-                    unit.set_update_args(args[3:])
+                    unit.set_update_args(args[3])
                 else:
                     self.load_unit(args)
             elif command == Game.ClientCommands.TARGET_CHANGE:
-                unit = self.find_with_id(int(args[0]))
+                unit = self.find_with_id(args[0])
                 unit.target = unit.decode_target(args[1])
             else:
-                print('Unexpected command', command, args)
+                print('Unexpected command', command, 'args:', args)
         elif self.side == Game.Side.SERVER:
             print(command, args)
             if command == Game.ServerCommands.PLACE_UNIT:
-                self.create_unit(args[0], (int(args[1]), int(args[2])), sender)
+                self.create_unit(args[0], (args[1], args[2]), sender)
             elif command == Game.ServerCommands.SET_TARGET_MOVE:
-                unit = self.find_with_id(int(args[0]))
-                self.set_target(unit, (Fighter.Target.MOVE, Vector2(float(args[1]), float(args[2]))))
+                unit = self.find_with_id(args[0])
+                self.set_target(unit, (Fighter.Target.MOVE, Vector2(args[1], args[2])))
             else:
                 print('Unexpected command', command, args)
 
@@ -564,7 +563,6 @@ class BuildMenu(UIElement):
                 btn.append_child(UIImage(Rect((0, 0), btn.relative_bounds.size), None, self.buildings[name].icon))
                 self.append_child(btn)
                 i += 1
-                print(name, entity)
 
     def draw(self, screen):
         if self.selected:

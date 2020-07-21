@@ -26,7 +26,7 @@ def listen(sock: socket.socket, submit_list):
             while splitter != -1:
                 command = command_buffer[:splitter]
                 if command != '':
-                    submit_list.append(command)
+                    submit_list.append(json.loads(command))
                 command_buffer = command_buffer[splitter + 1:]
                 splitter = command_buffer.find(';')
 
@@ -40,7 +40,7 @@ def send_function(conn, task_conn):
     while True:
         task = task_conn.recv()
         try:
-            conn.send((task + ';').encode('utf8'))
+            conn.send((json.dumps(task) + ';').encode('utf8'))
         except Exception as ex:
             print(f'Connection closed, because of {ex}')
             return
@@ -70,15 +70,15 @@ class WaitForServerWindow(UIElement):
         self.send_process.daemon = True
         self.send_process.start()
 
-        self.parent_conn.send(f'nick~{"".join(random.sample(list(ascii_letters), 5))}')
+        self.parent_conn.send(['nick', "".join(random.sample(list(ascii_letters), 5))])
 
     def update(self, event):
         if event.type == EVENT_UPDATE:
             while self.receive_list:
-                msg = self.receive_list.pop(0).split('~')
+                msg = self.receive_list.pop(0)
                 print(msg)
                 if msg[0] == 'start':
-                    nicks = json.loads(msg[2])
+                    nicks = msg[2]
                     self.start(int(msg[1]), nicks)
                     return
         super().update(event)
@@ -138,7 +138,7 @@ class ClientGameWindow(UIElement):
 
         if event.type == EVENT_UPDATE:
             while self.receive_list:
-                args = self.receive_list.pop(0).split('~')
+                args = self.receive_list.pop(0)
                 self.game.handle_command(args[0], args[1:])
 
         return super().update(event)

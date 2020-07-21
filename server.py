@@ -42,7 +42,7 @@ def listen(sock_id: int, sock, submit_list):
             while splitter != -1:
                 command = command_buffer[:splitter]
                 if command != '':
-                    submit_list.append((sock_id, command))
+                    submit_list.append((sock_id, json.loads(command)))
                 command_buffer = command_buffer[splitter + 1:]
                 splitter = command_buffer.find(';')
 
@@ -58,7 +58,7 @@ def send_function(connection_list, task_conn):
         to_remove = []
         for i, client in connection_list.items():
             try:
-                client[0].send((task + ';').encode('utf8'))
+                client[0].send((json.dumps(task) + ';').encode('utf8'))
             except Exception as ex:
                 to_remove.append(i)
                 print(f'Connection with id {i} closed, because of {ex}')
@@ -109,7 +109,6 @@ class WaitForPlayersWindow(UIElement):
         if event.type == EVENT_UPDATE:
             while self.receive_list:
                 sock_id, msg = self.receive_list.pop(0)
-                msg = msg.split('~')
                 print(msg)
                 if msg[0] == 'nick':
                     self.nicks.append({
@@ -133,7 +132,7 @@ class WaitForPlayersWindow(UIElement):
             n['base_meat'] = config['world']['base_meat']
         print(self.connection_list)
         for i, j in self.connection_list.items():
-            j[0].send(f'start~{i}~{json.dumps(self.nicks)};'.encode('utf8'))
+            j[0].send((json.dumps(['start', i, self.nicks]) + ';').encode('utf8'))
         w = ServerGameWindow(self.relative_bounds, self.color, self.sock, self.connection_list, self.receive_list,
                              self.parent_conn, self.child_conn, self.send_process, self.nicks)
         w.main = self.main
@@ -178,8 +177,7 @@ class ServerGameWindow(UIElement):
         if event.type == EVENT_UPDATE:
             while self.receive_list:
                 sender, command = self.receive_list.pop(0)
-                args = command.split('~')
-                self.game.handle_command(args[0], args[1:], sender=sender)
+                self.game.handle_command(command[0], command[1:], sender=sender)
 
         return super().update(event)
 
