@@ -7,9 +7,11 @@
 			247
 		],
 		"mark_size": 10,
-		"mark_color": [
-			"aquamarine"
-		]
+		"mark_color": {
+			"__color__": [
+				"aquamarine"
+			]
+		}
 	},
 	"world": {
 		"size": 2400,

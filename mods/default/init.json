@@ -9,11 +9,17 @@
 			],
 			"max_health": 300,
 			"damage": 50,
-			"delay_time": 150,
+			"delay_time": 30,
 			"agr_range": 1000,
-			"attack_range": 3,
+			"attack_range": 75,
 			"speed": 4,
 			"angle_speed": 5,
+			"valid_target": {
+				"__func__": "warrior/is_valid"
+			},
+			"when_close": {
+				"__func__": "warrior/when_close"
+			},
 			"texture": {
 				"__path__": "warrior/soldier/{team}.png"
 			}
@@ -26,24 +32,31 @@
 			"max_health": 150,
 			"delay_time": 150,
 			"agr_range": 1000,
-			"attack_range": 3,
+			"attack_range": 350,
 			"speed": 4,
 			"angle_speed": 7,
+			"valid_target": {
+				"__func__": "archer/is_valid"
+			},
+			"when_close": {
+				"__func__": "archer/when_close"
+			},
 			"texture": {
 				"__path__": "warrior/archer/{team}.png"
 			}
 		},
 		"arrow": {
-			"base": "twist_entity",
+			"base": "projectile",
 			"tags": [
 				"projectile",
 				"invincible"
 			],
-			"damage": 30,
+			"damage": 65,
 			"speed": 4,
 			"texture": {
 				"__path__": "warrior/archer/arrow.png"
-			}
+			},
+			"lifetime": 200
 		},
 		"fortress": {
 			"base": "producing_building",

@@ -176,6 +176,10 @@ class ServerGameWindow(UIElement):
         self.game.create_unit('warrior', (0, 0))
         self.game.create_unit('fortress', (500, 0))
         self.game.create_unit('fortress', (-500, 0))
+        self.game.create_unit('archer', (-25, -25))
+        self.game.create_unit('archer', (25, -25))
+        self.game.create_unit('archer', (-25, 25))
+        self.game.create_unit('archer', (25, 25))
 
     def update(self, event):
         self.game.update(event)
