@@ -38,7 +38,7 @@ def listen(sock: socket.socket, submit_list):
 
 def send_function(conn, task_conn):
     while True:
-        task = task_conn.recv()
+        task, _ = task_conn.recv()
         try:
             conn.send((json.dumps(task) + ';').encode('utf8'))
         except Exception as ex:
@@ -70,7 +70,7 @@ class WaitForServerWindow(UIElement):
         self.send_process.daemon = True
         self.send_process.start()
 
-        self.parent_conn.send(['nick', "".join(random.sample(list(ascii_letters), 5))])
+        self.parent_conn.send((['nick', "".join(random.sample(list(ascii_letters), 5))], None))
 
     def update(self, event):
         if event.type == EVENT_UPDATE:

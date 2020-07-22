@@ -51,6 +51,13 @@
 				"building",
 				"buildable"
 			],
+			"size": [
+				150,
+				150
+			],
+			"cost": {
+				"money": 2
+			},
 			"max_health": 2000,
 			"texture": {
 				"__path__": "building/fortress/{team}.png"
@@ -68,6 +75,14 @@
 				"building",
 				"buildable"
 			],
+			"size": [
+				100,
+				100
+			],
+			"cost": {
+				"money": 1,
+				"wood": 3
+			},
 			"max_health": 1000,
 			"texture": {
 				"__path__": "building/casern/{team}.png"

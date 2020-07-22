@@ -297,7 +297,7 @@ class Player:
         'black': Color('black')
     }
 
-    def __init__(self, game, player_info, ):
+    def __init__(self, game, player_info):
         self.game = game
         self.team_id = player_info['team_id']
         self.color_name = player_info['color']
@@ -308,6 +308,25 @@ class Player:
         self.meat = player_info['meat']
         self.base_meat = player_info['base_meat']
         self.max_meat = player_info['base_meat']
+
+    def has_enough(self, cost):
+        if self.money < cost.get('money', 0):
+            return False
+        if self.wood < cost.get('wood', 0):
+            return False
+        return True
+
+    def spend(self, cost):
+        to_update = {}
+        money = cost.get('money', 0)
+        if money > 0:
+            self.money -= money
+            to_update['money'] = self.money
+        wood = cost.get('wood', 0)
+        if wood > 0:
+            self.wood -= wood
+            to_update['wood'] = self.wood
+        self.game.send([Game.ClientCommands.RESOURCE_INFO, to_update], self.team_id)
 
 
 class Game:
@@ -350,6 +369,7 @@ class Game:
         if self.side == Game.Side.SERVER:
             self.next_sync = 10
             self.connection_list = connection_list
+            self.buildings = Group()
 
     @property
     def current_player(self) -> Player:
@@ -385,21 +405,50 @@ class Game:
     @side_only(Side.SERVER)
     def set_target(self, unit, target: Tuple[Fighter.Target, Any]):
         unit.target = target
-        self.send_connection.send([Game.ClientCommands.TARGET_CHANGE, unit.unit_id, unit.encode_target()])
+        self.send([Game.ClientCommands.TARGET_CHANGE, unit.unit_id, unit.encode_target()])
 
     @side_only(Side.SERVER)
     def sync(self):
         print('Sync')
         for unit in self.sprites:
-            send_msg = [Game.ClientCommands.UPDATE, unit.name, unit.unit_id, unit.team, unit.get_update_args()]
-            self.send_connection.send(send_msg)
+            self.send([Game.ClientCommands.UPDATE, unit.name, unit.unit_id, unit.team, unit.get_update_args()])
 
     @side_only(Side.SERVER)
     def create_unit(self, name, pos, team_id=-1):
         cls = self.get_base_class(name)
         u = cls(self, name, pos[0], pos[1], team_id)
+        if 'buildable' in u.cls_dict['tags']:
+            self.buildings.add(u)
         self.sprites.add(u)
-        self.send_connection.send([Game.ClientCommands.CREATE, u.name, u.unit_id, team_id, u.get_update_args()])
+        self.send([Game.ClientCommands.CREATE, u.name, u.unit_id, team_id, u.get_update_args()])
+
+    @side_only(Side.SERVER)
+    def place_unit(self, name, pos, team_id=-1):
+        prefab = self.mod_loader.entities[name]
+        if 'buildable' not in prefab['tags']:
+            print(f'Trying to place non placeable: {name=}, {team_id=}')
+            return
+
+        spr = Sprite()
+        rect = Rect((0, 0), prefab['size'])
+        rect.center = pos
+        spr.rect = rect
+        if pygame.sprite.spritecollideany(spr, self.sprites):
+            print(f'Trying to place on occupied area: {name=}, {team_id=}')
+            return
+
+        pl = self.get_player(team_id)
+        if not pl.has_enough(prefab['cost']):
+            print(f'Trying to place without resources: {name=}, {team_id=}')
+            return
+
+        cls = self.mod_loader.bases[prefab['base']]
+        u = cls(self, name, pos[0], pos[1], team_id)
+        self.sprites.add(u)
+        self.buildings.add(u)
+
+        pl.spend(prefab['cost'])
+        self.send([Game.ClientCommands.CREATE, u.name, u.unit_id, team_id, u.get_update_args()])
 
     @side_only(Side.CLIENT)
     def load_unit(self, args):
@@ -409,10 +458,14 @@ class Game:
         u.set_update_args(args[3])
         self.sprites.add(u)
 
+    def send(self, command: list, player_id: Optional[int] = None):
+        self.send_connection.send((command, player_id))
+
     @side_only(Side.CLIENT)
     def place_building(self, entity_name, pos):
-        self.send_connection.send([Game.ServerCommands.PLACE_UNIT, entity_name,
-                                   int(pos[0] - self.camera.offset_x), int(pos[1] - self.camera.offset_y)])
+        self.send([Game.ServerCommands.PLACE_UNIT, entity_name,
+                   int(pos[0] - self.camera.offset_x),
+                   int(pos[1] - self.camera.offset_y)])
 
     def get_base_class(self, name):
         return self.mod_loader.bases[self.mod_loader.entities[name]['base']]
@@ -429,18 +482,27 @@ class Game:
                     unit.set_update_args(args[3])
                 else:
                     self.load_unit(args)
+
             elif command == Game.ClientCommands.TARGET_CHANGE:
                 unit = self.find_with_id(args[0])
                 unit.target = unit.decode_target(args[1])
+
+            elif command == Game.ClientCommands.RESOURCE_INFO:
+                pl = self.current_player
+                for attr in ['meat', 'money', 'wood', 'max_meat']:
+                    if val := args[0].get(attr, None):
+                        setattr(pl, attr, val)
             else:
                 print('Unexpected command', command, 'args:', args)
         elif self.side == Game.Side.SERVER:
-            print(command, args)
+            print(command, args, sender)
             if command == Game.ServerCommands.PLACE_UNIT:
-                self.create_unit(args[0], (args[1], args[2]), sender)
+                self.place_unit(args[0], (args[1], args[2]), sender)
+
             elif command == Game.ServerCommands.SET_TARGET_MOVE:
                 unit = self.find_with_id(args[0])
                 self.set_target(unit, (Fighter.Target.MOVE, Vector2(args[1], args[2])))
+
             else:
                 print('Unexpected command', command, args)
 
@@ -574,10 +636,13 @@ class BuildMenu(UIElement):
     def update(self, event):
         if super().update(event):
             return True
-        if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1:
-                if self.selected:
+        if self.selected:
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
                     self.game.place_building(self.selected.name, pygame.mouse.get_pos())
+                    return True
+                if event.button == 3:
+                    self.selected = None
                     return True
         return False
 
@@ -588,13 +653,18 @@ class BuildMenu(UIElement):
 class ResourceMenu(UIElement):
     def __init__(self, player, bounds, font):
         super().__init__(bounds, None)
-        self.money_count = Label(Rect(0, 0, 500, 500), Color('yellow'), font, '500')
+        self.money_count = Label(Rect(0, 0, 500, 500), Color('yellow'), font, '-')
         self.append_child(self.money_count)
-        self.wood_count = Label(Rect(105, 0, 500, 500), Color('brown'), font, '5000')
+        self.wood_count = Label(Rect(105, 0, 500, 500), Color('brown'), font, '-')
         self.append_child(self.wood_count)
-        self.meat_count = Label(Rect(220, 0, 500, 500), Color('red'), font, '0')
+        self.meat_count = Label(Rect(220, 0, 500, 500), Color('red'), font, '-/-')
         self.append_child(self.meat_count)
         self.player = player
+
+    def update(self, event):
+        if super().update(event):
+            return True
+        self.update_values()
 
     def update_values(self):
         self.money_count.set_text(f'{self.player.money}')

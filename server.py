@@ -54,16 +54,22 @@ def listen(sock_id: int, sock, submit_list):
 
 def send_function(connection_list, task_conn):
     while True:
-        task = task_conn.recv()
-        to_remove = []
-        for i, client in connection_list.items():
+        task, pl_id = task_conn.recv()
+        if pl_id is not None:
             try:
-                client[0].send((json.dumps(task) + ';').encode('utf8'))
-            except Exception as ex:
-                to_remove.append(i)
-                print(f'Connection with id {i} closed, because of {ex}')
-        for i in to_remove:
-            connection_list.pop(i)
+                connection_list[pl_id][0].send((json.dumps(task) + ';').encode('utf8'))
+            except IndexError:
+                print(f'No player with id: {pl_id}')
+        else:
+            to_remove = []
+            for i, client in connection_list.items():
+                try:
+                    client[0].send((json.dumps(task) + ';').encode('utf8'))
+                except Exception as ex:
+                    to_remove.append(i)
+                    print(f'Connection with id {i} closed, because of {ex}')
+            for i in to_remove:
+                connection_list.pop(i)
 
 
 class WaitForPlayersWindow(UIElement):
@@ -132,7 +138,7 @@ class WaitForPlayersWindow(UIElement):
             n['base_meat'] = config['world']['base_meat']
         print(self.connection_list)
         for i, j in self.connection_list.items():
-            j[0].send((json.dumps(['start', i, self.nicks]) + ';').encode('utf8'))
+            self.parent_conn.send((['start', i, self.nicks], i))
         w = ServerGameWindow(self.relative_bounds, self.color, self.sock, self.connection_list, self.receive_list,
                              self.parent_conn, self.child_conn, self.send_process, self.nicks)
         w.main = self.main
