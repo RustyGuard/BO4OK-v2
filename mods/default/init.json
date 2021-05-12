@@ -22,6 +22,9 @@
 			},
 			"texture": {
 				"__path__": "warrior/soldier/{team}.png"
+			},
+			"icon": {
+				"__path__": "warrior/soldier/{team}.png"
 			}
 		},
 		"archer": {
@@ -42,6 +45,9 @@
 				"__func__": "archer/when_close"
 			},
 			"texture": {
+				"__path__": "warrior/archer/{team}.png"
+			},
+			"icon": {
 				"__path__": "warrior/archer/{team}.png"
 			}
 		},
@@ -80,7 +86,8 @@
 			},
 			"valid_types": [
 				"archer"
-			]
+			],
+			"produce_time": 2
 		},
 		"casern": {
 			"base": "producing_building",
@@ -106,7 +113,8 @@
 			"valid_types": [
 				"archer",
 				"warrior"
-			]
+			],
+			"produce_time": 0
 		}
 	}
 }

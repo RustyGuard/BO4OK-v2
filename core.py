@@ -87,6 +87,7 @@ class Unit(Sprite):
         if game.side == Game.Side.SERVER:
             self.unit_id = Unit.next_id
             Unit.next_id += 1
+            print('next id', Unit.next_id)
         super().__init__()
 
     @property
@@ -104,6 +105,10 @@ class Unit(Sprite):
         self.pos.x += x
         self.pos.y += y
         self.rect.center = self.pos.x, self.pos.y
+
+    @property
+    def pos_around(self):
+        return Vector2(self.pos.x + random.randint(-150, 150), self.pos.y + random.randint(-150, 150))
 
     @property
     def center(self):
@@ -307,7 +312,6 @@ class Fighter(TwistUnit):
             if self.delay <= 0:
                 self.delay = self.delay_time
 
-                print('Single attack!')
                 self.target[1].take_damage(self.damage)
 
     def throw_projectile(self, name):
@@ -315,8 +319,6 @@ class Fighter(TwistUnit):
             if self.delay <= 0:
                 self.game.create_unit(name, (self.x, self.y), self.team, angle=self.angle)
                 self.delay = self.delay_time
-
-                print('Ranged attack!')
 
     def move_to_point(self):
         self.find_target_angle()
@@ -354,8 +356,31 @@ class Fighter(TwistUnit):
 class ProducingBuilding(Unit):
     def __init__(self, game, name, x, y, team=-1):
         super().__init__(game, name, x, y, team)
-        self.units_tray = []
         self.valid_types = self.cls_dict['valid_types']
+        self.produce_time = self.cls_dict['produce_time']
+        self.time = self.produce_time
+        self.units_tray = []
+
+    def add_to_queque(self, name):
+        if name not in self.cls_dict['valid_types']:
+            print(f'{self.unit_id} can not produce {name}')
+            return
+        print(self.game.get_player(self.team))
+        self.game.get_player(self.team).spend({'money': 2})
+        self.units_tray.append(name)
+        print(self.units_tray)
+
+    def update(self, event):
+        super().update(event)
+
+        if self.game.side is Game.Side.SERVER and event.type == EVENT_SEC and self.units_tray:
+            if self.time > 0:
+                self.time -= 1
+            elif self.time == 0:
+                unit = self.units_tray.pop(0)
+                self.time = self.produce_time
+                self.game.create_unit(unit, self.pos_around, self.team)
+                print('created')
 
 
 def side_only(side):
@@ -405,6 +430,7 @@ class Player:
         return True
 
     def spend(self, cost):
+        print(cost)
         to_update = {}
         money = cost.get('money', 0)
         if money > 0:
@@ -414,6 +440,7 @@ class Player:
         if wood > 0:
             self.wood -= wood
             to_update['wood'] = self.wood
+        print(to_update)
         self.game.send([Game.ClientCommands.RESOURCE_INFO, to_update], self.team_id)
 
 
@@ -435,6 +462,7 @@ class Game:
         """Команды, отправляемые серверу"""
         PLACE_UNIT = 1
         SET_TARGET_MOVE = 2
+        PRODUCE_UNIT = 3
 
     def __init__(self, side: Side, mod_loader, send_connection, players_list: List, current_team: int,
                  connection_list=None):
@@ -559,6 +587,8 @@ class Game:
         self.sprites.add(u)
 
     def send(self, command: list, player_id: Optional[int] = None):
+        if player_id == -1:
+            return
         self.send_connection.send((command, player_id))
 
     @side_only(Side.CLIENT)
@@ -569,6 +599,12 @@ class Game:
 
     def get_base_class(self, name):
         return self.mod_loader.bases[self.mod_loader.entities[name]['base']]
+
+    def collide_cursor(self, cursor_pos):
+        cursor = Sprite()
+        cursor.rect = Rect((int(cursor_pos[0] - self.camera.offset_x), int(cursor_pos[1] - self.camera.offset_y)),
+                           (1, 1))
+        return pygame.sprite.spritecollide(cursor, self.sprites, False)
 
     def handle_command(self, command, args, sender=None):
         if self.side == Game.Side.CLIENT:
@@ -617,6 +653,15 @@ class Game:
             elif command == Game.ServerCommands.SET_TARGET_MOVE:
                 unit = self.find_with_id(args[0])
                 self.set_target(unit, (Fighter.Target.MOVE, Vector2(args[1], args[2])))
+
+            elif command == Game.ServerCommands.PRODUCE_UNIT:
+                prod_build = self.find_with_id(args[0])
+                unit_name = args[1]
+
+                try:
+                    prod_build.add_to_queque(unit_name)
+                except AttributeError:
+                    print(f'add_to_queque not provided to {prod_build.__class__.__name__}')
 
             else:
                 print('Unexpected command', command, args)
@@ -775,6 +820,61 @@ class BuildMenu(UIElement):
 
     def select(self, item_id):
         self.selected = self.buildings[item_id] if (item_id is not None) else None
+
+
+class ProduceMenu(UIElement):
+    class ProduceMenuItem:
+        def __init__(self, name, entity_json, game):
+            self.entity_json = entity_json
+            self.game = game
+            self.name = name
+            self.color = (random.randrange(0, 255), random.randrange(0, 255), random.randrange(0, 255))
+            self.icon = pygame.image.load(self.entity_json['icon'].format(team=self.game.current_player.color_name))
+
+    def __init__(self, bounds, game):
+        super().__init__(bounds, None)
+        self.game = game
+        self.units = {}
+
+    def set_selected(self, unit):
+        i = 0
+        self.childs.clear()
+        for name in unit.cls_dict['valid_types']:
+            entity = self.game.mod_loader.entities[name]
+            self.units[name] = ProduceMenu.ProduceMenuItem(name, entity, self.game)
+            btn = UIButton(Rect(150, i * 30 + 15, 25, 25), None, self.select, name)
+            btn.append_child(UIImage(Rect((0, 0), btn.relative_bounds.size), None, self.units[name].icon))
+
+            self.append_child(btn)
+            i += 1
+        self.selected_unit = unit.unit_id
+
+    def select(self, name):
+        self.game.send([Game.ServerCommands.PRODUCE_UNIT, self.selected_unit, name])
+
+    def draw(self, screen):
+        super().draw(screen)
+
+    def update(self, event):
+        if super().update(event):
+            return True
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            collide = self.game.collide_cursor(event.pos)
+            for unit in collide:
+                if isinstance(unit, ProducingBuilding) and unit.team == self.game.current_team:
+                    self.set_selected(unit)
+                    break
+
+        # if self.selected:
+        #     if event.type == pygame.MOUSEBUTTONUP:
+        #         if event.button == 1:
+        #             self.game.place_building(self.selected.name, pygame.mouse.get_pos())
+        #             return True
+        #         if event.button == 3:
+        #             self.selected = None
+        #             return True
+        return False
 
 
 class ResourceMenu(UIElement):

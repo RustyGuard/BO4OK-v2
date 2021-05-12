@@ -13,7 +13,7 @@ from config import config
 from constants import EVENT_UPDATE
 from mod_loader import mod_loader
 from ui import UIElement, FPSCounter, UIImage, Label
-from core import Game, Minimap, BuildMenu, ResourceMenu
+from core import Game, Minimap, BuildMenu, ResourceMenu, ProduceMenu
 
 
 def listen(sock: socket.socket, submit_list):
@@ -129,9 +129,11 @@ class ClientGameWindow(UIElement):
                                                     Rect(45, 108, 0, 0),
                                                     Font('assets/fonts/arial.ttf', 25)))
 
-        self.append_child(self.minimap_elem)
-
-        self.append_child(BuildMenu(self.relative_bounds, self.game))
+        menu_parent = UIElement(Rect(0, 0, 0, 0), None)
+        self.append_child(menu_parent)
+        menu_parent.append_child(self.minimap_elem)
+        menu_parent.append_child(BuildMenu(self.relative_bounds, self.game))
+        menu_parent.append_child(ProduceMenu(self.relative_bounds, self.game))
 
     def update(self, event):
         self.game.update(event)
