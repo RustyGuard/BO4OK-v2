@@ -1,16 +1,16 @@
 import pygame
-from pygame import Color
+from pygame import Color, Surface
 from pygame.rect import Rect
 from pygame.time import Clock
 
-from config import config
-from constants import EVENT_SEC, EVENT_UPDATE
-from main_menu import MainMenu
-from ui import UIElement
+from src.config import config
+from src.constants import EVENT_SEC, EVENT_UPDATE
+from src.main_menu import MainMenu
+from src.ui import UIElement
 
 
 class Main:
-    def __init__(self, main_element: UIElement, screen):
+    def __init__(self, main_element: UIElement, screen: Surface):
         self.main_element = main_element
         self.screen = screen
 
@@ -19,7 +19,7 @@ class Main:
         return self._main_element
 
     @main_element.setter
-    def main_element(self, value):
+    def main_element(self, value: UIElement):
         self._main_element = value
         value.main = self
 

@@ -2,21 +2,26 @@ import json
 import random
 import socket
 from multiprocessing import Process, Manager, Pipe
+from multiprocessing.connection import Connection
 from string import ascii_letters
 from typing import Optional
 
+import pygame
 from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
-from config import config
-from constants import EVENT_UPDATE
-from mod_loader import mod_loader
-from ui import UIElement, FPSCounter, UIImage, Label
-from core import Game, Minimap, BuildMenu, ResourceMenu, ProduceMenu
+from src.config import config
+from src.constants import EVENT_UPDATE
+from src.json_utils import PydanticDecoder
+from src.mod_loader import mod_loader
+from src.ui import UIElement, FPSCounter, UIImage
+from src.core.menus import BuildMenu, ProduceMenu, ResourceMenu
+from src.core.minimap import Minimap
+from src.core.game import Game
 
 
-def listen(sock: socket.socket, submit_list):
+def listen(sock: socket.socket, submit_list: list[list]):
     command_buffer = ''
     while True:
         try:
@@ -26,7 +31,7 @@ def listen(sock: socket.socket, submit_list):
             while splitter != -1:
                 command = command_buffer[:splitter]
                 if command != '':
-                    submit_list.append(json.loads(command))
+                    submit_list.append(json.loads(command, cls=PydanticDecoder))
                 command_buffer = command_buffer[splitter + 1:]
                 splitter = command_buffer.find(';')
 
@@ -36,11 +41,11 @@ def listen(sock: socket.socket, submit_list):
             return
 
 
-def send_function(conn, task_conn):
+def send_function(sock: socket.socket, task_conn: Connection):
     while True:
         task, _ = task_conn.recv()
         try:
-            conn.send((json.dumps(task) + ';').encode('utf8'))
+            sock.send((json.dumps(task) + ';').encode('utf8'))
         except Exception as ex:
             print(f'Connection closed, because of {ex}')
             return
@@ -72,18 +77,19 @@ class WaitForServerWindow(UIElement):
 
         self.parent_conn.send((['nick', "".join(random.sample(list(ascii_letters), 5))], None))
 
-    def update(self, event):
+    def update(self, event: pygame.event):
         if event.type == EVENT_UPDATE:
             while self.receive_list:
                 msg = self.receive_list.pop(0)
                 print(msg)
                 if msg[0] == 'start':
                     nicks = msg[2]
+                    print(f'{nicks=}')
                     self.start(int(msg[1]), nicks)
                     return
         super().update(event)
 
-    def start(self, team_id, nicks):
+    def start(self, team_id: int, nicks):
         print(team_id, nicks)
         w = ClientGameWindow(self.relative_bounds, self.color, self.sock, self.receive_list, self.socket_process,
                              self.parent_conn, self.child_conn, self.send_process, nicks, team_id)
@@ -141,9 +147,47 @@ class ClientGameWindow(UIElement):
         if event.type == EVENT_UPDATE:
             while self.receive_list:
                 args = self.receive_list.pop(0)
-                self.game.handle_command(args[0], args[1:])
+                self.handle_command(args[0], args[1:])
 
         return super().update(event)
+
+    def handle_command(self, command, args):
+        if command == Game.ClientCommands.CREATE:
+            self.game.load_unit(args)
+
+        elif command == Game.ClientCommands.UPDATE:
+            unit = self.game.find_with_id(args[1])
+            if unit is not None:
+                unit.set_update_args(args[3])
+            else:
+                print('\t[ALERT] It is ghoust! I am scared!', args)
+                self.game.load_unit(args)
+
+        elif command == Game.ClientCommands.TARGET_CHANGE:
+            unit = self.game.find_with_id(args[0])
+            unit.target = unit.decode_target(args[1])
+        elif command == Game.ClientCommands.TARGET_CHANGE:
+            unit = self.game.find_with_id(args[0])
+            unit.target = unit.decode_target(args[1])
+
+        elif command == Game.ClientCommands.RESOURCE_INFO:
+            player = self.game.current_player
+            for attr in ['meat', 'money', 'wood', 'max_meat']:
+                if val := args[0].get(attr, None):
+                    setattr(player.resources, attr, val)
+
+        elif command == Game.ClientCommands.HEALTH_INFO:
+            unit = self.game.find_with_id(args[0])
+            unit.health = float(args[1])
+            unit.max_health = float(args[2])
+
+        elif command == Game.ClientCommands.DEAD:
+            unit = self.game.find_with_id(args[0])
+            self.game.sprites.remove(unit)
+            print(unit, args[0], 'dead')
+
+        else:
+            print('Unexpected command', command, 'args:', args)
 
     def draw(self, screen):
         super().draw(screen)

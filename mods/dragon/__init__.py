@@ -1,6 +1,6 @@
 import random
 
-from mod_loader import mod_loader
+from src.mod_loader import mod_loader
 
 
 @mod_loader.load_func('dragon/is_valid')  # Просто пример регистрации функции, ничего важного на этом этапе

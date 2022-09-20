@@ -5,7 +5,7 @@ from pygame.font import Font
 from pygame.rect import Rect
 
 from client import WaitForServerWindow
-from ui import UIElement, FPSCounter, UIButton, UIPopup
+from src.ui import UIElement, FPSCounter, UIButton, UIPopup
 
 
 class MainMenu(UIElement):

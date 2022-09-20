@@ -4,8 +4,8 @@ from pygame import Color
 
 
 class Config:
-    def __init__(self, filepath):
-        self.filepath = 'config.json'
+    def __init__(self, filepath: str):
+        self.filepath = filepath
         self.json = {}
         self.reload()
 

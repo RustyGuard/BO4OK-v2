@@ -1,4 +1,4 @@
-from mod_loader import mod_loader
+from src.mod_loader import mod_loader
 
 
 @mod_loader.load_func('warrior/is_valid')
