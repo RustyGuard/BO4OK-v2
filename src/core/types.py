@@ -22,7 +22,7 @@ class PlayerResources(BaseModel):
 
 
 class PlayerInfo(BaseModel):
-    team_id: int
+    socket_id: int
     color_name: str
     nick: str
 

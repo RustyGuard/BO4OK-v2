@@ -11,22 +11,32 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
+from src.client.action_sender import ClientActionSender
+from src.client.action_handler import ClientActionHandler
+from src.components.decay import DecayComponent
+from src.components.minimap_icon import MinimapIconComponent
+from src.components.player_owner import PlayerOwnerComponent
+from src.components.position import PositionComponent
+from src.components.texture import TextureComponent
+from src.components.unit_production import UnitProductionComponent
+from src.components.velocity import VelocityComponent
 from src.config import config
 from src.constants import EVENT_UPDATE
-from src.json_utils import PydanticDecoder
-from src.mod_loader import mod_loader
-from src.ui import UIElement, FPSCounter, UIImage
-from src.core.menus import BuildMenu, ProduceMenu, ResourceMenu
+from src.core.camera import Camera
+from src.core.menus import ResourceMenu
 from src.core.minimap import Minimap
-from src.core.game import Game
+from src.core.types import PlayerInfo
+from src.entity_component_system import EntityComponentSystem
+from src.utils.json_utils import PydanticDecoder
+from src.systems.velocity import velocity_system
+from src.ui import UIElement, FPSCounter, UIImage
 
 
-def listen(sock: socket.socket, submit_list: list[list]):
+def read_server_actions(socket: socket.socket, submit_list: list[list]):
     command_buffer = ''
     while True:
         try:
-            command_buffer += sock.recv(1024).decode('utf8')
-            print(command_buffer)
+            command_buffer += socket.recv(1024).decode('utf8')
             splitter = command_buffer.find(';')
             while splitter != -1:
                 command = command_buffer[:splitter]
@@ -41,9 +51,9 @@ def listen(sock: socket.socket, submit_list: list[list]):
             return
 
 
-def send_function(sock: socket.socket, task_conn: Connection):
+def send_function(sock: socket.socket, read_connection: Connection):
     while True:
-        task, _ = task_conn.recv()
+        task, _ = read_connection.recv()
         try:
             sock.send((json.dumps(task) + ';').encode('utf8'))
         except Exception as ex:
@@ -67,7 +77,7 @@ class WaitForServerWindow(UIElement):
 
         manager = Manager()
         self.receive_list = manager.list()
-        self.socket_process = Process(target=listen, args=(self.sock, self.receive_list))
+        self.socket_process = Process(target=read_server_actions, args=(self.sock, self.receive_list))
         self.socket_process.start()
 
         self.parent_conn, self.child_conn = Pipe()
@@ -81,18 +91,15 @@ class WaitForServerWindow(UIElement):
         if event.type == EVENT_UPDATE:
             while self.receive_list:
                 msg = self.receive_list.pop(0)
-                print(msg)
                 if msg[0] == 'start':
-                    nicks = msg[2]
-                    print(f'{nicks=}')
-                    self.start(int(msg[1]), nicks)
+                    players = msg[2]
+                    self.start(int(msg[1]), players)
                     return
         super().update(event)
 
-    def start(self, team_id: int, nicks):
-        print(team_id, nicks)
+    def start(self, team_id: int, players: list[PlayerInfo]):
         w = ClientGameWindow(self.relative_bounds, self.color, self.sock, self.receive_list, self.socket_process,
-                             self.parent_conn, self.child_conn, self.send_process, nicks, team_id)
+                             self.parent_conn, self.child_conn, self.send_process, players, team_id)
         self.main.main_element = w
 
     def shutdown(self):
@@ -104,18 +111,21 @@ class WaitForServerWindow(UIElement):
 
 
 class ClientGameWindow(UIElement):
-    def __init__(self, rect: Rect, color: Optional[Color], sock, receive_list, socket_process, parent_conn, child_conn,
-                 send_process, nicks, team_id):
+    def __init__(self, rect: Rect, color: Optional[Color], socket: socket.socket, received_actions: list[list],
+                 read_socket_process: Process,
+                 write_action_connection: Connection, read_action_connection: Connection,
+                 send_process: Process, players: list[PlayerInfo], socket_id: int):
         super().__init__(rect, color)
+        print('dsdjfhfjkhsdjfhsfd')
 
-        self.sock = sock
-        self.receive_list = receive_list
-        self.socket_process = socket_process
-        self.parent_conn = parent_conn
-        self.child_conn = child_conn
+        self.current_player = next(player for player in players if player.socket_id == socket_id)
+
+        self.sock = socket
+        self.received_actions = received_actions
+        self.socket_process = read_socket_process
+        self.write_action_connection = write_action_connection
+        self.read_action_connection = read_action_connection
         self.send_process = send_process
-
-        mod_loader.import_mods()
 
         config.reload()
 
@@ -125,78 +135,59 @@ class ClientGameWindow(UIElement):
         sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
         self.append_child(sub_elem)
 
-        self.game = Game(Game.Side.CLIENT, mod_loader, self.parent_conn, nicks, team_id)
+        self.command_sender = ClientActionSender(self.write_action_connection)
 
-        self.minimap = Minimap(self.game)
+        self.ecs = EntityComponentSystem()
+
+        self.ecs.init_component(PositionComponent)
+        self.ecs.init_component(VelocityComponent)
+        self.ecs.init_component(DecayComponent)
+        self.ecs.init_component(TextureComponent)
+        self.ecs.init_component(MinimapIconComponent)
+        self.ecs.init_component(UnitProductionComponent)
+        self.ecs.init_component(PlayerOwnerComponent)
+
+        self.ecs.init_system(velocity_system)
+
+        self.command_handler = ClientActionHandler(self.ecs)
+
+        self.camera = Camera()
+
+        self.minimap = Minimap(self.ecs, self.camera)
         self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
 
-        self.minimap_elem.append_child(ResourceMenu(self.game.current_player,
+        self.minimap_elem.append_child(ResourceMenu(self.current_player,
                                                     Rect(45, 108, 0, 0),
                                                     Font('assets/fonts/arial.ttf', 25)))
 
         menu_parent = UIElement(Rect(0, 0, 0, 0), None)
         self.append_child(menu_parent)
         menu_parent.append_child(self.minimap_elem)
-        menu_parent.append_child(BuildMenu(self.relative_bounds, self.game))
-        menu_parent.append_child(ProduceMenu(self.relative_bounds, self.game))
+        # menu_parent.append_child(BuildMenu(self.relative_bounds, self.game))
+        # menu_parent.append_child(ProduceMenu(self.relative_bounds, self.game))
 
     def update(self, event):
-        self.game.update(event)
-
+        self.camera.update(event)
         if event.type == EVENT_UPDATE:
-            while self.receive_list:
-                args = self.receive_list.pop(0)
-                self.handle_command(args[0], args[1:])
+            while self.received_actions:
+                args = self.received_actions.pop(0)
+                self.command_handler.handle_action(args[0], args[1:])
+
+            self.ecs.update()
 
         return super().update(event)
 
-    def handle_command(self, command, args):
-        if command == Game.ClientCommands.CREATE:
-            self.game.load_unit(args)
-
-        elif command == Game.ClientCommands.UPDATE:
-            unit = self.game.find_with_id(args[1])
-            if unit is not None:
-                unit.set_update_args(args[3])
-            else:
-                print('\t[ALERT] It is ghoust! I am scared!', args)
-                self.game.load_unit(args)
-
-        elif command == Game.ClientCommands.TARGET_CHANGE:
-            unit = self.game.find_with_id(args[0])
-            unit.target = unit.decode_target(args[1])
-        elif command == Game.ClientCommands.TARGET_CHANGE:
-            unit = self.game.find_with_id(args[0])
-            unit.target = unit.decode_target(args[1])
-
-        elif command == Game.ClientCommands.RESOURCE_INFO:
-            player = self.game.current_player
-            for attr in ['meat', 'money', 'wood', 'max_meat']:
-                if val := args[0].get(attr, None):
-                    setattr(player.resources, attr, val)
-
-        elif command == Game.ClientCommands.HEALTH_INFO:
-            unit = self.game.find_with_id(args[0])
-            unit.health = float(args[1])
-            unit.max_health = float(args[2])
-
-        elif command == Game.ClientCommands.DEAD:
-            unit = self.game.find_with_id(args[0])
-            self.game.sprites.remove(unit)
-            print(unit, args[0], 'dead')
-
-        else:
-            print('Unexpected command', command, 'args:', args)
-
     def draw(self, screen):
         super().draw(screen)
-        self.game.draw(screen)
+        for texture, position in self.ecs.get_entities_with_components([TextureComponent, PositionComponent]):
+            texture.blit(screen, position.position_according_to_camera(self.camera))
+        pygame.draw.rect(screen, pygame.Color('white'), pygame.Rect((pygame.mouse.get_pos()), (10, 10)))
 
     def shutdown(self):
         self.sock.close()
         self.send_process.terminate()
         self.socket_process.terminate()
-        self.parent_conn.close()
-        self.child_conn.close()
+        self.write_action_connection.close()
+        self.read_action_connection.close()
         print('Closed')

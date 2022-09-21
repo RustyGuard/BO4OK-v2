@@ -6,10 +6,9 @@ from src.constants import EVENT_UPDATE
 
 
 class Camera:
-    def __init__(self, game):
+    def __init__(self):
         self.offset_x = config['screen']['size'][0] / 2
         self.offset_y = config['screen']['size'][1] / 2
-        self.game = game
         self.speed = 1
 
     def update(self, event):
@@ -33,16 +32,17 @@ class Camera:
                 self.speed = max(config['camera']['min_speed'], self.speed)
 
     def move(self, x, y):
+        world_size = config['world']['size']
         self.offset_x += x * self.speed
         self.offset_y += y * self.speed
-        if self.offset_x < -self.game.world_size + config['screen']['size'][0]:
-            self.offset_x = -self.game.world_size + config['screen']['size'][0]
-        if self.offset_x > self.game.world_size:
-            self.offset_x = self.game.world_size
-        if self.offset_y < -self.game.world_size + config['screen']['size'][1]:
-            self.offset_y = -self.game.world_size + config['screen']['size'][1]
-        if self.offset_y > self.game.world_size:
-            self.offset_y = self.game.world_size
+        if self.offset_x < -world_size + config['screen']['size'][0]:
+            self.offset_x = -world_size + config['screen']['size'][0]
+        if self.offset_x > world_size:
+            self.offset_x = world_size
+        if self.offset_y < -world_size + config['screen']['size'][1]:
+            self.offset_y = -world_size + config['screen']['size'][1]
+        if self.offset_y > world_size:
+            self.offset_y = world_size
 
     @property
     def center(self):

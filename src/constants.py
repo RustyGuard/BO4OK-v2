@@ -15,3 +15,20 @@ color_name_to_pygame_color = {
     'yellow': Color('yellow'),
     'black': Color('black')
 }
+
+
+class ClientCommands:
+    """Команды, отправляемые клиенту"""
+    CREATE = 1
+    UPDATE = 2
+    TARGET_CHANGE = 3
+    RESOURCE_INFO = 4
+    COMPONENT_INFO = 5
+    DEAD = 6
+
+
+class ServerCommands:
+    """Команды, отправляемые серверу"""
+    PLACE_UNIT = 1
+    SET_TARGET_MOVE = 2
+    PRODUCE_UNIT = 3

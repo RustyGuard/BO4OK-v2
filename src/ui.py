@@ -5,7 +5,7 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
-from constants import EVENT_SEC, EVENT_UPDATE
+from src.constants import EVENT_SEC, EVENT_UPDATE
 
 
 class UIElement:

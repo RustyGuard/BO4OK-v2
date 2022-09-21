@@ -4,7 +4,7 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
-from client import WaitForServerWindow
+from src.client.client import WaitForServerWindow
 from src.ui import UIElement, FPSCounter, UIButton, UIPopup
 
 

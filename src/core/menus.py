@@ -5,9 +5,8 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
-from src.core.game import Game
 from src.core.types import PlayerInfo
-from src.entities.units_base import ProducingBuilding
+# from src.entities.units_base import ProducingBuilding
 from src.ui import UIElement, UIButton, UIImage, Label
 
 
@@ -60,7 +59,7 @@ class BuildMenu(UIElement):
 
 class ProduceMenu(UIElement):
     class ProduceMenuItem:
-        def __init__(self, name: str, entity_json, game: Game):
+        def __init__(self, name: str, entity_json, game):
             self.entity_json = entity_json
             self.game = game
             self.name = name
@@ -84,7 +83,7 @@ class ProduceMenu(UIElement):
         self.selected_unit = unit.unit_id
 
     def select(self, name) -> None:
-        self.game.send([Game.ServerCommands.PRODUCE_UNIT, self.selected_unit, name])
+        self.game.send([CommandHandler.ServerCommands.PRODUCE_UNIT, self.selected_unit, name])
 
     def draw(self, screen) -> None:
         super().draw(screen)

@@ -4,24 +4,36 @@ import socket
 from dataclasses import dataclass
 from multiprocessing import Process, Manager, Pipe
 from multiprocessing.connection import Connection
-from typing import Optional, TypedDict, Any
+from typing import Optional, Any
 
 import pygame
-from pygame import Color, Vector2
+from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
+from src.components.decay import DecayComponent
+from src.components.minimap_icon import MinimapIconComponent
+from src.components.player_owner import PlayerOwnerComponent
+from src.components.position import PositionComponent
+from src.components.texture import TextureComponent
+from src.components.unit_production import UnitProductionComponent
+from src.components.velocity import VelocityComponent
 from src.config import config
-from src.constants import EVENT_UPDATE, color_name_to_pygame_color
-from main import Main
-from src.ui import UIElement, FPSCounter, UIImage
-from src.core.minimap import Minimap
-from src.core.game import Game
-from src.core.types import PlayerResources, PlayerInfo
-from src.entities.units_base import Fighter
+from src.constants import EVENT_UPDATE, color_name_to_pygame_color, EVENT_SEC
 
-from src.mod_loader import mod_loader
-from src.json_utils import PydanticEncoder
+from src.entities.arrow import create_arrow
+from src.entity_component_system import EntityComponentSystem, Component, EntityId
+from src.main import Main
+from src.server.action_handler import ServerActionHandler
+from src.server.action_sender import ServerActionSender
+from src.server.level_setup import setup_level
+from src.systems.decay import decay_system
+from src.systems.unit_production import unit_production_system
+from src.systems.velocity import velocity_system
+from src.ui import UIElement, FPSCounter
+from src.core.types import PlayerResources, PlayerInfo
+
+from src.utils.json_utils import PydanticEncoder
 
 Connections = dict[int, tuple[socket.socket, Any]]
 
@@ -155,7 +167,7 @@ class WaitForPlayersWindow(UIElement):
         players = [
             PlayerInfo(
                 color_name=colors.pop(),
-                team_id=connected_player.socket_id,
+                socket_id=connected_player.socket_id,
                 nick=connected_player.nick,
                 resources=PlayerResources(
                     money=config['world']['start_money'],
@@ -166,7 +178,7 @@ class WaitForPlayersWindow(UIElement):
             ) for connected_player in self.connected_players]
 
         players.append(PlayerInfo(  # Add host to game
-            team_id=-1,
+            socket_id=-1,
             color_name='black',
             nick='Admin',
             resources=PlayerResources(
@@ -184,9 +196,9 @@ class ServerGameWindow(UIElement):
     def __init__(self, rect: Rect, color: Optional[Color], socket: socket.socket, connections: Connections,
                  received_actions: list[tuple[int, Any]], write_action_connection: Connection, send_process: Process,
                  players: list[PlayerInfo]):
-        mod_loader.import_mods()
-
         super().__init__(rect, color)
+
+        self.players = players
 
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
@@ -200,56 +212,58 @@ class ServerGameWindow(UIElement):
         self.write_action_connection = write_action_connection
         self.send_process = send_process
 
-        self.game = Game(Game.Side.SERVER, mod_loader, self.write_action_connection, players, -1)
+        self.command_sender = ServerActionSender(self.write_action_connection)
 
-        self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
+        self.ecs = EntityComponentSystem(self.on_create, self.on_remove)
 
-        self.minimap = Minimap(self.game)
-        self.minimap_elem.append_child(self.minimap)
+        self.ecs.init_component(PositionComponent)
+        self.ecs.init_component(VelocityComponent)
+        self.ecs.init_component(DecayComponent)
+        self.ecs.init_component(TextureComponent)
+        self.ecs.init_component(MinimapIconComponent)
+        self.ecs.init_component(UnitProductionComponent)
+        self.ecs.init_component(PlayerOwnerComponent)
 
-        self.append_child(self.minimap_elem)
-        self.game.create_unit('warrior', (0, 0))
-        self.game.create_unit('fortress', (500, 0))
-        self.game.create_unit('fortress', (-500, 0))
-        self.game.create_unit('archer', (-25, -25))
-        self.game.create_unit('archer', (25, -25))
-        self.game.create_unit('archer', (-25, 25))
-        self.game.create_unit('archer', (25, 25))
+        self.ecs.init_system(velocity_system)
+        self.ecs.init_system(decay_system)
+        self.ecs.init_system(unit_production_system)
+
+        self.command_handler = ServerActionHandler(self.ecs)
+
+        # self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
+        #
+        # self.minimap = Minimap(self.game)
+        # self.minimap_elem.append_child(self.minimap)
+        #
+        # self.append_child(self.minimap_elem)
+        setup_level(self.ecs, self.players)
+
+    def on_create(self, entity_id, components: list[Component]):
+        components_to_exclude = (
+            DecayComponent,
+
+        )
+        components = [component for component in components if type(component) not in components_to_exclude]
+
+        self.command_sender.send_entity(entity_id, components)
+
+    def on_remove(self, entity_id: EntityId):
+        self.command_sender.remove_entity(entity_id)
 
     def update(self, event: pygame.event) -> bool:
-        self.game.update(event)
-
         if event.type == EVENT_UPDATE:
             while self.received_actions:
                 sender, command = self.received_actions.pop(0)
-                self.handle_command(command[0], command[1:], socket_id=sender)
+                self.command_handler.handle_action(command[0], command[1:], sender)
+
+            self.ecs.update()
 
         return super().update(event)
 
-    def handle_command(self, command: str, args: list[Any], socket_id: int) -> None:
-        print(command, args, socket_id)
-        if command == Game.ServerCommands.PLACE_UNIT:
-            self.game.place_unit(args[0], (args[1], args[2]), socket_id)
-
-        elif command == Game.ServerCommands.SET_TARGET_MOVE:
-            unit = self.game.find_with_id(args[0])
-            self.game.set_target(unit, (Fighter.Target.MOVE, Vector2(args[1], args[2])))
-
-        elif command == Game.ServerCommands.PRODUCE_UNIT:
-            prod_build = self.game.find_with_id(args[0])
-            unit_name = args[1]
-
-            try:
-                prod_build.add_to_queue(unit_name)
-            except AttributeError:
-                print(f'add_to_queue not provided to {prod_build.__class__.__name__}')
-
-        else:
-            print('Unexpected command', command, args)
-
     def draw(self, screen) -> None:
         super().draw(screen)
-        self.game.draw(screen)
+        for texture, position in self.ecs.get_entities_with_components([TextureComponent, PositionComponent]):
+            texture.blit(screen, position.to_tuple())
 
     def shutdown(self) -> None:
         print('Shutdown')
