@@ -53,3 +53,7 @@ class Camera:
         pygame.draw.line(screen, Color('red3'), c, (self.offset_x + 15, self.offset_y), 3)
         pygame.draw.line(screen, Color('green'), c, (self.offset_x, self.offset_y + 15), 3)
         pygame.draw.line(screen, Color('blue'), c, (self.offset_x - 8, self.offset_y - 8), 4)
+
+    def get_in_game_mouse_position(self) -> tuple[float, float]:
+        mouse_pos = pygame.mouse.get_pos()
+        return mouse_pos[0] - self.offset_x, mouse_pos[1] - self.offset_y

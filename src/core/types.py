@@ -1,17 +1,16 @@
-from pydantic import BaseModel, validator
+from dataclasses import dataclass
+
+from pydantic import BaseModel
 from pygame import Color
 
 from src.constants import color_name_to_pygame_color
 
 
-class RequiredCost(BaseModel):
+@dataclass
+class RequiredCost:
     money: int = 0
     wood: int = 0
-
-    @validator('money', 'wood')
-    def validate_positive(cls, v):
-        assert v >= 0
-        return v
+    meat: int = 0
 
 
 class PlayerResources(BaseModel):
@@ -33,8 +32,10 @@ class PlayerInfo(BaseModel):
         return color_name_to_pygame_color[self.color_name]
 
     def has_enough(self, cost: RequiredCost) -> bool:
-        return self.resources.money >= cost.money and self.resources.wood >= cost.wood
+        return self.resources.money >= cost.money and self.resources.wood >= cost.wood and (
+                self.resources.meat + cost.meat <= self.resources.max_meat)
 
     def spend(self, cost: RequiredCost):
         self.resources.money -= cost.money
         self.resources.wood -= cost.wood
+        self.resources.meat += cost.meat

@@ -9,7 +9,13 @@ from src.constants import EVENT_SEC, EVENT_UPDATE
 
 
 class UIElement:
-    def __init__(self, bounds: Rect, color: Optional[Color]):
+    def __init__(self, bounds: Rect, color: Optional[Color], border_top_left_radius=-1, border_top_right_radius=-1,
+                 border_bottom_left_radius=-1, border_bottom_right_radius=-1):
+        self.border_top_left_radius = border_top_left_radius
+        self.border_top_right_radius = border_top_right_radius
+        self.border_bottom_left_radius = border_bottom_left_radius
+        self.border_bottom_right_radius = border_bottom_right_radius
+
         self.relative_bounds = bounds
         self.absolute_bounds = bounds.copy()
         self.color = color
@@ -55,7 +61,12 @@ class UIElement:
 
     def draw(self, screen):
         if self.color is not None:
-            pygame.draw.rect(screen, self.color, self.absolute_bounds)
+            pygame.draw.rect(screen, self.color, self.absolute_bounds,
+                             border_top_left_radius=self.border_top_left_radius,
+                             border_top_right_radius=self.border_top_right_radius,
+                             border_bottom_left_radius=self.border_bottom_left_radius,
+                             border_bottom_right_radius=self.border_bottom_right_radius,
+                             )
 
     def append_child(self, child):
         self.childs.append(child)

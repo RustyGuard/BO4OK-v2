@@ -23,7 +23,7 @@ from src.components.velocity import VelocityComponent
 from src.config import config
 from src.constants import EVENT_UPDATE
 from src.core.camera import Camera
-from src.core.menus import ResourceMenu
+from src.core.menus import ResourceMenu, ProduceMenu
 from src.core.minimap import Minimap
 from src.core.types import PlayerInfo
 from src.entity_component_system import EntityComponentSystem
@@ -53,7 +53,7 @@ def read_server_actions(socket: socket.socket, submit_list: list[list]):
 
 def send_function(sock: socket.socket, read_connection: Connection):
     while True:
-        task, _ = read_connection.recv()
+        task = read_connection.recv()
         try:
             sock.send((json.dumps(task) + ';').encode('utf8'))
         except Exception as ex:
@@ -85,19 +85,20 @@ class WaitForServerWindow(UIElement):
         self.send_process.daemon = True
         self.send_process.start()
 
-        self.parent_conn.send((['nick', "".join(random.sample(list(ascii_letters), 5))], None))
+        self.parent_conn.send(['nick', "".join(random.sample(list(ascii_letters), 5))])
 
     def update(self, event: pygame.event):
         if event.type == EVENT_UPDATE:
             while self.receive_list:
                 msg = self.receive_list.pop(0)
+                print(msg)
                 if msg[0] == 'start':
-                    players = msg[2]
+                    players = {int(i): j for i, j in msg[2].items()}
                     self.start(int(msg[1]), players)
                     return
         super().update(event)
 
-    def start(self, team_id: int, players: list[PlayerInfo]):
+    def start(self, team_id: int, players: dict[int, PlayerInfo]):
         w = ClientGameWindow(self.relative_bounds, self.color, self.sock, self.receive_list, self.socket_process,
                              self.parent_conn, self.child_conn, self.send_process, players, team_id)
         self.main.main_element = w
@@ -114,11 +115,11 @@ class ClientGameWindow(UIElement):
     def __init__(self, rect: Rect, color: Optional[Color], socket: socket.socket, received_actions: list[list],
                  read_socket_process: Process,
                  write_action_connection: Connection, read_action_connection: Connection,
-                 send_process: Process, players: list[PlayerInfo], socket_id: int):
+                 send_process: Process, players: dict[int, PlayerInfo], socket_id: int):
         super().__init__(rect, color)
         print('dsdjfhfjkhsdjfhsfd')
 
-        self.current_player = next(player for player in players if player.socket_id == socket_id)
+        self.current_player = players[socket_id]
 
         self.sock = socket
         self.received_actions = received_actions
@@ -149,7 +150,7 @@ class ClientGameWindow(UIElement):
 
         self.ecs.init_system(velocity_system)
 
-        self.command_handler = ClientActionHandler(self.ecs)
+        self.command_handler = ClientActionHandler(self.ecs, self.current_player)
 
         self.camera = Camera()
 
@@ -157,15 +158,17 @@ class ClientGameWindow(UIElement):
         self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
 
-        self.minimap_elem.append_child(ResourceMenu(self.current_player,
+        resource_menu = ResourceMenu(self.current_player,
                                                     Rect(45, 108, 0, 0),
-                                                    Font('assets/fonts/arial.ttf', 25)))
+                                                    Font('assets/fonts/arial.ttf', 25))
+        self.minimap_elem.append_child(resource_menu)
 
         menu_parent = UIElement(Rect(0, 0, 0, 0), None)
         self.append_child(menu_parent)
         menu_parent.append_child(self.minimap_elem)
         # menu_parent.append_child(BuildMenu(self.relative_bounds, self.game))
-        # menu_parent.append_child(ProduceMenu(self.relative_bounds, self.game))
+        menu_parent.append_child(ProduceMenu(self.relative_bounds, self.ecs, self.command_sender, self.camera,
+                                             self.current_player, resource_menu))
 
     def update(self, event):
         self.camera.update(event)
@@ -180,7 +183,7 @@ class ClientGameWindow(UIElement):
 
     def draw(self, screen):
         super().draw(screen)
-        for texture, position in self.ecs.get_entities_with_components([TextureComponent, PositionComponent]):
+        for _, (texture, position) in self.ecs.get_entities_with_components([TextureComponent, PositionComponent]):
             texture.blit(screen, position.position_according_to_camera(self.camera))
         pygame.draw.rect(screen, pygame.Color('white'), pygame.Rect((pygame.mouse.get_pos()), (10, 10)))
 

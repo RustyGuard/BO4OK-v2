@@ -98,7 +98,7 @@ class ConnectedPlayer:
 
 
 class WaitForPlayersWindow(UIElement):
-    REQUIRED_AMOUNT_OF_PLAYERS = 2
+    REQUIRED_AMOUNT_OF_PLAYERS = 1
 
     def __init__(self, rect: Rect, color: Optional[Color]):
         super().__init__(rect, color)
@@ -160,24 +160,25 @@ class WaitForPlayersWindow(UIElement):
                              self.write_action_connection, self.send_process, players)
         self.main.main_element = w
 
-    def get_players(self) -> list[PlayerInfo]:
+    def get_players(self) -> dict[int, PlayerInfo]:
         colors = list(color_name_to_pygame_color.keys())
         random.shuffle(colors)
 
-        players = [
-            PlayerInfo(
-                color_name=colors.pop(),
-                socket_id=connected_player.socket_id,
-                nick=connected_player.nick,
-                resources=PlayerResources(
-                    money=config['world']['start_money'],
-                    wood=config['world']['start_wood'],
-                    meat=config['world']['start_meat'],
-                    max_meat=config['world']['base_meat'],
-                )
-            ) for connected_player in self.connected_players]
+        players = {
+            connected_player.socket_id:
+                PlayerInfo(
+                    color_name=colors.pop(),
+                    socket_id=connected_player.socket_id,
+                    nick=connected_player.nick,
+                    resources=PlayerResources(
+                        money=config['world']['start_money'],
+                        wood=config['world']['start_wood'],
+                        meat=config['world']['start_meat'],
+                        max_meat=config['world']['base_meat'],
+                    )
+                ) for connected_player in self.connected_players}
 
-        players.append(PlayerInfo(  # Add host to game
+        players[-1] = PlayerInfo(  # Add host to game
             socket_id=-1,
             color_name='black',
             nick='Admin',
@@ -188,14 +189,14 @@ class WaitForPlayersWindow(UIElement):
                 meat=0,
                 max_meat=50000
             )
-        ))
+        )
         return players
 
 
 class ServerGameWindow(UIElement):
     def __init__(self, rect: Rect, color: Optional[Color], socket: socket.socket, connections: Connections,
                  received_actions: list[tuple[int, Any]], write_action_connection: Connection, send_process: Process,
-                 players: list[PlayerInfo]):
+                 players: dict[int, PlayerInfo]):
         super().__init__(rect, color)
 
         self.players = players
@@ -212,7 +213,7 @@ class ServerGameWindow(UIElement):
         self.write_action_connection = write_action_connection
         self.send_process = send_process
 
-        self.command_sender = ServerActionSender(self.write_action_connection)
+        self.action_sender = ServerActionSender(self.write_action_connection)
 
         self.ecs = EntityComponentSystem(self.on_create, self.on_remove)
 
@@ -228,7 +229,7 @@ class ServerGameWindow(UIElement):
         self.ecs.init_system(decay_system)
         self.ecs.init_system(unit_production_system)
 
-        self.command_handler = ServerActionHandler(self.ecs)
+        self.action_handler = ServerActionHandler(self.ecs, self.players, self.action_sender)
 
         # self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
         #
@@ -245,16 +246,16 @@ class ServerGameWindow(UIElement):
         )
         components = [component for component in components if type(component) not in components_to_exclude]
 
-        self.command_sender.send_entity(entity_id, components)
+        self.action_sender.send_entity(entity_id, components)
 
     def on_remove(self, entity_id: EntityId):
-        self.command_sender.remove_entity(entity_id)
+        self.action_sender.remove_entity(entity_id)
 
     def update(self, event: pygame.event) -> bool:
         if event.type == EVENT_UPDATE:
             while self.received_actions:
                 sender, command = self.received_actions.pop(0)
-                self.command_handler.handle_action(command[0], command[1:], sender)
+                self.action_handler.handle_action(command[0], command[1:], sender)
 
             self.ecs.update()
 
@@ -262,7 +263,7 @@ class ServerGameWindow(UIElement):
 
     def draw(self, screen) -> None:
         super().draw(screen)
-        for texture, position in self.ecs.get_entities_with_components([TextureComponent, PositionComponent]):
+        for _, (texture, position) in self.ecs.get_entities_with_components([TextureComponent, PositionComponent]):
             texture.blit(screen, position.to_tuple())
 
     def shutdown(self) -> None:

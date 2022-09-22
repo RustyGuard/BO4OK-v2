@@ -36,10 +36,7 @@ class ServerActionSender:
         }])
 
     def update_resource_info(self, player: PlayerInfo) -> None:
-        self.send([ClientCommands.RESOURCE_INFO, {
-            'money': player.resources.money,
-            'wood': player.resources.wood
-        }], player.socket_id)
+        self.send([ClientCommands.RESOURCE_INFO, player.resources.dict()], player.socket_id)
 
     def update_component_info(self, entity_id: EntityId, component: Component) -> None:
         self.send([ClientCommands.COMPONENT_INFO,

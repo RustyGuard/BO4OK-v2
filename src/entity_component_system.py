@@ -1,6 +1,6 @@
 import inspect
 from dataclasses import dataclass
-from typing import Callable, Type, Any, Iterator
+from typing import Callable, Type, Any, Iterator, Iterable
 
 from src.systems.test import test_bc_system
 from src.utils.unique_id import UniqueIdGenerator
@@ -90,13 +90,13 @@ class EntityComponentSystem:
             *[set(self.components[component_class]) for component_class in component_classes])
         return entities
 
-    def get_entities_with_components(self, component_classes: list[Type[Component]]) -> Iterator[list[Component]]:
+    def get_entities_with_components(self, component_classes: list[Type[Component]]) -> Iterator[tuple[EntityId, list[Component]]]:
         for entity_id in self.entities:
             try:
                 components = []
                 for component_class in component_classes:
                     components.append(self.components[component_class][entity_id])
-                yield components
+                yield entity_id, components
 
             except KeyError:
                 pass
@@ -118,6 +118,16 @@ class EntityComponentSystem:
         self.entities.remove(entity_id)
         if self.on_remove is not None:
             self.on_remove(entity_id)
+
+    def get_component(self, entity_id: EntityId, component_class: Type[Component]):
+        return self.components[component_class].get(entity_id, None)
+
+    def get_components(self, entity_id: EntityId,
+                       component_classes: Iterable[Type[Component]]) -> list[Component] | None:
+        try:
+            return [self.components[component_class][entity_id] for component_class in component_classes]
+        except KeyError:
+            return None
 
 
 def test():

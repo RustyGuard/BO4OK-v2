@@ -1,12 +1,14 @@
 from typing import Any
 
 from src.constants import ClientCommands
+from src.core.types import PlayerInfo
 from src.entity_component_system import EntityComponentSystem, EntityId
 
 
 class ClientActionHandler:
-    def __init__(self, ecs: EntityComponentSystem):
+    def __init__(self, ecs: EntityComponentSystem, current_player: PlayerInfo):
         self.ecs = ecs
+        self.current_player = current_player
 
     def handle_action(self, command: str, args: list[Any]):
         if command == ClientCommands.CREATE:
@@ -14,6 +16,12 @@ class ClientActionHandler:
 
         elif command == ClientCommands.DEAD:
             self.handle_remove(args[0])
+
+        elif command == ClientCommands.RESOURCE_INFO:
+            self.handle_player_info_update(args[0])
+
+        else:
+            print(f'Unknown command: {command}({args})')
 
     def handle_create(self, entity_json: dict):
         entity_id = entity_json['entity_id']
@@ -27,3 +35,7 @@ class ClientActionHandler:
 
     def handle_remove(self, entity_id: EntityId):
         self.ecs.remove_entity(entity_id)
+
+    def handle_player_info_update(self, player_info_json):
+        for field, value in player_info_json.items():
+            setattr(self.current_player.resources, field, value)

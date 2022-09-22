@@ -3,6 +3,7 @@ from src.components.player_owner import PlayerOwnerComponent
 from src.components.position import PositionComponent
 from src.components.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
+from src.core.types import RequiredCost
 
 
 def create_fortress(x: float, y: float, player_color_name: str, player_nick: str, player_socket_id: int):
@@ -11,5 +12,6 @@ def create_fortress(x: float, y: float, player_color_name: str, player_nick: str
         TextureComponent.create_from_filepath(f'assets/building/fortress/{player_color_name}.png'),
         MinimapIconComponent('square', player_color_name),
         PlayerOwnerComponent(player_color_name, player_nick, player_socket_id),
-        UnitProductionComponent(delay=180),
+        UnitProductionComponent(delay=60, producible_units={'fortress': RequiredCost(money=15),
+                                                            'arrow': RequiredCost(money=10, wood=1, meat=1)}),
     ]
