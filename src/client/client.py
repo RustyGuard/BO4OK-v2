@@ -23,7 +23,9 @@ from src.components.velocity import VelocityComponent
 from src.config import config
 from src.constants import EVENT_UPDATE
 from src.core.camera import Camera
-from src.core.menus import ResourceMenu, ProduceMenu
+from src.core.menus.building_place import BuildMenu
+from src.core.menus.unit_produce import ProduceMenu
+from src.core.menus.resources_display import ResourceDisplayMenu
 from src.core.minimap import Minimap
 from src.core.types import PlayerInfo
 from src.entity_component_system import EntityComponentSystem
@@ -136,7 +138,7 @@ class ClientGameWindow(UIElement):
         sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
         self.append_child(sub_elem)
 
-        self.command_sender = ClientActionSender(self.write_action_connection)
+        self.action_sender = ClientActionSender(self.write_action_connection)
 
         self.ecs = EntityComponentSystem()
 
@@ -150,7 +152,7 @@ class ClientGameWindow(UIElement):
 
         self.ecs.init_system(velocity_system)
 
-        self.command_handler = ClientActionHandler(self.ecs, self.current_player)
+        self.action_handler = ClientActionHandler(self.ecs, self.current_player)
 
         self.camera = Camera()
 
@@ -158,16 +160,17 @@ class ClientGameWindow(UIElement):
         self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
 
-        resource_menu = ResourceMenu(self.current_player,
-                                                    Rect(45, 108, 0, 0),
-                                                    Font('assets/fonts/arial.ttf', 25))
+        resource_menu = ResourceDisplayMenu(self.current_player,
+                                            Rect(45, 108, 0, 0),
+                                            Font('assets/fonts/arial.ttf', 25))
         self.minimap_elem.append_child(resource_menu)
 
         menu_parent = UIElement(Rect(0, 0, 0, 0), None)
         self.append_child(menu_parent)
         menu_parent.append_child(self.minimap_elem)
-        # menu_parent.append_child(BuildMenu(self.relative_bounds, self.game))
-        menu_parent.append_child(ProduceMenu(self.relative_bounds, self.ecs, self.command_sender, self.camera,
+        menu_parent.append_child(BuildMenu(self.relative_bounds, resource_menu, self.action_sender,
+                                           self.current_player, self.camera))
+        menu_parent.append_child(ProduceMenu(self.relative_bounds, self.ecs, self.action_sender, self.camera,
                                              self.current_player, resource_menu))
 
     def update(self, event):
@@ -175,7 +178,7 @@ class ClientGameWindow(UIElement):
         if event.type == EVENT_UPDATE:
             while self.received_actions:
                 args = self.received_actions.pop(0)
-                self.command_handler.handle_action(args[0], args[1:])
+                self.action_handler.handle_action(args[0], args[1:])
 
             self.ecs.update()
 

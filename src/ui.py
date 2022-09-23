@@ -48,7 +48,7 @@ class UIElement:
         self.update_bounds()
 
     def update(self, event):
-        for elem in self.childs:
+        for elem in reversed(self.childs):
             if elem.enabled and elem.update(event):
                 return True
         return False
@@ -156,6 +156,7 @@ class UIButton(UIElement):
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and self.absolute_bounds.collidepoint(*event.pos):
                 self.callback_func(*self.callback_args)
+                print('dasdkasjdajsakjdklajldjlaksdjklajd')
                 return True
 
 
