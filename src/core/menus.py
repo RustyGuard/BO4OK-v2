@@ -1,11 +1,10 @@
-import math
 import random
+from functools import partial
 
 import pygame
 from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
-from setuptools._distutils.command.config import config
 
 from src.client.action_sender import ClientActionSender
 from src.components.player_owner import PlayerOwnerComponent
@@ -13,10 +12,9 @@ from src.components.position import PositionComponent
 from src.components.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
 from src.config import config
-from src.constants import EVENT_SEC
+from src.constants import EVENT_UPDATE
 from src.core.camera import Camera
 from src.core.types import PlayerInfo, RequiredCost
-# from src.entities.units_base import ProducingBuilding
 from src.entities import entity_icons
 from src.entity_component_system import EntityComponentSystem, EntityId
 from src.ui import UIElement, UIButton, UIImage, Label
@@ -70,19 +68,10 @@ class BuildMenu(UIElement):
 
 
 class ProduceMenu(UIElement):
-    class ProduceMenuItem:
-        def __init__(self, name: str, icon_path: str, cost: RequiredCost, bounds: Rect):
-            self.name = name
-            self.color = (random.randrange(0, 255), random.randrange(0, 255), random.randrange(0, 255))
-            self.icon = pygame.image.load(icon_path)
-            self.cost = cost
-            self.bounds = bounds
-
     def __init__(self, bounds, ecs: EntityComponentSystem, action_sender: ClientActionSender, camera: Camera,
                  current_player: PlayerInfo, resource_menu: 'ResourceMenu'):
         super().__init__(bounds, None)
         self.ecs = ecs
-        self.units = {}
         self.selected_unit: EntityId | None = None
         self.action_sender = action_sender
         self.camera = camera
@@ -100,23 +89,31 @@ class ProduceMenu(UIElement):
         bottom_bar = UIElement(Rect(config['minimap']['bounds'][3] + config['minimap']['bounds'][1],
                                     config['screen']['size'][1] - 120,
                                     450,
-                                    120), Color(184, 187, 194), border_top_left_radius=15,
+                                    120), Color(184, 187, 194),
+                               border_top_left_radius=15,
                                border_top_right_radius=15)
-        bottom_bar.append_child(Label(Rect(5, 5, 450, 60), Color('black'), Font('assets/fonts/arial.ttf', 20), 'Создание юнитов'))
+        bottom_bar.append_child(
+            Label(Rect(5, 5, 450, 60), Color('black'), Font('assets/fonts/arial.ttf', 20), 'Создание юнитов'))
         self.append_child(bottom_bar)
+
         for i, (unit_name, unit_cost) in enumerate(produce_component.producible_units.items()):
             unit_cost = RequiredCost(**unit_cost)
             icon_path = entity_icons[unit_name]
 
-            btn = UIButton(Rect(5 + 80 * i, 35, 80, 80), None, self.select, unit_name)
+            btn = UIButton(Rect(5 + 85 * i, 35, 80, 80), None,
+                           callback_func=partial(self.produce_unit, unit_name, unit_cost),
+                           on_mouse_hover=partial(self.resource_menu.display_cost, unit_cost),
+                           on_mouse_exit=partial(self.resource_menu.hide_cost, unit_cost))
             btn.append_child(UIImage(Rect((0, 0), btn.relative_bounds.size), None, pygame.image.load(icon_path)))
 
             bottom_bar.append_child(btn)
-            self.units[unit_name] = self.ProduceMenuItem(unit_name, icon_path, unit_cost, btn.absolute_bounds)
 
         self.selected_unit = build_entity_id
 
-    def select(self, unit_name: str) -> None:
+    def produce_unit(self, unit_name: str, unit_cost: RequiredCost) -> None:
+        if not self.current_player.has_enough(unit_cost):
+            return
+
         self.action_sender.produce_unit(self.selected_unit, unit_name)
 
     def draw(self, screen) -> None:
@@ -131,16 +128,6 @@ class ProduceMenu(UIElement):
     def update(self, event) -> bool:
         if super().update(event):
             return True
-
-        if event.type == pygame.MOUSEMOTION:
-            for item in self.units.values():
-                mouse_pos = pygame.mouse.get_pos()
-                if item.bounds.collidepoint(*mouse_pos):
-                    print(item.cost)
-                    self.resource_menu.display_cost(item.cost)
-                    break
-            else:
-                self.resource_menu.display_cost(None)
 
         if event.type == pygame.MOUSEBUTTONUP:
             mouse_pos = self.camera.get_in_game_mouse_position()
@@ -172,32 +159,54 @@ class ResourceMenu(UIElement):
         self.append_child(self.wood_count)
         self.meat_count = Label(Rect(220, 0, 500, 500), Color('pink'), font, '-/-')
         self.append_child(self.meat_count)
+
+        self.cost_display = UIElement(Rect(0, -32, 0, 0), None)
+        self.append_child(self.cost_display)
+
+        self.money_cost = Label(Rect(0, 0, 500, 500), Color('black'), font, '-')
+        self.cost_display.append_child(self.money_cost)
+        self.wood_cost = Label(Rect(105, 0, 500, 500), Color('black'), font, '-')
+        self.cost_display.append_child(self.wood_cost)
+        self.meat_cost = Label(Rect(220, 0, 500, 500), Color('black'), font, '-/-')
+        self.cost_display.append_child(self.meat_cost)
+
+        self.cost_display.enabled = False
+
         self.player = player
         self.cost: RequiredCost | None = None
 
     def display_cost(self, cost: RequiredCost):
         self.cost = cost
+        self.cost_display.enabled = True
+
+    def hide_cost(self, cost: RequiredCost):
+        if self.cost == cost:
+            self.cost = None
+            self.cost_display.enabled = False
 
     def update(self, event: pygame.event) -> bool:
         if super().update(event):
             return True
-        self.update_values()
+        if event.type == EVENT_UPDATE:
+            self.update_values()
         return False
 
     def update_values(self) -> None:
         if self.cost:
-
-            self.money_count.set_text(f'{self.player.resources.money - self.cost.money}')
             if self.cost.money:
+                self.money_count.set_text(f'{self.player.resources.money - self.cost.money}')
                 self.money_count.set_color(Color('red'))
-            self.wood_count.set_text(f'{self.player.resources.wood - self.cost.wood}')
+                self.money_cost.set_text(f'-{self.cost.money}')
             if self.cost.wood:
+                self.wood_count.set_text(f'{self.player.resources.wood - self.cost.wood}')
                 self.wood_count.set_color(Color('red'))
-            self.meat_count.set_text(f'{self.player.resources.meat + self.cost.meat}/{self.player.resources.max_meat}')
+                self.wood_cost.set_text(f'-{self.cost.wood}')
             if self.cost.meat:
+                self.meat_count.set_text(
+                    f'{self.player.resources.meat + self.cost.meat}/{self.player.resources.max_meat}')
                 self.meat_count.set_color(Color('red'))
+                self.meat_cost.set_text(f'-{self.cost.meat}')
         else:
-
             self.money_count.set_text(f'{self.player.resources.money}')
             self.money_count.set_color(Color('yellow'))
             self.wood_count.set_text(f'{self.player.resources.wood}')
