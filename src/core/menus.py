@@ -205,7 +205,7 @@ class ResourceMenu(UIElement):
                 self.meat_count.set_text(
                     f'{self.player.resources.meat + self.cost.meat}/{self.player.resources.max_meat}')
                 self.meat_count.set_color(Color('red'))
-                self.meat_cost.set_text(f'-{self.cost.meat}')
+                self.meat_cost.set_text(f'+{self.cost.meat}')
         else:
             self.money_count.set_text(f'{self.player.resources.money}')
             self.money_count.set_color(Color('yellow'))

@@ -9,5 +9,5 @@ def create_arrow(x: float, y: float, angle: int, speed: float = 2):
         PositionComponent(x, y),
         VelocityComponent.create_from_polar_coordinates(speed, angle),
         DecayComponent(150),
-        TextureComponent.create_from_filepath('assets/warrior/archer/arrow.png', rotation_angle=angle),
+        TextureComponent.create_from_filepath('assets/unit/archer/arrow.png', rotation_angle=angle),
     ]

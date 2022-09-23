@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from src.core.types import RequiredCost, PlayerInfo
 
 
-@dataclass
+@dataclass(slots=True)
 class UnitProductionComponent:
     delay: int
     producible_units: dict[str, RequiredCost]

@@ -18,7 +18,5 @@ def unit_production_system(unit_prod: UnitProductionComponent, position: Positio
         unit_to_produce = unit_prod.unit_queue.pop(0)
         entity = entity_factories[unit_to_produce](x=position.x + random.randint(-150, 150),
                                                    y=position.y + random.randint(-150, 150),
-                                                   player_color_name=player_owner.color_name,
-                                                   player_nick=player_owner.nick,
-                                                   player_socket_id=player_owner.socket_id)
+                                                   player_owner=player_owner)
         ecs.create_entity(entity)
