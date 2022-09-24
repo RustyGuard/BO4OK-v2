@@ -57,3 +57,6 @@ class Camera:
     def get_in_game_mouse_position(self) -> tuple[float, float]:
         mouse_pos = pygame.mouse.get_pos()
         return mouse_pos[0] - self.offset_x, mouse_pos[1] - self.offset_y
+
+    def to_screen_position(self, pos: tuple[float, float]):
+        return pos[0] + self.offset_x, pos[1] + self.offset_y

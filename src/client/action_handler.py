@@ -32,7 +32,7 @@ class ClientActionHandler:
                                    component_class.__name__ == component_class_name)
             component = component_class(**component_json)
             if hasattr(component, 'assemble_on_client'):
-                component.assemble_on_client()
+                component.assemble_on_client(self.ecs)
             components.append(component)
         self.ecs.create_entity(components, entity_id)
 

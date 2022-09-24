@@ -29,6 +29,7 @@ from src.core.types import PlayerInfo
 from src.menus.building_place import BuildMenu
 from src.menus.minimap import Minimap
 from src.menus.resources_display import ResourceDisplayMenu
+from src.menus.unit_move import UnitMoveMenu
 from src.menus.unit_produce import ProduceMenu
 from src.systems.chase import chase_system
 from src.systems.velocity import velocity_system
@@ -171,10 +172,19 @@ class ClientGameWindow(UIElement):
         self.minimap_elem.append_child(resource_menu)
 
         menu_parent.append_child(self.minimap_elem)
+
         menu_parent.append_child(BuildMenu(self.relative_bounds, resource_menu, self.action_sender,
                                            self.current_player, self.camera))
+
         menu_parent.append_child(ProduceMenu(self.relative_bounds, self.ecs, self.action_sender, self.camera,
                                              self.current_player, resource_menu))
+
+        menu_parent.append_child(UnitMoveMenu(
+            self.ecs,
+            self.action_sender,
+            self.camera,
+            self.current_player,
+        ))
 
     def update(self, event):
         self.camera.update(event)
