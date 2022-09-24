@@ -11,8 +11,8 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
-from src.client.action_sender import ClientActionSender
 from src.client.action_handler import ClientActionHandler
+from src.client.action_sender import ClientActionSender
 from src.components.decay import DecayComponent
 from src.components.minimap_icon import MinimapIconComponent
 from src.components.player_owner import PlayerOwnerComponent
@@ -23,15 +23,15 @@ from src.components.velocity import VelocityComponent
 from src.config import config
 from src.constants import EVENT_UPDATE
 from src.core.camera import Camera
-from src.menus.building_place import BuildMenu
-from src.menus.unit_produce import ProduceMenu
-from src.menus.resources_display import ResourceDisplayMenu
-from src.menus.minimap import Minimap
-from src.core.types import PlayerInfo
 from src.core.entity_component_system import EntityComponentSystem
-from src.utils.json_utils import PydanticDecoder
+from src.core.types import PlayerInfo
+from src.menus.building_place import BuildMenu
+from src.menus.minimap import Minimap
+from src.menus.resources_display import ResourceDisplayMenu
+from src.menus.unit_produce import ProduceMenu
 from src.systems.velocity import velocity_system
 from src.ui import UIElement, FPSCounter, UIImage
+from src.utils.json_utils import PydanticDecoder
 
 
 def read_server_actions(socket: socket.socket, submit_list: list[list]):

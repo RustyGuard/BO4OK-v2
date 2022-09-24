@@ -1,6 +1,5 @@
 import inspect
-from dataclasses import dataclass
-from typing import Callable, Type, Any, Iterator, Iterable
+from typing import Callable, Type, Any, Iterator
 
 from src.core.types import EntityId, Component, StoredSystem
 from src.systems.test import test_bc_system

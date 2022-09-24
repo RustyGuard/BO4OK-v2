@@ -20,8 +20,8 @@ from src.components.unit_production import UnitProductionComponent
 from src.components.velocity import VelocityComponent
 from src.config import config
 from src.constants import EVENT_UPDATE, color_name_to_pygame_color
-
 from src.core.entity_component_system import EntityComponentSystem
+from src.core.types import PlayerResources, PlayerInfo, EntityId, Component
 from src.main import Main
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
@@ -30,8 +30,6 @@ from src.systems.decay import decay_system
 from src.systems.unit_production import unit_production_system
 from src.systems.velocity import velocity_system
 from src.ui import UIElement, FPSCounter
-from src.core.types import PlayerResources, PlayerInfo, EntityId, Component
-
 from src.utils.json_utils import PydanticEncoder
 
 Connections = dict[int, tuple[socket.socket, Any]]

@@ -3,9 +3,9 @@ from typing import Any
 from src.components.player_owner import PlayerOwnerComponent
 from src.components.unit_production import UnitProductionComponent
 from src.constants import ServerCommands
+from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
 from src.entities import buildings, building_factories
-from src.core.entity_component_system import EntityComponentSystem
 from src.server.action_sender import ServerActionSender
 
 

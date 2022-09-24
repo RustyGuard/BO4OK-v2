@@ -12,10 +12,10 @@ from src.components.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
 from src.config import config
 from src.core.camera import Camera
-from src.menus.resources_display import ResourceDisplayMenu
+from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, RequiredCost, EntityId
 from src.entities import entity_icons
-from src.core.entity_component_system import EntityComponentSystem
+from src.menus.resources_display import ResourceDisplayMenu
 from src.ui import UIElement, Label, UIButton, UIImage
 
 

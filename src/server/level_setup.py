@@ -1,9 +1,9 @@
 import math
 
 from src.components.player_owner import PlayerOwnerComponent
+from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo
 from src.entities.fortress import create_fortress
-from src.core.entity_component_system import EntityComponentSystem
 
 
 def setup_level(ecs: EntityComponentSystem, players: dict[int, PlayerInfo]):

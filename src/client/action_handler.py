@@ -1,8 +1,8 @@
 from typing import Any
 
 from src.constants import ClientCommands
-from src.core.types import PlayerInfo, EntityId
 from src.core.entity_component_system import EntityComponentSystem
+from src.core.types import PlayerInfo, EntityId
 
 
 class ClientActionHandler:
