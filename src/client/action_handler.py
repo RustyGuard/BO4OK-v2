@@ -20,6 +20,9 @@ class ClientActionHandler:
         elif command == ClientCommands.RESOURCE_INFO:
             self.handle_player_info_update(args[0])
 
+        elif command == ClientCommands.COMPONENT_INFO:
+            self.handle_update_component_info(args[0], args[1], args[2])
+
         else:
             print(f'Unknown command: {command}({args})')
 
@@ -42,3 +45,11 @@ class ClientActionHandler:
     def handle_player_info_update(self, player_info_json):
         for field, value in player_info_json.items():
             setattr(self.current_player.resources, field, value)
+
+    def handle_update_component_info(self, entity_id: EntityId, component_class_name: str, component_json):
+        component_class = next(component_class for component_class in self.ecs.components if
+                               component_class.__name__ == component_class_name)
+        component = component_class(**component_json)
+        if hasattr(component, 'assemble_on_client'):
+            component.assemble_on_client(self.ecs)
+        self.ecs.components[component_class][entity_id] = component

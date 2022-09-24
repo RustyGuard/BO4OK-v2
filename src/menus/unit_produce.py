@@ -78,7 +78,7 @@ class ProduceMenu(UIElement):
             position, texture = self.ecs.get_components(self.selected_unit, (PositionComponent, TextureComponent))
             rect = texture.texture.get_rect()
             rect.center = position.x + self.camera.offset_x, position.y + self.camera.offset_y
-            pygame.draw.rect(screen, Color(255, 255, 255, 0), rect, 1, 15)
+            pygame.draw.rect(screen, self.current_player.color, rect, 1, 15)
 
     def update(self, event) -> bool:
         if super().update(event):

@@ -31,40 +31,43 @@ class UnitMoveMenu(UIElement):
 
             render_rect = rect_by_two_points(pos, mouse_pos)
 
-            pygame.draw.rect(screen, Color('blue'), render_rect, 2)
+            if not(render_rect.width <= 40 and render_rect.height <= 40):
+                pygame.draw.rect(screen, self.current_player.color, render_rect, 2)
 
         if self.selected_entities:
             for entity_id in self.selected_entities:
                 position, texture = self.ecs.get_components(entity_id, (PositionComponent, TextureComponent))
                 rect = texture.texture.get_rect()
                 rect.center = self.camera.to_screen_position(position.to_tuple())
-                pygame.draw.ellipse(screen, Color('blue'), rect, 1)
+                pygame.draw.ellipse(screen, self.current_player.color, rect, 1)
 
     def update(self, event: pygame.event.Event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            self.mouse_click_position = self.camera.get_in_game_mouse_position()
+            if not self.selected_entities:
+                self.mouse_click_position = self.camera.get_in_game_mouse_position()
 
         elif event.type == pygame.MOUSEBUTTONUP:
 
             if self.selected_entities:
                 mouse_up_position = self.camera.get_in_game_mouse_position()
-                for entity_id in self.selected_entities:
-                    chase = self.ecs.get_component(entity_id, ChaseComponent)
-                    chase.chase_position = PositionComponent(*spread_position(mouse_up_position, 100))
+
+                self.action_sender.force_to_move(self.selected_entities, mouse_up_position)
 
                 self.mouse_click_position = None
                 self.selected_entities.clear()
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
                 return True
 
             if self.mouse_click_position is not None:
-                if self.mouse_click_position == self.camera.get_in_game_mouse_position():
-                    self.mouse_click_position = None
-                    return False
 
                 mouse_up_position = self.camera.get_in_game_mouse_position()
                 self.selected_entities.clear()
                 selection_rect = rect_by_two_points(mouse_up_position, self.mouse_click_position)
+
+                if selection_rect.width <= 40 and selection_rect.height <= 40:
+                    self.mouse_click_position = None
+                    return False
 
                 for entity_id, (position, chase, player) in self.ecs.get_entities_with_components(
                         (PositionComponent, ChaseComponent, PlayerOwnerComponent)):
@@ -77,7 +80,10 @@ class UnitMoveMenu(UIElement):
 
                     self.selected_entities.add(entity_id)
 
-                print(self.selected_entities)
+                if self.selected_entities:
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_CROSSHAIR)
+                else:
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
                 self.mouse_click_position = None
                 return True

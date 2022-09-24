@@ -1,12 +1,15 @@
 from typing import Any
 
+from src.components.chase import ChaseComponent
 from src.components.player_owner import PlayerOwnerComponent
+from src.components.position import PositionComponent
 from src.components.unit_production import UnitProductionComponent
 from src.constants import ServerCommands
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
 from src.entities import buildings, building_factories
 from src.server.action_sender import ServerActionSender
+from src.utils.math_utils import spread_position
 
 
 class ServerActionHandler:
@@ -20,6 +23,8 @@ class ServerActionHandler:
             self.handle_produce(socket_id, args[0], args[1])
         elif command == ServerCommands.PLACE_UNIT:
             self.handle_place(socket_id, args[0], args[1], args[2])
+        elif command == ServerCommands.SET_TARGET_MOVE:
+            self.handle_force_move(socket_id, args[0], tuple(args[1]))
 
         else:
             print(f'Unknown command: {command}({args})')
@@ -34,6 +39,7 @@ class ServerActionHandler:
         producing_component, owner_component = components
         if owner_component.socket_id != socket_id:
             print(f'''{socket_id=} trying to produce units in other's({owner_component.socket_id}) building''')
+            return
 
         if producing_component.add_to_queue(unit_name, player):
             self.action_sender.update_resource_info(player)
@@ -56,4 +62,21 @@ class ServerActionHandler:
         ))
         player.spend(cost)
         self.action_sender.update_resource_info(player)
+
+    def handle_force_move(self, socket_id: int, entities: list[EntityId], position: tuple[float, float]):
+        for entity_id in entities:
+            components = self.ecs.get_components(entity_id, (ChaseComponent, PlayerOwnerComponent))
+            if components is None:
+                print(f'This entity({entity_id=}) can not chase anything, you are stupid, {socket_id=}')
+                return
+            chase, owner_component = components
+
+            if owner_component.socket_id != socket_id:
+                print(f'''{socket_id=} trying to force to move {entity_id=} in other's({owner_component.socket_id}) team''')
+                return
+
+            chase.chase_position = PositionComponent(*spread_position(position, 50))
+            chase.entity_id = None
+
+            self.action_sender.update_component_info(entity_id, chase)
 

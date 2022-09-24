@@ -41,10 +41,14 @@ class ResourceDisplayMenu(UIElement):
         self.wood_cost.set_text(f'-{self.cost.wood}' if self.cost.wood else '')
         self.meat_cost.set_text(f'+{self.cost.meat}' if self.cost.meat else '')
 
+        if not self.player.has_enough(cost):
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_NO)
+
     def hide_cost(self, cost: RequiredCost):
         if self.cost == cost:
             self.cost = None
             self.cost_display.enabled = False
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
     def update(self, event: pygame.event) -> bool:
         if super().update(event):
@@ -69,6 +73,9 @@ class ResourceDisplayMenu(UIElement):
                 self.meat_count.set_text(
                     f'{self.player.resources.meat + self.cost.meat}/{self.player.resources.max_meat}')
                 self.meat_count.set_color(Color('red'))
+
+            if not self.player.has_enough(self.cost):
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_NO)
         else:
             self.money_count.set_text(f'{self.player.resources.money}')
             self.wood_count.set_text(f'{self.player.resources.wood}')
