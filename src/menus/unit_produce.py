@@ -12,10 +12,10 @@ from src.components.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
 from src.config import config
 from src.core.camera import Camera
-from src.core.menus.resources_display import ResourceDisplayMenu
-from src.core.types import PlayerInfo, RequiredCost
+from src.menus.resources_display import ResourceDisplayMenu
+from src.core.types import PlayerInfo, RequiredCost, EntityId
 from src.entities import entity_icons
-from src.entity_component_system import EntityComponentSystem, EntityId
+from src.core.entity_component_system import EntityComponentSystem
 from src.ui import UIElement, Label, UIButton, UIImage
 
 
@@ -75,8 +75,8 @@ class ProduceMenu(UIElement):
     def draw(self, screen) -> None:
         super().draw(screen)
 
-        if self.selected_unit:
-            position, texture = self.ecs.get_components(self.selected_unit, [PositionComponent, TextureComponent])
+        if self.selected_unit is not None:
+            position, texture = self.ecs.get_components(self.selected_unit, (PositionComponent, TextureComponent))
             rect = texture.texture.get_rect()
             rect.center = position.x + self.camera.offset_x, position.y + self.camera.offset_y
             pygame.draw.rect(screen, Color(255, 255, 255, 0), rect, 1, 15)
@@ -88,10 +88,10 @@ class ProduceMenu(UIElement):
         if event.type == pygame.MOUSEBUTTONUP:
             mouse_pos = self.camera.get_in_game_mouse_position()
 
-            for entity_id, components in self.ecs.get_entities_with_components([UnitProductionComponent,
+            for entity_id, components in self.ecs.get_entities_with_components((UnitProductionComponent,
                                                                                 PositionComponent,
                                                                                 TextureComponent,
-                                                                                PlayerOwnerComponent]):
+                                                                                PlayerOwnerComponent)):
                 unit_production, position, texture, owner = components
                 if owner.socket_id != self.current_player.socket_id:
                     continue

@@ -1,4 +1,3 @@
-import random
 from typing import NamedTuple
 
 import pygame
@@ -8,7 +7,7 @@ from pygame.surface import Surface
 
 from src.client.action_sender import ClientActionSender
 from src.core.camera import Camera
-from src.core.menus.resources_display import ResourceDisplayMenu
+from src.menus.resources_display import ResourceDisplayMenu
 from src.core.types import RequiredCost, PlayerInfo
 from src.entities import buildings, entity_icons
 from src.ui import UIElement, UIButton, UIImage

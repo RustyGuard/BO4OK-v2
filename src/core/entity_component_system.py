@@ -2,19 +2,9 @@ import inspect
 from dataclasses import dataclass
 from typing import Callable, Type, Any, Iterator, Iterable
 
+from src.core.types import EntityId, Component, StoredSystem
 from src.systems.test import test_bc_system
 from src.utils.unique_id import UniqueIdGenerator
-
-EntityId = str
-Component = object
-
-
-@dataclass
-class StoredSystem:
-    variables: dict[str, Any]
-    components: dict[str, Type[Component]]  # key is argument name
-    has_entity_id_argument: bool
-    has_ecs_argument: bool
 
 
 class EntityComponentSystem:
@@ -64,7 +54,7 @@ class EntityComponentSystem:
 
         self.systems[system] = stored_system
 
-    def add_variable(self, variable_name, variable_value):
+    def add_variable(self, variable_name: str, variable_value: Any) -> None:
         self.vars[variable_name] = variable_value
 
     def create_entity(self, components: list[Component], entity_id=None) -> EntityId:
@@ -82,7 +72,7 @@ class EntityComponentSystem:
 
         return entity_id
 
-    def get_entity_ids_with_components(self, component_classes: list[Type[Component]]) -> set[EntityId]:
+    def get_entity_ids_with_components(self, component_classes: tuple[Type[Component], ...]) -> set[EntityId]:
         if not component_classes:
             return set(self.entities)
 
@@ -90,12 +80,11 @@ class EntityComponentSystem:
             *[set(self.components[component_class]) for component_class in component_classes])
         return entities
 
-    def get_entities_with_components(self, component_classes: list[Type[Component]]) -> Iterator[tuple[EntityId, list[Component]]]:
+    def get_entities_with_components(self, component_classes: list[Type[Component]]) -> Iterator[tuple[
+        EntityId, list[Component]]]:
         for entity_id in self.entities:
             try:
-                components = []
-                for component_class in component_classes:
-                    components.append(self.components[component_class][entity_id])
+                components = tuple(self.components[component_class][entity_id] for component_class in component_classes)
                 yield entity_id, components
 
             except KeyError:
@@ -123,9 +112,9 @@ class EntityComponentSystem:
         return self.components[component_class].get(entity_id, None)
 
     def get_components(self, entity_id: EntityId,
-                       component_classes: Iterable[Type[Component]]) -> list[Component] | None:
+                       component_classes):
         try:
-            return [self.components[component_class][entity_id] for component_class in component_classes]
+            return tuple(self.components[component_class][entity_id] for component_class in component_classes)
         except KeyError:
             return None
 
@@ -151,8 +140,8 @@ def test():
 
     ecs.update()
 
-    print(*ecs.get_entities_with_components([BComponent]))
-    print(*ecs.get_entities_with_components([BComponent, CComponent]))
+    print(*ecs.get_entities_with_components((BComponent,)))
+    print(*ecs.get_entities_with_components((BComponent, CComponent)))
 
 
 if __name__ == '__main__':

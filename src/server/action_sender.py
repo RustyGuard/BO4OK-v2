@@ -4,7 +4,7 @@ from typing import Any
 
 from src.constants import ClientCommands
 from src.core.types import PlayerInfo
-from src.entity_component_system import Component, EntityId
+from src.core.entity_component_system import Component, EntityId
 
 
 class ServerActionSender:

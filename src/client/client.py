@@ -23,12 +23,12 @@ from src.components.velocity import VelocityComponent
 from src.config import config
 from src.constants import EVENT_UPDATE
 from src.core.camera import Camera
-from src.core.menus.building_place import BuildMenu
-from src.core.menus.unit_produce import ProduceMenu
-from src.core.menus.resources_display import ResourceDisplayMenu
-from src.core.minimap import Minimap
+from src.menus.building_place import BuildMenu
+from src.menus.unit_produce import ProduceMenu
+from src.menus.resources_display import ResourceDisplayMenu
+from src.menus.minimap import Minimap
 from src.core.types import PlayerInfo
-from src.entity_component_system import EntityComponentSystem
+from src.core.entity_component_system import EntityComponentSystem
 from src.utils.json_utils import PydanticDecoder
 from src.systems.velocity import velocity_system
 from src.ui import UIElement, FPSCounter, UIImage
@@ -186,7 +186,7 @@ class ClientGameWindow(UIElement):
 
     def draw(self, screen):
         super().draw(screen)
-        for _, (texture, position) in self.ecs.get_entities_with_components([TextureComponent, PositionComponent]):
+        for _, (texture, position) in self.ecs.get_entities_with_components((TextureComponent, PositionComponent)):
             texture.blit(screen, position.position_according_to_camera(self.camera))
         pygame.draw.rect(screen, pygame.Color('white'), pygame.Rect((pygame.mouse.get_pos()), (10, 10)))
 

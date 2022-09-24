@@ -1,7 +1,7 @@
 from multiprocessing.connection import Connection
 
 from src.constants import ServerCommands
-from src.entity_component_system import EntityId
+from src.core.types import EntityId
 
 
 class ClientActionSender:

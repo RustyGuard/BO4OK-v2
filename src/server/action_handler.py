@@ -3,11 +3,10 @@ from typing import Any
 from src.components.player_owner import PlayerOwnerComponent
 from src.components.unit_production import UnitProductionComponent
 from src.constants import ServerCommands
-from src.core.types import PlayerInfo
+from src.core.types import PlayerInfo, EntityId
 from src.entities import buildings, building_factories
-from src.entity_component_system import EntityComponentSystem, EntityId
+from src.core.entity_component_system import EntityComponentSystem
 from src.server.action_sender import ServerActionSender
-from src.utils.unique_id import UniqueIdGenerator
 
 
 class ServerActionHandler:
@@ -27,7 +26,7 @@ class ServerActionHandler:
 
     def handle_produce(self, socket_id: int, build_entity_id: EntityId, unit_name: str):
         player = self.players[socket_id]
-        components = self.ecs.get_components(build_entity_id, [UnitProductionComponent, PlayerOwnerComponent])
+        components = self.ecs.get_components(build_entity_id, (UnitProductionComponent, PlayerOwnerComponent))
         if components is None:
             print(f'This entity({build_entity_id=}) can not produce anything, you are stupid, {socket_id=}')
             return

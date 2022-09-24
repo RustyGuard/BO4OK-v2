@@ -4,7 +4,7 @@ from src.components.player_owner import PlayerOwnerComponent
 from src.components.position import PositionComponent
 from src.components.unit_production import UnitProductionComponent
 from src.entities import unit_production_factories
-from src.entity_component_system import EntityComponentSystem
+from src.core.entity_component_system import EntityComponentSystem
 
 
 def unit_production_system(unit_prod: UnitProductionComponent, position: PositionComponent, ecs: EntityComponentSystem,

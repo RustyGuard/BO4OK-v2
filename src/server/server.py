@@ -19,10 +19,9 @@ from src.components.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
 from src.components.velocity import VelocityComponent
 from src.config import config
-from src.constants import EVENT_UPDATE, color_name_to_pygame_color, EVENT_SEC
+from src.constants import EVENT_UPDATE, color_name_to_pygame_color
 
-from src.entities.arrow import create_arrow
-from src.entity_component_system import EntityComponentSystem, Component, EntityId
+from src.core.entity_component_system import EntityComponentSystem
 from src.main import Main
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
@@ -31,7 +30,7 @@ from src.systems.decay import decay_system
 from src.systems.unit_production import unit_production_system
 from src.systems.velocity import velocity_system
 from src.ui import UIElement, FPSCounter
-from src.core.types import PlayerResources, PlayerInfo
+from src.core.types import PlayerResources, PlayerInfo, EntityId, Component
 
 from src.utils.json_utils import PydanticEncoder
 
@@ -263,7 +262,7 @@ class ServerGameWindow(UIElement):
 
     def draw(self, screen) -> None:
         super().draw(screen)
-        for _, (texture, position) in self.ecs.get_entities_with_components([TextureComponent, PositionComponent]):
+        for _, (texture, position) in self.ecs.get_entities_with_components((TextureComponent, PositionComponent)):
             texture.blit(screen, position.to_tuple())
 
     def shutdown(self) -> None:

@@ -7,7 +7,7 @@ from src.components.position import PositionComponent
 from src.config import config
 from src.constants import color_name_to_pygame_color
 from src.core.camera import Camera
-from src.entity_component_system import EntityComponentSystem
+from src.core.entity_component_system import EntityComponentSystem
 from src.ui import UIElement
 
 
@@ -26,7 +26,7 @@ class Minimap(UIElement):
 
         position: PositionComponent
         minimap_icon: MinimapIconComponent
-        for _, (position, minimap_icon) in self.ecs.get_entities_with_components([PositionComponent, MinimapIconComponent]):
+        for _, (position, minimap_icon) in self.ecs.get_entities_with_components((PositionComponent, MinimapIconComponent)):
             shape = minimap_icon.mark_shape
             team_color = color_name_to_pygame_color[minimap_icon.team_color_name]
 
