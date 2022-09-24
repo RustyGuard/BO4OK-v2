@@ -11,6 +11,7 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
+from src.components.chase import ChaseComponent
 from src.components.decay import DecayComponent
 from src.components.minimap_icon import MinimapIconComponent
 from src.components.player_owner import PlayerOwnerComponent
@@ -28,6 +29,7 @@ from src.menus.minimap import Minimap
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
+from src.systems.chase import chase_system
 from src.systems.decay import decay_system
 from src.systems.unit_production import unit_production_system
 from src.systems.velocity import velocity_system
@@ -223,10 +225,12 @@ class ServerGameWindow(UIElement):
         self.ecs.init_component(MinimapIconComponent)
         self.ecs.init_component(UnitProductionComponent)
         self.ecs.init_component(PlayerOwnerComponent)
+        self.ecs.init_component(ChaseComponent)
 
         self.ecs.init_system(velocity_system)
         self.ecs.init_system(decay_system)
         self.ecs.init_system(unit_production_system)
+        self.ecs.init_system(chase_system)
 
         self.action_handler = ServerActionHandler(self.ecs, self.players, self.action_sender)
 

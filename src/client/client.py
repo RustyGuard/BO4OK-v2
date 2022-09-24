@@ -13,6 +13,7 @@ from pygame.rect import Rect
 
 from src.client.action_handler import ClientActionHandler
 from src.client.action_sender import ClientActionSender
+from src.components.chase import ChaseComponent
 from src.components.decay import DecayComponent
 from src.components.minimap_icon import MinimapIconComponent
 from src.components.player_owner import PlayerOwnerComponent
@@ -29,6 +30,7 @@ from src.menus.building_place import BuildMenu
 from src.menus.minimap import Minimap
 from src.menus.resources_display import ResourceDisplayMenu
 from src.menus.unit_produce import ProduceMenu
+from src.systems.chase import chase_system
 from src.systems.velocity import velocity_system
 from src.ui import UIElement, FPSCounter, UIImage
 from src.utils.json_utils import PydanticDecoder
@@ -101,8 +103,8 @@ class WaitForServerWindow(UIElement):
         super().update(event)
 
     def start(self, team_id: int, players: dict[int, PlayerInfo]):
-        w = ClientGameWindow(self.relative_bounds, self.color, self.sock, self.receive_list, self.socket_process,
-                             self.parent_conn, self.child_conn, self.send_process, players, team_id)
+        w = ClientGameWindow(self.relative_bounds, self.sock, self.receive_list, self.socket_process, self.parent_conn,
+                             self.child_conn, self.send_process, players, team_id)
         self.main.main_element = w
 
     def shutdown(self):
@@ -114,12 +116,10 @@ class WaitForServerWindow(UIElement):
 
 
 class ClientGameWindow(UIElement):
-    def __init__(self, rect: Rect, color: Optional[Color], socket: socket.socket, received_actions: list[list],
-                 read_socket_process: Process,
-                 write_action_connection: Connection, read_action_connection: Connection,
-                 send_process: Process, players: dict[int, PlayerInfo], socket_id: int):
-        super().__init__(rect, color)
-        print('dsdjfhfjkhsdjfhsfd')
+    def __init__(self, rect: Rect, socket: socket.socket, received_actions: list[list], read_socket_process: Process,
+                 write_action_connection: Connection, read_action_connection: Connection, send_process: Process,
+                 players: dict[int, PlayerInfo], socket_id: int):
+        super().__init__(rect, Color(93, 161, 48))
 
         self.current_player = players[socket_id]
 
@@ -149,12 +149,17 @@ class ClientGameWindow(UIElement):
         self.ecs.init_component(MinimapIconComponent)
         self.ecs.init_component(UnitProductionComponent)
         self.ecs.init_component(PlayerOwnerComponent)
+        self.ecs.init_component(ChaseComponent)
 
         self.ecs.init_system(velocity_system)
+        self.ecs.init_system(chase_system)
 
         self.action_handler = ClientActionHandler(self.ecs, self.current_player)
 
         self.camera = Camera()
+
+        menu_parent = UIElement(Rect(0, 0, 0, 0), None)
+        self.append_child(menu_parent)
 
         self.minimap = Minimap(self.ecs, self.camera)
         self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
@@ -165,8 +170,6 @@ class ClientGameWindow(UIElement):
                                             Font('assets/fonts/arial.ttf', 25))
         self.minimap_elem.append_child(resource_menu)
 
-        menu_parent = UIElement(Rect(0, 0, 0, 0), None)
-        self.append_child(menu_parent)
         menu_parent.append_child(self.minimap_elem)
         menu_parent.append_child(BuildMenu(self.relative_bounds, resource_menu, self.action_sender,
                                            self.current_player, self.camera))
@@ -175,6 +178,7 @@ class ClientGameWindow(UIElement):
 
     def update(self, event):
         self.camera.update(event)
+
         if event.type == EVENT_UPDATE:
             while self.received_actions:
                 args = self.received_actions.pop(0)
@@ -188,7 +192,6 @@ class ClientGameWindow(UIElement):
         super().draw(screen)
         for _, (texture, position) in self.ecs.get_entities_with_components((TextureComponent, PositionComponent)):
             texture.blit(screen, position.position_according_to_camera(self.camera))
-        pygame.draw.rect(screen, pygame.Color('white'), pygame.Rect((pygame.mouse.get_pos()), (10, 10)))
 
     def shutdown(self):
         self.sock.close()
