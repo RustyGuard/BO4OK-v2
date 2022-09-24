@@ -49,7 +49,7 @@ class ProduceMenu(UIElement):
         self.append_child(bottom_bar)
 
         for i, (unit_name, unit_cost) in enumerate(produce_component.producible_units.items()):
-            icon_path = entity_icons[unit_name]
+            icon_path = entity_icons[unit_name].format(color_name=self.current_player.color_name)
 
             btn = UIButton(Rect(5 + 85 * i, 35, 80, 80), None,
                            callback_func=partial(self.produce_unit, unit_name, unit_cost),

@@ -30,7 +30,7 @@ class BuildMenu(UIElement):
         self.resource_menu = resource_menu
         self.action_sender = action_sender
         for i, (build_name, cost) in enumerate(buildings.items()):
-            image = get_image(entity_icons[build_name])
+            image = get_image(entity_icons[build_name].format(color_name=self.current_player.color_name))
             btn = UIButton(Rect(0, i * 55 + 15, 50, 50), None, partial(self.select_building, build_name, cost, image))
             btn.append_child(UIImage(Rect((0, 0), btn.relative_bounds.size), None, image))
             self.append_child(btn)

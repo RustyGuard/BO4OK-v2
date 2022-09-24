@@ -24,8 +24,6 @@ class Minimap(UIElement):
         super().draw(screen)
         mark_rect = Rect(self.absolute_bounds.x, self.absolute_bounds.y, self.mark_size, self.mark_size)
 
-        position: PositionComponent
-        minimap_icon: MinimapIconComponent
         for _, (position, minimap_icon) in self.ecs.get_entities_with_components((PositionComponent, MinimapIconComponent)):
             shape = minimap_icon.mark_shape
             team_color = color_name_to_pygame_color[minimap_icon.team_color_name]
