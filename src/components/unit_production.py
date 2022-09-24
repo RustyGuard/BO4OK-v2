@@ -23,3 +23,7 @@ class UnitProductionComponent:
         player.spend(cost)
         self.unit_queue.append(unit_name)
         return True
+
+    def assemble_on_client(self):
+        self.producible_units = {unit_name: RequiredCost(**cost_dict) for unit_name, cost_dict in
+                                 self.producible_units.items()}

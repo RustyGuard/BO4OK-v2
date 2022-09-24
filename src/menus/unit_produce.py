@@ -49,7 +49,6 @@ class ProduceMenu(UIElement):
         self.append_child(bottom_bar)
 
         for i, (unit_name, unit_cost) in enumerate(produce_component.producible_units.items()):
-            unit_cost = RequiredCost(**unit_cost)
             icon_path = entity_icons[unit_name]
 
             btn = UIButton(Rect(5 + 85 * i, 35, 80, 80), None,
@@ -93,6 +92,7 @@ class ProduceMenu(UIElement):
                                                                                 TextureComponent,
                                                                                 PlayerOwnerComponent)):
                 unit_production, position, texture, owner = components
+
                 if owner.socket_id != self.current_player.socket_id:
                     continue
 

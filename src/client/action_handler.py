@@ -30,7 +30,10 @@ class ClientActionHandler:
             component_class_name = component_json.pop('component_class')
             component_class = next(component_class for component_class in self.ecs.components if
                                    component_class.__name__ == component_class_name)
-            components.append(component_class(**component_json))
+            component = component_class(**component_json)
+            if hasattr(component, 'assemble_on_client'):
+                component.assemble_on_client()
+            components.append(component)
         self.ecs.create_entity(components, entity_id)
 
     def handle_remove(self, entity_id: EntityId):
