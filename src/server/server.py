@@ -20,16 +20,18 @@ from src.components.unit_production import UnitProductionComponent
 from src.components.velocity import VelocityComponent
 from src.config import config
 from src.constants import EVENT_UPDATE, color_name_to_pygame_color
+from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerResources, PlayerInfo, EntityId, Component
 from src.main import Main
+from src.menus.minimap import Minimap
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
 from src.systems.decay import decay_system
 from src.systems.unit_production import unit_production_system
 from src.systems.velocity import velocity_system
-from src.ui import UIElement, FPSCounter
+from src.ui import UIElement, FPSCounter, UIImage
 from src.utils.json_utils import PydanticEncoder
 
 Connections = dict[int, tuple[socket.socket, Any]]
@@ -153,7 +155,7 @@ class WaitForPlayersWindow(UIElement):
         for socket_id in self.connections:
             self.write_action_connection.send((['start', socket_id, players], socket_id))
 
-        w = ServerGameWindow(self.relative_bounds, self.color, self.sock, self.connections, self.received_actions,
+        w = ServerGameWindow(self.relative_bounds, self.sock, self.connections, self.received_actions,
                              self.write_action_connection, self.send_process, players)
         self.main.main_element = w
 
@@ -191,10 +193,10 @@ class WaitForPlayersWindow(UIElement):
 
 
 class ServerGameWindow(UIElement):
-    def __init__(self, rect: Rect, color: Optional[Color], socket: socket.socket, connections: Connections,
+    def __init__(self, rect: Rect, socket: socket.socket, connections: Connections,
                  received_actions: list[tuple[int, Any]], write_action_connection: Connection, send_process: Process,
                  players: dict[int, PlayerInfo]):
-        super().__init__(rect, color)
+        super().__init__(rect, Color(93, 161, 48))
 
         self.players = players
 
@@ -228,12 +230,16 @@ class ServerGameWindow(UIElement):
 
         self.action_handler = ServerActionHandler(self.ecs, self.players, self.action_sender)
 
-        # self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
-        #
-        # self.minimap = Minimap(self.game)
-        # self.minimap_elem.append_child(self.minimap)
-        #
-        # self.append_child(self.minimap_elem)
+        self.camera = Camera()
+
+        menu_parent = UIElement(Rect(0, 0, 0, 0), None)
+        self.append_child(menu_parent)
+
+        self.minimap = Minimap(self.ecs, self.camera)
+        self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
+        self.minimap_elem.append_child(self.minimap)
+        menu_parent.append_child(self.minimap_elem)
+
         setup_level(self.ecs, self.players)
 
     def on_create(self, entity_id, components: list[Component]):
@@ -249,6 +255,8 @@ class ServerGameWindow(UIElement):
         self.action_sender.remove_entity(entity_id)
 
     def update(self, event: pygame.event) -> bool:
+        self.camera.update(event)
+
         if event.type == EVENT_UPDATE:
             while self.received_actions:
                 sender, command = self.received_actions.pop(0)
@@ -261,7 +269,7 @@ class ServerGameWindow(UIElement):
     def draw(self, screen) -> None:
         super().draw(screen)
         for _, (texture, position) in self.ecs.get_entities_with_components((TextureComponent, PositionComponent)):
-            texture.blit(screen, position.to_tuple())
+            texture.blit(screen, position.position_according_to_camera(self.camera))
 
     def shutdown(self) -> None:
         print('Shutdown')
