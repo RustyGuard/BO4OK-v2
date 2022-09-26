@@ -11,7 +11,7 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
-from src.components.arrow_throw import ArrowThrowComponent
+from src.components.projectile_throw import ProjectileThrowComponent
 from src.components.chase import ChaseComponent
 from src.components.close_range_attack import CloseRangeAttack
 from src.components.damage_on_contact import DamageOnContactComponent
@@ -34,7 +34,7 @@ from src.menus.minimap import Minimap
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
-from src.systems.arrow_throw import arrow_throw_system
+from src.systems.projectile_throw import projectile_throw_system
 from src.systems.chase import chase_system
 from src.systems.close_range_attack import close_range_attack_system
 from src.systems.damage_on_contact import damage_on_contact_system
@@ -240,7 +240,7 @@ class ServerGameWindow(UIElement):
         self.ecs.init_component(ChaseComponent)
         self.ecs.init_component(EnemyFinderComponent)
         self.ecs.init_component(HealthComponent)
-        self.ecs.init_component(ArrowThrowComponent)
+        self.ecs.init_component(ProjectileThrowComponent)
         self.ecs.init_component(DamageOnContactComponent)
         self.ecs.init_component(CloseRangeAttack)
 
@@ -249,7 +249,7 @@ class ServerGameWindow(UIElement):
         self.ecs.init_system(unit_production_system)
         self.ecs.init_system(chase_system)
         self.ecs.init_system(enemy_finder_system)
-        self.ecs.init_system(arrow_throw_system)
+        self.ecs.init_system(projectile_throw_system)
         self.ecs.init_system(damage_on_contact_system)
         self.ecs.init_system(close_range_attack_system)
         self.ecs.init_system(death_system)
@@ -272,7 +272,7 @@ class ServerGameWindow(UIElement):
         components_to_exclude = (
             DecayComponent,
             EnemyFinderComponent,
-            ArrowThrowComponent,
+            ProjectileThrowComponent,
             DamageOnContactComponent,
             CloseRangeAttack,
         )

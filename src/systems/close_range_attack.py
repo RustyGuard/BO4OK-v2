@@ -21,11 +21,15 @@ def close_range_attack_system(entity_id: EntityId,
     if chase.chase_position.distance(position) > chase.distance_until_attack:
         return
 
-    close_range_attack.current_delay += 1
-    if close_range_attack.current_delay >= close_range_attack.delay:
-        close_range_attack.current_delay = 0
+    if close_range_attack.current_delay < close_range_attack.delay:
+        close_range_attack.current_delay += 1
+        return
 
-        enemy_health, = ecs.get_components(chase.entity_id, (HealthComponent,))
+    close_range_attack.current_delay = 0
 
-        enemy_health.apply_damage(close_range_attack.damage)
-        action_sender.update_component_info(chase.entity_id, enemy_health)
+    enemy_health, = ecs.get_components(chase.entity_id, (HealthComponent,))
+
+    enemy_health.apply_damage(close_range_attack.damage)
+    action_sender.update_component_info(chase.entity_id, enemy_health)
+    action_sender.apply_damage(entity_id, chase.entity_id, close_range_attack.damage)
+

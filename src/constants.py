@@ -25,6 +25,7 @@ class ClientCommands:
     RESOURCE_INFO = 4
     COMPONENT_INFO = 5
     DEAD = 6
+    DAMAGE = 7
 
 
 class ServerCommands:

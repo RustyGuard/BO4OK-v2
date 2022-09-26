@@ -44,3 +44,6 @@ class ServerActionSender:
 
     def remove_entity(self, entity_id: EntityId):
         self.send([ClientCommands.DEAD, entity_id])
+
+    def apply_damage(self, enemy_id: EntityId, victim_id: EntityId, damage: int):
+        self.send([ClientCommands.DAMAGE, enemy_id, victim_id, damage])

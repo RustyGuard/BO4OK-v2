@@ -35,6 +35,7 @@ def damage_on_contact_system(entity_id: EntityId,
 
         enemy_health.apply_damage(damage_on_contact.damage)
         action_sender.update_component_info(enemy_id, enemy_health)
+        action_sender.apply_damage(entity_id, enemy_id, damage_on_contact.damage)
 
         if damage_on_contact.die_on_contact:
             ecs.remove_entity(entity_id)

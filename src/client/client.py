@@ -23,11 +23,12 @@ from src.components.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
 from src.components.velocity import VelocityComponent
 from src.config import config
-from src.constants import EVENT_UPDATE
+from src.constants import EVENT_UPDATE, EVENT_SEC
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo
 from src.menus.building_place import BuildMenu
+from src.menus.damage_indicators import DamageIndicators
 from src.menus.minimap import Minimap
 from src.menus.resources_display import ResourceDisplayMenu
 from src.menus.unit_move import UnitMoveMenu
@@ -157,9 +158,9 @@ class ClientGameWindow(UIElement):
         self.ecs.init_system(velocity_system)
         self.ecs.init_system(chase_system)
 
-        self.action_handler = ClientActionHandler(self.ecs, self.current_player)
-
         self.camera = Camera()
+        self.damage_indicators = DamageIndicators(self.camera)
+        self.action_handler = ClientActionHandler(self.ecs, self.current_player, self.damage_indicators)
 
         menu_parent = UIElement(Rect(0, 0, 0, 0), None)
         self.append_child(menu_parent)
@@ -187,6 +188,8 @@ class ClientGameWindow(UIElement):
             self.camera,
             self.current_player,
         ))
+
+        menu_parent.append_child(self.damage_indicators)
 
     def update(self, event):
         self.camera.update(event)

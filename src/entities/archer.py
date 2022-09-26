@@ -1,6 +1,6 @@
 import random
 
-from src.components.arrow_throw import ArrowThrowComponent
+from src.components.projectile_throw import ProjectileThrowComponent
 from src.components.chase import ChaseComponent
 from src.components.enemy_finder import EnemyFinderComponent
 from src.components.health import HealthComponent
@@ -18,6 +18,6 @@ def create_archer(x: float, y: float, player_owner: PlayerOwnerComponent):
                        movement_speed=random.uniform(3, 4.5),
                        rotation_speed=20),
         HealthComponent(max_amount=50),
-        ArrowThrowComponent(delay=60),
+        ProjectileThrowComponent(delay=60, projectile_name='arrow'),
         EnemyFinderComponent(anger_range=1000),
     ]

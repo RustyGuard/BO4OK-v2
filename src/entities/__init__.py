@@ -23,3 +23,6 @@ building_factories = {
 buildings = {
     'casern': RequiredCost(money=100, wood=50),
 }
+projectiles = {
+    'arrow': create_arrow
+}
