@@ -15,12 +15,11 @@ def rotation_direction(angle: int, required_angle: int) -> int:
     return -1 if diff < 180 else 1
 
 
+FORCE_MOVE_DISTANCE_FROM_AIM = 50
+
+
 def chase_system(chase: ChaseComponent, position: PositionComponent, texture: TextureComponent):
     if chase.chase_position is None:
-        return
-
-    if position.distance(chase.chase_position) <= chase.minimal_distance:
-        chase.chase_position = None
         return
 
     angle = position.angle_between(chase.chase_position)
@@ -35,6 +34,14 @@ def chase_system(chase: ChaseComponent, position: PositionComponent, texture: Te
     rotation_dir = rotation_direction(texture.rotation_angle, angle)
 
     texture.rotation_angle = convert_to_main_angle(texture.rotation_angle + rotation_dir * chase.rotation_speed)
+
+    if chase.entity_id is None:
+        if position.distance(chase.chase_position) <= FORCE_MOVE_DISTANCE_FROM_AIM:
+            chase.chase_position = None
+            return
+    else:
+        if position.distance(chase.chase_position) <= chase.distance_until_attack:
+            return
 
     position.x += math.cos(texture.rotation_angle * math.pi / 180)
     position.y += -math.sin(texture.rotation_angle * math.pi / 180)

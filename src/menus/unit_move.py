@@ -35,8 +35,13 @@ class UnitMoveMenu(UIElement):
                 pygame.draw.rect(screen, self.current_player.color, render_rect, 2)
 
         if self.selected_entities:
-            for entity_id in self.selected_entities:
-                position, texture = self.ecs.get_components(entity_id, (PositionComponent, TextureComponent))
+            for entity_id in self.selected_entities.copy():
+                components = self.ecs.get_components(entity_id, (PositionComponent, TextureComponent))
+                if components is None:
+                    self.selected_entities.remove(entity_id)
+                    continue
+
+                position, texture = components
                 rect = texture.texture.get_rect()
                 rect.center = self.camera.to_screen_position(position.to_tuple())
                 pygame.draw.ellipse(screen, self.current_player.color, rect, 1)

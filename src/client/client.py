@@ -15,6 +15,7 @@ from src.client.action_handler import ClientActionHandler
 from src.client.action_sender import ClientActionSender
 from src.components.chase import ChaseComponent
 from src.components.decay import DecayComponent
+from src.components.health import HealthComponent
 from src.components.minimap_icon import MinimapIconComponent
 from src.components.player_owner import PlayerOwnerComponent
 from src.components.position import PositionComponent
@@ -151,6 +152,7 @@ class ClientGameWindow(UIElement):
         self.ecs.init_component(UnitProductionComponent)
         self.ecs.init_component(PlayerOwnerComponent)
         self.ecs.init_component(ChaseComponent)
+        self.ecs.init_component(HealthComponent)
 
         self.ecs.init_system(velocity_system)
         self.ecs.init_system(chase_system)
@@ -202,6 +204,15 @@ class ClientGameWindow(UIElement):
         super().draw(screen)
         for _, (texture, position) in self.ecs.get_entities_with_components((TextureComponent, PositionComponent)):
             texture.blit(screen, position.position_according_to_camera(self.camera))
+
+        for _, (texture, health, position) in self.ecs.get_entities_with_components((TextureComponent, HealthComponent, PositionComponent)):
+            if health.amount == health.max_amount:
+                continue
+            health_rect = Rect(0, 0, 50, 5)
+            health_rect.center = position.position_according_to_camera(self.camera)
+            pygame.draw.rect(screen, Color('gray'), health_rect)
+            health_rect.width = health_rect.width * health.amount / health.max_amount
+            pygame.draw.rect(screen, Color('red'), health_rect)
 
     def shutdown(self):
         self.sock.close()

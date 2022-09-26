@@ -7,7 +7,7 @@ from src.core.types import EntityId
 
 @dataclass(slots=True)
 class ChaseComponent:
-    minimal_distance: float
+    distance_until_attack: float
     movement_speed: float
     rotation_speed: int  # in degrees
     chase_position: PositionComponent | None = None

@@ -1,3 +1,4 @@
+from src.components.health import HealthComponent
 from src.components.minimap_icon import MinimapIconComponent
 from src.components.player_owner import PlayerOwnerComponent
 from src.components.position import PositionComponent
@@ -14,4 +15,5 @@ def create_casern(x: float, y: float, player_owner: PlayerOwnerComponent):
         player_owner,
         UnitProductionComponent(delay=60, producible_units={'archer': RequiredCost(money=1, wood=5, meat=1),
                                                             'warrior': RequiredCost(money=2, meat=2)}),
+        HealthComponent(max_amount=300),
     ]
