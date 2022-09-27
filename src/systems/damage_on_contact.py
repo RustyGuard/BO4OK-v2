@@ -15,6 +15,7 @@ def damage_on_contact_system(entity_id: EntityId,
                              owner: PlayerOwnerComponent,
                              position: PositionComponent,
                              ecs: EntityComponentSystem,
+                             texture: TextureComponent,
                              action_sender: ServerActionSender
                              ):
     damage_on_contact.check_delay += 1
@@ -28,9 +29,11 @@ def damage_on_contact_system(entity_id: EntityId,
         if enemy_owner == owner:
             continue
 
-        rect = enemy_texture.texture.get_rect()
-        rect.center = enemy_position.to_tuple()
-        if not rect.collidepoint(*position.to_tuple()):
+        rect = texture.texture.get_rect()
+        rect.center = position.to_tuple()
+        enemy_rect = enemy_texture.texture.get_rect()
+        enemy_rect.center = enemy_position.to_tuple()
+        if not enemy_rect.colliderect(rect):
             continue
 
         enemy_health.apply_damage(damage_on_contact.damage)
