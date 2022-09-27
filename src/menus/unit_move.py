@@ -35,11 +35,8 @@ class UnitMoveMenu(UIElement):
                 pygame.draw.rect(screen, self.current_player.color, render_rect, 2)
 
         if self.selected_entities:
-            for entity_id in self.selected_entities.copy():
+            for entity_id in self.selected_entities:
                 components = self.ecs.get_components(entity_id, (PositionComponent, TextureComponent))
-                if components is None:
-                    self.selected_entities.remove(entity_id)
-                    continue
 
                 position, texture = components
                 rect = texture.texture.get_rect()

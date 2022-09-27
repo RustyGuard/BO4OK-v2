@@ -23,10 +23,10 @@ from src.components.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
 from src.components.velocity import VelocityComponent
 from src.config import config
-from src.constants import EVENT_UPDATE, EVENT_SEC
+from src.constants import EVENT_UPDATE, EVENT_SEC, ClientCommands
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
-from src.core.types import PlayerInfo
+from src.core.types import PlayerInfo, EntityId
 from src.menus.building_place import BuildMenu
 from src.menus.damage_indicators import DamageIndicators
 from src.menus.minimap import Minimap
@@ -168,28 +168,34 @@ class ClientGameWindow(UIElement):
         self.minimap_elem.append_child(self.minimap)
 
         self.resource_menu = ResourceDisplayMenu(self.current_player,
-                                            Rect(45, 108, 0, 0),
-                                            Font('assets/fonts/arial.ttf', 25))
+                                                 Rect(45, 108, 0, 0),
+                                                 Font('assets/fonts/arial.ttf', 25))
         self.minimap_elem.append_child(self.resource_menu)
 
         menu_parent.append_child(self.minimap_elem)
 
-        menu_parent.append_child(BuildMenu(self.relative_bounds, self.resource_menu, self.action_sender,
-                                           self.current_player, self.camera))
+        self.build_menu = BuildMenu(self.relative_bounds, self.resource_menu, self.action_sender,
+                                    self.current_player, self.camera)
+        menu_parent.append_child(self.build_menu)
 
-        menu_parent.append_child(ProduceMenu(self.relative_bounds, self.ecs, self.action_sender, self.camera,
-                                             self.current_player, self.resource_menu))
+        self.produce_menu = ProduceMenu(self.relative_bounds, self.ecs, self.action_sender, self.camera,
+                                        self.current_player, self.resource_menu)
+        menu_parent.append_child(self.produce_menu)
 
-        menu_parent.append_child(UnitMoveMenu(
+        self.unit_move_menu = UnitMoveMenu(
             self.ecs,
             self.action_sender,
             self.camera,
             self.current_player,
-        ))
+        )
+        menu_parent.append_child(self.unit_move_menu)
 
         menu_parent.append_child(self.damage_indicators)
 
-        self.action_handler = ClientActionHandler(self.ecs, self.current_player, self.damage_indicators, self.resource_menu)
+        self.action_handler = ClientActionHandler(self.ecs, self.current_player)
+        self.action_handler.add_hook(ClientCommands.DAMAGE, self.handle_damage)
+        self.action_handler.add_hook(ClientCommands.RESOURCE_INFO, lambda *_: self.resource_menu.update_values())
+        self.action_handler.add_hook(ClientCommands.DEAD, self.handle_death)
 
     def update(self, event):
         self.camera.update(event)
@@ -208,7 +214,8 @@ class ClientGameWindow(UIElement):
         for _, (texture, position) in self.ecs.get_entities_with_components((TextureComponent, PositionComponent)):
             texture.blit(screen, position.position_according_to_camera(self.camera))
 
-        for _, (texture, health, position) in self.ecs.get_entities_with_components((TextureComponent, HealthComponent, PositionComponent)):
+        for _, (texture, health, position) in self.ecs.get_entities_with_components(
+                (TextureComponent, HealthComponent, PositionComponent)):
             if health.amount == health.max_amount:
                 continue
             health_rect = Rect(0, 0, 50, 5)
@@ -224,3 +231,16 @@ class ClientGameWindow(UIElement):
         self.write_action_connection.close()
         self.read_action_connection.close()
         print('Closed')
+
+    def handle_damage(self, enemy_id: EntityId, victim_id: EntityId, damage: int):
+        position = self.ecs.get_component(victim_id, PositionComponent)
+        if position is None:
+            return
+        self.damage_indicators.show_indicator(damage, position)
+
+    def handle_death(self, entity_id: EntityId):
+        if self.produce_menu.selected_unit == entity_id:
+            self.produce_menu.unselect()
+
+        if entity_id in self.unit_move_menu.selected_entities:
+            self.unit_move_menu.selected_entities.remove(entity_id)

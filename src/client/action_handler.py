@@ -1,20 +1,18 @@
-from typing import Any
+from typing import Any, Callable
 
-from src.components.position import PositionComponent
 from src.constants import ClientCommands
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
-from src.menus.damage_indicators import DamageIndicators
-from src.menus.resources_display import ResourceDisplayMenu
 
 
 class ClientActionHandler:
-    def __init__(self, ecs: EntityComponentSystem, current_player: PlayerInfo, damage_indicators: DamageIndicators,
-                 resource_menu: ResourceDisplayMenu):
+    def __init__(self, ecs: EntityComponentSystem, current_player: PlayerInfo):
         self.ecs = ecs
         self.current_player = current_player
-        self.damage_indicators = damage_indicators
-        self.resource_menu = resource_menu
+        self.hooks = {}
+
+    def add_hook(self, command_id: int, hook: Callable[..., Any]):
+        self.hooks[command_id] = hook
 
     def handle_action(self, command: str, args: list[Any]):
         if command == ClientCommands.CREATE:
@@ -30,16 +28,14 @@ class ClientActionHandler:
             self.handle_update_component_info(args[0], args[1], args[2])
 
         elif command == ClientCommands.DAMAGE:
-            self.handle_damage(args[0], args[1], args[2])
+            pass
 
         else:
             print(f'Unknown command: {command}({args})')
 
-    def handle_damage(self, enemy_id: EntityId, victim_id: EntityId, damage: int):
-        position = self.ecs.get_component(victim_id, PositionComponent)
-        if position is None:
-            return
-        self.damage_indicators.show_indicator(damage, position)
+        hook = self.hooks.get(command, None)
+        if hook:
+            hook(*args)
 
     def handle_create(self, entity_json: dict):
         entity_id = entity_json['entity_id']
@@ -60,7 +56,6 @@ class ClientActionHandler:
     def handle_player_info_update(self, player_info_json):
         for field, value in player_info_json.items():
             setattr(self.current_player.resources, field, value)
-        self.resource_menu.update_values()
 
     def handle_update_component_info(self, entity_id: EntityId, component_class_name: str, component_json):
         component_class = next(component_class for component_class in self.ecs.components if
