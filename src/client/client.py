@@ -136,9 +136,7 @@ class ClientGameWindow(UIElement):
 
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
-        sub_elem = UIElement(Rect(50, 50, 50, 50), None)
-        sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
-        self.append_child(sub_elem)
+        self.append_child(FPSCounter(Rect(config['screen']['size'][0] - 100, 5, 0, 0), fps_font))
 
         self.action_sender = ClientActionSender(self.write_action_connection)
 

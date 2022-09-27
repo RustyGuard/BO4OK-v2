@@ -3,12 +3,14 @@ from typing import Any
 from src.components.chase import ChaseComponent
 from src.components.player_owner import PlayerOwnerComponent
 from src.components.position import PositionComponent
+from src.components.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
 from src.constants import ServerCommands
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
-from src.entities import buildings, building_factories
+from src.entities import buildings, building_factories, entity_icons
 from src.server.action_sender import ServerActionSender
+from src.utils.image import get_image
 from src.utils.math_utils import spread_position
 
 
@@ -50,6 +52,18 @@ class ServerActionHandler:
         cost = buildings[build_name]
         if not player.has_enough(cost):
             return
+
+        building_texture = get_image(entity_icons[build_name].format(color_name='black'))
+        building_rect = building_texture.get_rect()
+        building_rect.center = position_x, position_y
+
+        for entity_id, (position, texture) in self.ecs.get_entities_with_components((PositionComponent, TextureComponent)):
+            rect = texture.texture.get_rect()
+            rect.center = position.to_tuple()
+
+            if rect.colliderect(building_rect):
+                print('Can not build on top of entity')
+                return
 
         self.ecs.create_entity(building_factories[build_name](
             x=position_x,
