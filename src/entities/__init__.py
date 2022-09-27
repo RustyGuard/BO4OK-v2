@@ -2,6 +2,7 @@ from src.core.types import RequiredCost
 from src.entities.archer import create_archer
 from src.entities.arrow import create_arrow
 from src.entities.casern import create_casern
+from src.entities.farm import create_farm
 from src.entities.fortress import create_fortress
 from src.entities.warrior import create_warrior
 
@@ -10,7 +11,8 @@ entity_icons = {
     'arrow': 'assets/unit/archer/arrow.png',
     'archer': 'assets/unit/archer/{color_name}.png',
     'warrior': 'assets/unit/warrior/{color_name}.png',
-    'casern': 'assets/building/casern/{color_name}.png'
+    'casern': 'assets/building/casern/{color_name}.png',
+    'farm': 'assets/building/farm/{color_name}.png',
 }
 
 unit_production_factories = {
@@ -19,9 +21,11 @@ unit_production_factories = {
 }
 building_factories = {
     'casern': create_casern,
+    'farm': create_farm,
 }
-buildings = {
+buildings: dict[str: RequiredCost] = {
     'casern': RequiredCost(money=100, wood=50),
+    'farm': RequiredCost(money=25, wood=100),
 }
 projectiles = {
     'arrow': create_arrow

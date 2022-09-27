@@ -98,7 +98,6 @@ class WaitForServerWindow(UIElement):
         if event.type == EVENT_UPDATE:
             while self.receive_list:
                 msg = self.receive_list.pop(0)
-                print(msg)
                 if msg[0] == 'start':
                     players = {int(i): j for i, j in msg[2].items()}
                     self.start(int(msg[1]), players)
@@ -160,7 +159,6 @@ class ClientGameWindow(UIElement):
 
         self.camera = Camera()
         self.damage_indicators = DamageIndicators(self.camera)
-        self.action_handler = ClientActionHandler(self.ecs, self.current_player, self.damage_indicators)
 
         menu_parent = UIElement(Rect(0, 0, 0, 0), None)
         self.append_child(menu_parent)
@@ -169,18 +167,18 @@ class ClientGameWindow(UIElement):
         self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
 
-        resource_menu = ResourceDisplayMenu(self.current_player,
+        self.resource_menu = ResourceDisplayMenu(self.current_player,
                                             Rect(45, 108, 0, 0),
                                             Font('assets/fonts/arial.ttf', 25))
-        self.minimap_elem.append_child(resource_menu)
+        self.minimap_elem.append_child(self.resource_menu)
 
         menu_parent.append_child(self.minimap_elem)
 
-        menu_parent.append_child(BuildMenu(self.relative_bounds, resource_menu, self.action_sender,
+        menu_parent.append_child(BuildMenu(self.relative_bounds, self.resource_menu, self.action_sender,
                                            self.current_player, self.camera))
 
         menu_parent.append_child(ProduceMenu(self.relative_bounds, self.ecs, self.action_sender, self.camera,
-                                             self.current_player, resource_menu))
+                                             self.current_player, self.resource_menu))
 
         menu_parent.append_child(UnitMoveMenu(
             self.ecs,
@@ -190,6 +188,8 @@ class ClientGameWindow(UIElement):
         ))
 
         menu_parent.append_child(self.damage_indicators)
+
+        self.action_handler = ClientActionHandler(self.ecs, self.current_player, self.damage_indicators, self.resource_menu)
 
     def update(self, event):
         self.camera.update(event)

@@ -73,6 +73,8 @@ class ProduceMenu(UIElement):
 
     def draw(self, screen) -> None:
         super().draw(screen)
+        if self.selected_unit not in self.ecs.entities:
+            self.selected_unit = None
 
         if self.selected_unit is not None:
             position, texture = self.ecs.get_components(self.selected_unit, (PositionComponent, TextureComponent))

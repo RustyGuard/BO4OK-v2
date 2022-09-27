@@ -5,13 +5,16 @@ from src.constants import ClientCommands
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
 from src.menus.damage_indicators import DamageIndicators
+from src.menus.resources_display import ResourceDisplayMenu
 
 
 class ClientActionHandler:
-    def __init__(self, ecs: EntityComponentSystem, current_player: PlayerInfo, damage_indicators: DamageIndicators):
+    def __init__(self, ecs: EntityComponentSystem, current_player: PlayerInfo, damage_indicators: DamageIndicators,
+                 resource_menu: ResourceDisplayMenu):
         self.ecs = ecs
         self.current_player = current_player
         self.damage_indicators = damage_indicators
+        self.resource_menu = resource_menu
 
     def handle_action(self, command: str, args: list[Any]):
         if command == ClientCommands.CREATE:
@@ -57,6 +60,7 @@ class ClientActionHandler:
     def handle_player_info_update(self, player_info_json):
         for field, value in player_info_json.items():
             setattr(self.current_player.resources, field, value)
+        self.resource_menu.update_values()
 
     def handle_update_component_info(self, entity_id: EntityId, component_class_name: str, component_json):
         component_class = next(component_class for component_class in self.ecs.components if

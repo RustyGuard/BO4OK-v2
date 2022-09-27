@@ -11,6 +11,7 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
+from src.components.meat import ReturnMeatOnDeath, MaxMeatIncrease
 from src.components.projectile_throw import ProjectileThrowComponent
 from src.components.chase import ChaseComponent
 from src.components.close_range_attack import CloseRangeAttack
@@ -34,6 +35,7 @@ from src.menus.minimap import Minimap
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
+from src.systems.max_meat_increase import max_meat_increase_system
 from src.systems.projectile_throw import projectile_throw_system
 from src.systems.chase import chase_system
 from src.systems.close_range_attack import close_range_attack_system
@@ -67,7 +69,6 @@ def receive_data_from_socket(socket_id: int, socket: socket.socket, submit_list:
     while True:
         try:
             command_buffer += socket.recv(1024).decode('utf8')
-            print(command_buffer)
             splitter = command_buffer.find(';')
             while splitter != -1:
                 command = command_buffer[:splitter]
@@ -229,6 +230,7 @@ class ServerGameWindow(UIElement):
         self.ecs = EntityComponentSystem(self.on_create, self.on_remove)
 
         self.ecs.add_variable('action_sender', self.action_sender)
+        self.ecs.add_variable('players', self.players)
 
         self.ecs.init_component(PositionComponent)
         self.ecs.init_component(VelocityComponent)
@@ -243,6 +245,8 @@ class ServerGameWindow(UIElement):
         self.ecs.init_component(ProjectileThrowComponent)
         self.ecs.init_component(DamageOnContactComponent)
         self.ecs.init_component(CloseRangeAttack)
+        self.ecs.init_component(ReturnMeatOnDeath)
+        self.ecs.init_component(MaxMeatIncrease)
 
         self.ecs.init_system(velocity_system)
         self.ecs.init_system(decay_system)
@@ -253,6 +257,7 @@ class ServerGameWindow(UIElement):
         self.ecs.init_system(damage_on_contact_system)
         self.ecs.init_system(close_range_attack_system)
         self.ecs.init_system(death_system)
+        self.ecs.init_system(max_meat_increase_system)
 
         self.action_handler = ServerActionHandler(self.ecs, self.players, self.action_sender)
 
@@ -275,6 +280,8 @@ class ServerGameWindow(UIElement):
             ProjectileThrowComponent,
             DamageOnContactComponent,
             CloseRangeAttack,
+            ReturnMeatOnDeath,
+            MaxMeatIncrease,
         )
         components = [component for component in components if type(component) not in components_to_exclude]
 

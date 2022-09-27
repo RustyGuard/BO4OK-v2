@@ -44,4 +44,3 @@ def enemy_finder_system(entity_id: EntityId, ecs: EntityComponentSystem, action_
     chase.entity_id = other_entity_id
     chase.chase_position = other_position
     action_sender.update_component_info(entity_id, chase)
-    print(nearest)

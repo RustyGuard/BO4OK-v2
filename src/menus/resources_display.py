@@ -33,6 +33,8 @@ class ResourceDisplayMenu(UIElement):
         self.player = player
         self.cost: RequiredCost | None = None
 
+        self.update_values()
+
     def display_cost(self, cost: RequiredCost):
         self.cost = cost
         self.cost_display.enabled = True
@@ -43,18 +45,19 @@ class ResourceDisplayMenu(UIElement):
 
         if not self.player.has_enough(cost):
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_NO)
+        self.update_values()
 
     def hide_cost(self, cost: RequiredCost):
         if self.cost == cost:
             self.cost = None
             self.cost_display.enabled = False
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+            self.update_values()
 
     def update(self, event: pygame.event) -> bool:
         if super().update(event):
             return True
-        if event.type == EVENT_UPDATE:
-            self.update_values()
+
         return False
 
     def update_values(self) -> None:
@@ -64,15 +67,15 @@ class ResourceDisplayMenu(UIElement):
 
         if self.cost:
             if self.cost.money:
-                self.money_count.set_text(f'{self.player.resources.money - self.cost.money}')
                 self.money_count.set_color(Color('red'))
             if self.cost.wood:
-                self.wood_count.set_text(f'{self.player.resources.wood - self.cost.wood}')
                 self.wood_count.set_color(Color('red'))
             if self.cost.meat:
-                self.meat_count.set_text(
-                    f'{self.player.resources.meat + self.cost.meat}/{self.player.resources.max_meat}')
                 self.meat_count.set_color(Color('red'))
+
+            self.money_count.set_text(f'{self.player.resources.money - self.cost.money}')
+            self.wood_count.set_text(f'{self.player.resources.wood - self.cost.wood}')
+            self.meat_count.set_text(f'{self.player.resources.meat + self.cost.meat}/{self.player.resources.max_meat}')
 
             if not self.player.has_enough(self.cost):
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_NO)
