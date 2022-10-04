@@ -3,7 +3,7 @@ from pygame import Rect, Color
 from pygame.font import Font
 from pygame.sprite import Sprite, Group
 
-from src.components.position import PositionComponent
+from src.components.base.position import PositionComponent
 from src.constants import EVENT_UPDATE
 from src.core.camera import Camera
 from src.ui import UIElement

@@ -1,12 +1,12 @@
 import random
 
-from src.components.projectile_throw import ProjectileThrowComponent
+from src.components.fighting.projectile_throw import ProjectileThrowComponent
 from src.components.chase import ChaseComponent
-from src.components.enemy_finder import EnemyFinderComponent
-from src.components.health import HealthComponent
-from src.components.player_owner import PlayerOwnerComponent
-from src.components.position import PositionComponent
-from src.components.texture import TextureComponent
+from src.components.fighting.enemy_finder import EnemyFinderComponent
+from src.components.fighting.health import HealthComponent
+from src.components.base.player_owner import PlayerOwnerComponent
+from src.components.base.position import PositionComponent
+from src.components.base.texture import TextureComponent
 
 
 def create_archer(x: float, y: float, player_owner: PlayerOwnerComponent):

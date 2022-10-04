@@ -1,5 +1,5 @@
-from src.components.position import PositionComponent
-from src.components.texture import TextureComponent
+from src.components.base.position import PositionComponent
+from src.components.base.texture import TextureComponent
 
 
 def create_tree(x: float, y: float):

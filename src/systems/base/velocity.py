@@ -1,5 +1,5 @@
-from src.components.position import PositionComponent
-from src.components.velocity import VelocityComponent
+from src.components.base.position import PositionComponent
+from src.components.base.velocity import VelocityComponent
 
 
 def velocity_system(velocity: VelocityComponent, position: PositionComponent):

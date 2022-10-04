@@ -22,3 +22,12 @@ def rect_by_two_points(p1: tuple[float, float], p2: tuple[float, float]):
 def spread_position(position: tuple[float, float], spread_distance: int):
     return (position[0] + random.randint(-spread_distance, spread_distance),
             position[1] + random.randint(-spread_distance, spread_distance))
+
+
+def rotation_direction(angle: int, required_angle: int) -> int:
+    if angle == required_angle:
+        return 0
+    diff = angle - required_angle
+    diff = convert_to_main_angle(diff)
+
+    return -1 if diff < 180 else 1

@@ -1,13 +1,12 @@
 from src.core.types import RequiredCost
-from src.entities.archer import create_archer
-from src.entities.arrow import create_arrow
-from src.entities.ballista import create_ballista
-from src.entities.bolt import create_bolt
-from src.entities.casern import create_casern
-from src.entities.farm import create_farm
-from src.entities.fortress import create_fortress
-from src.entities.warrior import create_warrior
-from src.entities.workshop import create_workshop
+from src.entities.fighters.archer import create_archer
+from src.entities.projectiles.arrow import create_arrow
+from src.entities.fighters.ballista import create_ballista
+from src.entities.projectiles.bolt import create_bolt
+from src.entities.buildings.casern import create_casern
+from src.entities.buildings.farm import create_farm
+from src.entities.fighters.warrior import create_warrior
+from src.entities.buildings.workshop import create_workshop
 
 entity_icons = {
     'fortress': 'assets/building/fortress/{color_name}.png',

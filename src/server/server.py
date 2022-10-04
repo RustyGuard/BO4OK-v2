@@ -12,19 +12,19 @@ from pygame.font import Font
 from pygame.rect import Rect
 
 from src.components.meat import ReturnMeatOnDeath, MaxMeatIncrease
-from src.components.projectile_throw import ProjectileThrowComponent
+from src.components.fighting.projectile_throw import ProjectileThrowComponent
 from src.components.chase import ChaseComponent
-from src.components.close_range_attack import CloseRangeAttack
-from src.components.damage_on_contact import DamageOnContactComponent
-from src.components.decay import DecayComponent
-from src.components.enemy_finder import EnemyFinderComponent
-from src.components.health import HealthComponent
+from src.components.fighting.close_range_attack import CloseRangeAttack
+from src.components.fighting.damage_on_contact import DamageOnContactComponent
+from src.components.base.decay import DecayComponent
+from src.components.fighting.enemy_finder import EnemyFinderComponent
+from src.components.fighting.health import HealthComponent
 from src.components.minimap_icon import MinimapIconComponent
-from src.components.player_owner import PlayerOwnerComponent
-from src.components.position import PositionComponent
-from src.components.texture import TextureComponent
+from src.components.base.player_owner import PlayerOwnerComponent
+from src.components.base.position import PositionComponent
+from src.components.base.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
-from src.components.velocity import VelocityComponent
+from src.components.base.velocity import VelocityComponent
 from src.config import config
 from src.constants import EVENT_UPDATE, color_name_to_pygame_color
 from src.core.camera import Camera
@@ -36,15 +36,15 @@ from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
 from src.systems.max_meat_increase import max_meat_increase_system
-from src.systems.projectile_throw import projectile_throw_system
+from src.systems.fighting.projectile_throw import projectile_throw_system
 from src.systems.chase import chase_system
-from src.systems.close_range_attack import close_range_attack_system
-from src.systems.damage_on_contact import damage_on_contact_system
-from src.systems.death import death_system
-from src.systems.decay import decay_system
-from src.systems.enemy_finder import enemy_finder_system
+from src.systems.fighting.close_range_attack import close_range_attack_system
+from src.systems.fighting.damage_on_contact import damage_on_contact_system
+from src.systems.base.death import death_system
+from src.systems.base.decay import decay_system
+from src.systems.fighting.enemy_finder import enemy_finder_system
 from src.systems.unit_production import unit_production_system
-from src.systems.velocity import velocity_system
+from src.systems.base.velocity import velocity_system
 from src.ui import UIElement, FPSCounter, UIImage
 from src.utils.json_utils import PydanticEncoder
 

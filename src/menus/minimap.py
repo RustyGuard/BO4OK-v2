@@ -3,7 +3,7 @@ from pygame import Color
 from pygame.rect import Rect
 
 from src.components.minimap_icon import MinimapIconComponent
-from src.components.position import PositionComponent
+from src.components.base.position import PositionComponent
 from src.config import config
 from src.constants import color_name_to_pygame_color
 from src.core.camera import Camera

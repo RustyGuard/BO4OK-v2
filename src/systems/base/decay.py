@@ -1,6 +1,6 @@
 from typing_extensions import TYPE_CHECKING
 
-from src.components.decay import DecayComponent
+from src.components.base.decay import DecayComponent
 
 if TYPE_CHECKING:
     from src.core.entity_component_system import EntityComponentSystem

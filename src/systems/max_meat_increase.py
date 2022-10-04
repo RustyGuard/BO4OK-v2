@@ -1,5 +1,5 @@
 from src.components.meat import MaxMeatIncrease
-from src.components.player_owner import PlayerOwnerComponent
+from src.components.base.player_owner import PlayerOwnerComponent
 from src.core.types import PlayerInfo
 from src.server.action_sender import ServerActionSender
 

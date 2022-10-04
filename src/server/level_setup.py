@@ -1,13 +1,13 @@
 import math
 
-from src.components.player_owner import PlayerOwnerComponent
+from src.components.base.player_owner import PlayerOwnerComponent
 from src.config import config
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo
 from src.entities import create_archer, create_warrior
-from src.entities.fortress import create_fortress
-from src.entities.mine import create_mine
-from src.entities.tree import create_tree
+from src.entities.buildings.fortress import create_fortress
+from src.entities.resources.mine import create_mine
+from src.entities.resources.tree import create_tree
 from src.utils.math_utils import spread_position
 
 

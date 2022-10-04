@@ -1,7 +1,7 @@
 from src.components.chase import ChaseComponent
-from src.components.health import HealthComponent
+from src.components.fighting.health import HealthComponent
 from src.components.meat import ReturnMeatOnDeath, MaxMeatIncrease
-from src.components.player_owner import PlayerOwnerComponent
+from src.components.base.player_owner import PlayerOwnerComponent
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import EntityId, PlayerInfo
 from src.server.action_sender import ServerActionSender

@@ -1,16 +1,16 @@
 import pygame.event
-from pygame import Rect, Color
+from pygame import Rect
 
 from src.client.action_sender import ClientActionSender
 from src.components.chase import ChaseComponent
-from src.components.player_owner import PlayerOwnerComponent
-from src.components.position import PositionComponent
-from src.components.texture import TextureComponent
+from src.components.base.player_owner import PlayerOwnerComponent
+from src.components.base.position import PositionComponent
+from src.components.base.texture import TextureComponent
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import EntityId, PlayerInfo
 from src.ui import UIElement
-from src.utils.math_utils import rect_by_two_points, spread_position
+from src.utils.math_utils import rect_by_two_points
 
 
 class UnitMoveMenu(UIElement):

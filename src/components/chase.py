@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from src.components.position import PositionComponent
+from src.components.base.position import PositionComponent
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import EntityId
 

@@ -1,19 +1,9 @@
 import math
 
 from src.components.chase import ChaseComponent
-from src.components.position import PositionComponent
-from src.components.texture import TextureComponent
-from src.utils.math_utils import convert_to_main_angle
-
-
-def rotation_direction(angle: int, required_angle: int) -> int:
-    if angle == required_angle:
-        return 0
-    diff = angle - required_angle
-    diff = convert_to_main_angle(diff)
-
-    return -1 if diff < 180 else 1
-
+from src.components.base.position import PositionComponent
+from src.components.base.texture import TextureComponent
+from src.utils.math_utils import convert_to_main_angle, rotation_direction
 
 FORCE_MOVE_DISTANCE_FROM_AIM = 50
 
@@ -45,19 +35,3 @@ def chase_system(chase: ChaseComponent, position: PositionComponent, texture: Te
 
     position.x += math.cos(texture.rotation_angle * math.pi / 180)
     position.y += -math.sin(texture.rotation_angle * math.pi / 180)
-
-
-def test():
-    for i in range(0, 90):
-        assert rotation_direction(i, 90) == 1, i
-    for i in range(91, 270):
-        assert rotation_direction(i, 90) == -1, i
-
-    for i in range(0, 45):
-        assert rotation_direction(i, 45) == 1, i
-    for i in range(46, 225):
-        assert rotation_direction(i, 45) == -1, i
-
-
-if __name__ == '__main__':
-    test()

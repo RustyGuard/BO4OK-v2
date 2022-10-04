@@ -1,12 +1,12 @@
 import random
 
 from src.components.chase import ChaseComponent
-from src.components.close_range_attack import CloseRangeAttack
-from src.components.enemy_finder import EnemyFinderComponent
-from src.components.health import HealthComponent
-from src.components.player_owner import PlayerOwnerComponent
-from src.components.position import PositionComponent
-from src.components.texture import TextureComponent
+from src.components.fighting.close_range_attack import CloseRangeAttack
+from src.components.fighting.enemy_finder import EnemyFinderComponent
+from src.components.fighting.health import HealthComponent
+from src.components.base.player_owner import PlayerOwnerComponent
+from src.components.base.position import PositionComponent
+from src.components.base.texture import TextureComponent
 
 
 def create_warrior(x: float, y: float, player_owner: PlayerOwnerComponent):

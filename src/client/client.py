@@ -14,14 +14,14 @@ from pygame.rect import Rect
 from src.client.action_handler import ClientActionHandler
 from src.client.action_sender import ClientActionSender
 from src.components.chase import ChaseComponent
-from src.components.decay import DecayComponent
-from src.components.health import HealthComponent
+from src.components.base.decay import DecayComponent
+from src.components.fighting.health import HealthComponent
 from src.components.minimap_icon import MinimapIconComponent
-from src.components.player_owner import PlayerOwnerComponent
-from src.components.position import PositionComponent
-from src.components.texture import TextureComponent
+from src.components.base.player_owner import PlayerOwnerComponent
+from src.components.base.position import PositionComponent
+from src.components.base.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
-from src.components.velocity import VelocityComponent
+from src.components.base.velocity import VelocityComponent
 from src.config import config
 from src.constants import EVENT_UPDATE, ClientCommands
 from src.core.camera import Camera
@@ -34,7 +34,7 @@ from src.menus.resources_display import ResourceDisplayMenu
 from src.menus.unit_move import UnitMoveMenu
 from src.menus.unit_produce import ProduceMenu
 from src.systems.chase import chase_system
-from src.systems.velocity import velocity_system
+from src.systems.base.velocity import velocity_system
 from src.ui import UIElement, FPSCounter, UIImage
 from src.utils.json_utils import PydanticDecoder
 

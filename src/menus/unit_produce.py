@@ -6,9 +6,9 @@ from pygame.font import Font
 from pygame.rect import Rect
 
 from src.client.action_sender import ClientActionSender
-from src.components.player_owner import PlayerOwnerComponent
-from src.components.position import PositionComponent
-from src.components.texture import TextureComponent
+from src.components.base.player_owner import PlayerOwnerComponent
+from src.components.base.position import PositionComponent
+from src.components.base.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
 from src.config import config
 from src.core.camera import Camera

@@ -1,9 +1,9 @@
-from src.components.damage_on_contact import DamageOnContactComponent
-from src.components.decay import DecayComponent
-from src.components.player_owner import PlayerOwnerComponent
-from src.components.position import PositionComponent
-from src.components.texture import TextureComponent
-from src.components.velocity import VelocityComponent
+from src.components.fighting.damage_on_contact import DamageOnContactComponent
+from src.components.base.decay import DecayComponent
+from src.components.base.player_owner import PlayerOwnerComponent
+from src.components.base.position import PositionComponent
+from src.components.base.texture import TextureComponent
+from src.components.base.velocity import VelocityComponent
 
 
 def create_bolt(x: float, y: float, owner: PlayerOwnerComponent, angle: int, speed: float = 0.5):
