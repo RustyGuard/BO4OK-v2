@@ -1,8 +1,8 @@
-from src.components.fighting.projectile_throw import ProjectileThrowComponent
-from src.components.chase import ChaseComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
+from src.components.chase import ChaseComponent
+from src.components.fighting.projectile_throw import ProjectileThrowComponent
 from src.core.entity_component_system import EntityComponentSystem
 from src.entities import projectiles
 

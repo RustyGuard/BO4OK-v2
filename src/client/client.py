@@ -13,15 +13,16 @@ from pygame.rect import Rect
 
 from src.client.action_handler import ClientActionHandler
 from src.client.action_sender import ClientActionSender
-from src.components.chase import ChaseComponent
 from src.components.base.decay import DecayComponent
-from src.components.fighting.health import HealthComponent
-from src.components.minimap_icon import MinimapIconComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
-from src.components.unit_production import UnitProductionComponent
 from src.components.base.velocity import VelocityComponent
+from src.components.chase import ChaseComponent
+from src.components.fighting.health import HealthComponent
+from src.components.minimap_icon import MinimapIconComponent
+from src.components.unit_production import UnitProductionComponent
+from src.components.worker.resource import ResourceComponent
 from src.config import config
 from src.constants import EVENT_UPDATE, ClientCommands
 from src.core.camera import Camera
@@ -33,8 +34,8 @@ from src.menus.minimap import Minimap
 from src.menus.resources_display import ResourceDisplayMenu
 from src.menus.unit_move import UnitMoveMenu
 from src.menus.unit_produce import ProduceMenu
-from src.systems.chase import chase_system
 from src.systems.base.velocity import velocity_system
+from src.systems.chase import chase_system
 from src.ui import UIElement, FPSCounter, UIImage
 from src.utils.json_utils import PydanticDecoder
 
@@ -149,6 +150,7 @@ class ClientGameWindow(UIElement):
         self.ecs.init_component(PlayerOwnerComponent)
         self.ecs.init_component(ChaseComponent)
         self.ecs.init_component(HealthComponent)
+        self.ecs.init_component(ResourceComponent)
 
         self.ecs.init_system(velocity_system)
         self.ecs.init_system(chase_system)
@@ -189,7 +191,7 @@ class ClientGameWindow(UIElement):
         menu_parent.append_child(self.damage_indicators)
 
         self.action_handler = ClientActionHandler(self.ecs, self.current_player)
-        self.action_handler.add_hook(ClientCommands.DAMAGE, self.handle_damage)
+        self.action_handler.add_hook(ClientCommands.POPUP, self.handle_show_label)
         self.action_handler.add_hook(ClientCommands.RESOURCE_INFO, lambda *_: self.resource_menu.update_values())
         self.action_handler.add_hook(ClientCommands.DEAD, self.handle_death)
 
@@ -228,11 +230,9 @@ class ClientGameWindow(UIElement):
         self.read_action_connection.close()
         print('Closed')
 
-    def handle_damage(self, enemy_id: EntityId, victim_id: EntityId, damage: int):
-        position = self.ecs.get_component(victim_id, PositionComponent)
-        if position is None:
-            return
-        self.damage_indicators.show_indicator(damage, position)
+    def handle_show_label(self, label: str, pos_x: int, pos_y: int, color: str):
+        position = PositionComponent(pos_x, pos_y)
+        self.damage_indicators.show_indicator(label, position, color)
 
     def handle_death(self, entity_id: EntityId):
         if self.produce_menu.selected_unit == entity_id:

@@ -1,8 +1,8 @@
 import math
 
-from src.components.chase import ChaseComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
+from src.components.chase import ChaseComponent
 from src.utils.math_utils import convert_to_main_angle, rotation_direction
 
 FORCE_MOVE_DISTANCE_FROM_AIM = 50

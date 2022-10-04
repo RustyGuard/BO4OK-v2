@@ -1,7 +1,7 @@
+from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.chase import ChaseComponent
 from src.components.fighting.health import HealthComponent
-from src.components.meat import ReturnMeatOnDeath, MaxMeatIncrease
-from src.components.base.player_owner import PlayerOwnerComponent
+from src.components.meat import ReturnMeatOnDeathComponent, MaxMeatIncreaseComponent
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import EntityId, PlayerInfo
 from src.server.action_sender import ServerActionSender
@@ -15,12 +15,12 @@ def bring_meat_back(entity_id: EntityId, action_sender: ServerActionSender,
     owner_info = players[owner.socket_id]
     resources_changed = False
 
-    meat_on_death = ecs.get_component(entity_id, ReturnMeatOnDeath)
+    meat_on_death = ecs.get_component(entity_id, ReturnMeatOnDeathComponent)
     if meat_on_death:
         owner_info.resources.meat -= meat_on_death.meat_amount
         resources_changed = True
 
-    max_meat_increase = ecs.get_component(entity_id, MaxMeatIncrease)
+    max_meat_increase = ecs.get_component(entity_id, MaxMeatIncreaseComponent)
     if max_meat_increase:
         owner_info.resources.max_meat -= max_meat_increase.meat_amount
         resources_changed = True

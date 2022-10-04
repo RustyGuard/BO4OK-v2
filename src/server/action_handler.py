@@ -1,9 +1,9 @@
 from typing import Any
 
-from src.components.chase import ChaseComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
+from src.components.chase import ChaseComponent
 from src.components.unit_production import UnitProductionComponent
 from src.constants import ServerCommands
 from src.core.entity_component_system import EntityComponentSystem

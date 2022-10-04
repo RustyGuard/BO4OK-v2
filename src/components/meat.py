@@ -2,11 +2,11 @@ from dataclasses import dataclass
 
 
 @dataclass(slots=True, frozen=True)
-class ReturnMeatOnDeath:
+class ReturnMeatOnDeathComponent:
     meat_amount: int
 
 
 @dataclass(slots=True)
-class MaxMeatIncrease:
+class MaxMeatIncreaseComponent:
     meat_amount: int
     increased: bool = False

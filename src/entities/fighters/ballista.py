@@ -1,12 +1,12 @@
 import random
 
-from src.components.fighting.projectile_throw import ProjectileThrowComponent
-from src.components.chase import ChaseComponent
-from src.components.fighting.enemy_finder import EnemyFinderComponent
-from src.components.fighting.health import HealthComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
+from src.components.chase import ChaseComponent
+from src.components.fighting.enemy_finder import EnemyFinderComponent
+from src.components.fighting.health import HealthComponent
+from src.components.fighting.projectile_throw import ProjectileThrowComponent
 
 
 def create_ballista(x: float, y: float, player_owner: PlayerOwnerComponent):

@@ -27,7 +27,7 @@ class ClientActionHandler:
         elif command == ClientCommands.COMPONENT_INFO:
             self.handle_update_component_info(args[0], args[1], args[2])
 
-        elif command == ClientCommands.DAMAGE:
+        elif command == ClientCommands.POPUP:
             pass
 
         else:

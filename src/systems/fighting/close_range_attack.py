@@ -1,15 +1,15 @@
-from src.components.chase import ChaseComponent
-from src.components.fighting.close_range_attack import CloseRangeAttack
-from src.components.fighting.health import HealthComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
+from src.components.chase import ChaseComponent
+from src.components.fighting.close_range_attack import CloseRangeAttackComponent
+from src.components.fighting.health import HealthComponent
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import EntityId
 from src.server.action_sender import ServerActionSender
 
 
 def close_range_attack_system(entity_id: EntityId,
-                              close_range_attack: CloseRangeAttack,
+                              close_range_attack: CloseRangeAttackComponent,
                               owner: PlayerOwnerComponent,
                               position: PositionComponent,
                               ecs: EntityComponentSystem,
@@ -31,5 +31,5 @@ def close_range_attack_system(entity_id: EntityId,
 
     enemy_health.apply_damage(close_range_attack.damage)
     action_sender.update_component_info(chase.entity_id, enemy_health)
-    action_sender.apply_damage(entity_id, chase.entity_id, close_range_attack.damage)
+    action_sender.show_popup(str(close_range_attack.damage), chase.chase_position, 'red')
 

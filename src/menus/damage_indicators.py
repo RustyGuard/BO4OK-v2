@@ -11,10 +11,10 @@ from src.utils.math_utils import spread_position
 
 
 class DamageIndicator(Sprite):
-    def __init__(self, damage: int, position: tuple[float, float], font: Font):
+    def __init__(self, label: str, position: tuple[float, float], font: Font, color: Color):
         super().__init__()
 
-        self.image = font.render(f'{damage}', True, Color('red'))
+        self.image = font.render(label, True, color)
         self.rect = self.image.get_rect()
         self.rect.center = position
 
@@ -35,9 +35,10 @@ class DamageIndicators(UIElement):
         self.font = pygame.font.SysFont('Comic Sans MS', 20)
         self.camera = camera
 
-    def show_indicator(self, damage: int, position: PositionComponent):
+    def show_indicator(self, label: str, position: PositionComponent, color: str):
         self.indicators.add(
-            DamageIndicator(damage, spread_position(position.position_according_to_camera(self.camera), 10), self.font))
+            DamageIndicator(label, spread_position(position.position_according_to_camera(self.camera), 10), self.font,
+                            Color(color)))
 
     def draw(self, screen):
         self.indicators.draw(screen)

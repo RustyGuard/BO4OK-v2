@@ -11,20 +11,24 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
-from src.components.meat import ReturnMeatOnDeath, MaxMeatIncrease
-from src.components.fighting.projectile_throw import ProjectileThrowComponent
-from src.components.chase import ChaseComponent
-from src.components.fighting.close_range_attack import CloseRangeAttack
-from src.components.fighting.damage_on_contact import DamageOnContactComponent
 from src.components.base.decay import DecayComponent
-from src.components.fighting.enemy_finder import EnemyFinderComponent
-from src.components.fighting.health import HealthComponent
-from src.components.minimap_icon import MinimapIconComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
-from src.components.unit_production import UnitProductionComponent
 from src.components.base.velocity import VelocityComponent
+from src.components.chase import ChaseComponent
+from src.components.fighting.close_range_attack import CloseRangeAttackComponent
+from src.components.fighting.damage_on_contact import DamageOnContactComponent
+from src.components.fighting.enemy_finder import EnemyFinderComponent
+from src.components.fighting.health import HealthComponent
+from src.components.fighting.projectile_throw import ProjectileThrowComponent
+from src.components.meat import ReturnMeatOnDeathComponent, MaxMeatIncreaseComponent
+from src.components.minimap_icon import MinimapIconComponent
+from src.components.unit_production import UnitProductionComponent
+from src.components.worker.depot import ResourceDepotComponent
+from src.components.worker.resource import ResourceComponent
+from src.components.worker.resource_gatherer import ResourceGathererComponent
+from src.components.worker.work_finder import WorkFinderComponent
 from src.config import config
 from src.constants import EVENT_UPDATE, color_name_to_pygame_color
 from src.core.camera import Camera
@@ -35,16 +39,18 @@ from src.menus.minimap import Minimap
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
-from src.systems.max_meat_increase import max_meat_increase_system
-from src.systems.fighting.projectile_throw import projectile_throw_system
+from src.systems.base.death import death_system
+from src.systems.base.decay import decay_system
+from src.systems.base.velocity import velocity_system
 from src.systems.chase import chase_system
 from src.systems.fighting.close_range_attack import close_range_attack_system
 from src.systems.fighting.damage_on_contact import damage_on_contact_system
-from src.systems.base.death import death_system
-from src.systems.base.decay import decay_system
 from src.systems.fighting.enemy_finder import enemy_finder_system
+from src.systems.fighting.projectile_throw import projectile_throw_system
+from src.systems.max_meat_increase import max_meat_increase_system
 from src.systems.unit_production import unit_production_system
-from src.systems.base.velocity import velocity_system
+from src.systems.worker.resource_gathering import resource_gathering_system
+from src.systems.worker.work_finder import work_finder_system
 from src.ui import UIElement, FPSCounter, UIImage
 from src.utils.json_utils import PydanticEncoder
 
@@ -244,9 +250,13 @@ class ServerGameWindow(UIElement):
         self.ecs.init_component(HealthComponent)
         self.ecs.init_component(ProjectileThrowComponent)
         self.ecs.init_component(DamageOnContactComponent)
-        self.ecs.init_component(CloseRangeAttack)
-        self.ecs.init_component(ReturnMeatOnDeath)
-        self.ecs.init_component(MaxMeatIncrease)
+        self.ecs.init_component(CloseRangeAttackComponent)
+        self.ecs.init_component(ReturnMeatOnDeathComponent)
+        self.ecs.init_component(MaxMeatIncreaseComponent)
+        self.ecs.init_component(WorkFinderComponent)
+        self.ecs.init_component(ResourceComponent)
+        self.ecs.init_component(ResourceDepotComponent)
+        self.ecs.init_component(ResourceGathererComponent)
 
         self.ecs.init_system(velocity_system)
         self.ecs.init_system(decay_system)
@@ -258,6 +268,8 @@ class ServerGameWindow(UIElement):
         self.ecs.init_system(close_range_attack_system)
         self.ecs.init_system(death_system)
         self.ecs.init_system(max_meat_increase_system)
+        self.ecs.init_system(work_finder_system)
+        self.ecs.init_system(resource_gathering_system)
 
         self.action_handler = ServerActionHandler(self.ecs, self.players, self.action_sender)
 
@@ -279,9 +291,12 @@ class ServerGameWindow(UIElement):
             EnemyFinderComponent,
             ProjectileThrowComponent,
             DamageOnContactComponent,
-            CloseRangeAttack,
-            ReturnMeatOnDeath,
-            MaxMeatIncrease,
+            CloseRangeAttackComponent,
+            ReturnMeatOnDeathComponent,
+            MaxMeatIncreaseComponent,
+            WorkFinderComponent,
+            ResourceGathererComponent,
+            ResourceDepotComponent,
         )
         components = [component for component in components if type(component) not in components_to_exclude]
 

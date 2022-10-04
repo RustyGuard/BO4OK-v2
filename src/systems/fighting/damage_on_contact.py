@@ -1,8 +1,8 @@
-from src.components.fighting.damage_on_contact import DamageOnContactComponent
-from src.components.fighting.health import HealthComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
+from src.components.fighting.damage_on_contact import DamageOnContactComponent
+from src.components.fighting.health import HealthComponent
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import EntityId
 from src.server.action_sender import ServerActionSender
@@ -38,7 +38,7 @@ def damage_on_contact_system(entity_id: EntityId,
 
         enemy_health.apply_damage(damage_on_contact.damage)
         action_sender.update_component_info(enemy_id, enemy_health)
-        action_sender.apply_damage(entity_id, enemy_id, damage_on_contact.damage)
+        action_sender.show_popup(str(damage_on_contact.damage), enemy_position, 'red')
 
         if damage_on_contact.die_on_contact:
             ecs.remove_entity(entity_id)

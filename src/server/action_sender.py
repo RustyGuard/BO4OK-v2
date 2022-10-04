@@ -2,6 +2,7 @@ import dataclasses
 from multiprocessing.connection import Connection
 from typing import Any
 
+from src.components.base.position import PositionComponent
 from src.constants import ClientCommands
 from src.core.types import Component, EntityId
 from src.core.types import PlayerInfo
@@ -45,5 +46,5 @@ class ServerActionSender:
     def remove_entity(self, entity_id: EntityId):
         self.send([ClientCommands.DEAD, entity_id])
 
-    def apply_damage(self, enemy_id: EntityId, victim_id: EntityId, damage: int):
-        self.send([ClientCommands.DAMAGE, enemy_id, victim_id, damage])
+    def show_popup(self, label: str, position: PositionComponent, color: str):
+        self.send([ClientCommands.POPUP, label, position.x, position.y, color])

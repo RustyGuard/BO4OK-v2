@@ -1,9 +1,9 @@
-from src.components.fighting.health import HealthComponent
-from src.components.meat import MaxMeatIncrease
-from src.components.minimap_icon import MinimapIconComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
+from src.components.fighting.health import HealthComponent
+from src.components.meat import MaxMeatIncreaseComponent
+from src.components.minimap_icon import MinimapIconComponent
 
 
 def create_farm(x: float, y: float, player_owner: PlayerOwnerComponent):
@@ -13,5 +13,5 @@ def create_farm(x: float, y: float, player_owner: PlayerOwnerComponent):
         MinimapIconComponent('square', player_owner.color_name),
         player_owner,
         HealthComponent(max_amount=500),
-        MaxMeatIncrease(20),
+        MaxMeatIncreaseComponent(20),
     ]

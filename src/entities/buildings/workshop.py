@@ -1,8 +1,8 @@
-from src.components.fighting.health import HealthComponent
-from src.components.minimap_icon import MinimapIconComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
+from src.components.fighting.health import HealthComponent
+from src.components.minimap_icon import MinimapIconComponent
 from src.components.unit_production import UnitProductionComponent
 from src.core.types import RequiredCost
 

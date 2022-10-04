@@ -3,7 +3,6 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
-from src.constants import EVENT_UPDATE
 from src.core.types import PlayerInfo, RequiredCost
 from src.ui import UIElement, Label
 
