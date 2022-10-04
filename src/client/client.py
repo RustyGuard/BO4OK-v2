@@ -30,6 +30,8 @@ from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
 from src.menus.building_place import BuildMenu
 from src.menus.damage_indicators import DamageIndicators
+from src.menus.entities_renderer import EntitiesRenderer
+from src.menus.grass_background import GrassBackground
 from src.menus.minimap import Minimap
 from src.menus.resources_display import ResourceDisplayMenu
 from src.menus.unit_move import UnitMoveMenu
@@ -190,6 +192,9 @@ class ClientGameWindow(UIElement):
 
         menu_parent.append_child(self.damage_indicators)
 
+        self.append_child(EntitiesRenderer(self.ecs, self.camera))
+        self.append_child(GrassBackground(self.camera))
+
         self.action_handler = ClientActionHandler(self.ecs, self.current_player)
         self.action_handler.add_hook(ClientCommands.POPUP, self.handle_show_label)
         self.action_handler.add_hook(ClientCommands.RESOURCE_INFO, lambda *_: self.resource_menu.update_values())
@@ -206,21 +211,6 @@ class ClientGameWindow(UIElement):
             self.ecs.update()
 
         return super().update(event)
-
-    def draw(self, screen):
-        super().draw(screen)
-        for _, (texture, position) in self.ecs.get_entities_with_components((TextureComponent, PositionComponent)):
-            texture.blit(screen, position.position_according_to_camera(self.camera))
-
-        for _, (texture, health, position) in self.ecs.get_entities_with_components(
-                (TextureComponent, HealthComponent, PositionComponent)):
-            if health.amount == health.max_amount:
-                continue
-            health_rect = Rect(0, 0, 50, 5)
-            health_rect.center = position.position_according_to_camera(self.camera)
-            pygame.draw.rect(screen, Color('gray'), health_rect)
-            health_rect.width = health_rect.width * health.amount / health.max_amount
-            pygame.draw.rect(screen, Color('red'), health_rect)
 
     def shutdown(self):
         self.sock.close()

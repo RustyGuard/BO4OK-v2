@@ -1,7 +1,7 @@
 from typing import Optional, Callable
 
 import pygame
-from pygame import Color
+from pygame import Color, Surface
 from pygame.font import Font
 from pygame.rect import Rect
 
@@ -53,13 +53,13 @@ class UIElement:
                 return True
         return False
 
-    def render(self, screen):
+    def render(self, screen: Surface):
         self.draw(screen)
         for elem in reversed(self.childs):
             if elem.enabled:
                 elem.render(screen)
 
-    def draw(self, screen):
+    def draw(self, screen: Surface):
         if self.color is not None:
             pygame.draw.rect(screen, self.color, self.absolute_bounds,
                              border_top_left_radius=self.border_top_left_radius,
