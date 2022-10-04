@@ -23,7 +23,7 @@ from src.components.texture import TextureComponent
 from src.components.unit_production import UnitProductionComponent
 from src.components.velocity import VelocityComponent
 from src.config import config
-from src.constants import EVENT_UPDATE, EVENT_SEC, ClientCommands
+from src.constants import EVENT_UPDATE, ClientCommands
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
@@ -132,11 +132,9 @@ class ClientGameWindow(UIElement):
         self.read_action_connection = read_action_connection
         self.send_process = send_process
 
-        config.reload()
-
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
-        self.append_child(FPSCounter(Rect(config['screen']['size'][0] - 100, 5, 0, 0), fps_font))
+        self.append_child(FPSCounter(Rect(config.screen.size[0] - 100, 5, 0, 0), fps_font))
 
         self.action_sender = ClientActionSender(self.write_action_connection)
 
@@ -162,7 +160,7 @@ class ClientGameWindow(UIElement):
         self.append_child(menu_parent)
 
         self.minimap = Minimap(self.ecs, self.camera)
-        self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
+        self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
 
         self.resource_menu = ResourceDisplayMenu(self.current_player,

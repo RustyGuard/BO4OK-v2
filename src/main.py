@@ -57,9 +57,9 @@ class Main:
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode(config['screen']['size'])
+    screen = pygame.display.set_mode(config.screen.size)
 
-    elem = MainMenu(Rect((0, 0), config['screen']['size']), Color('aquamarine3'))
+    elem = MainMenu(Rect((0, 0), config.screen.size), Color('aquamarine3'))
 
     m = Main(elem, screen)
     m.loop()

@@ -123,7 +123,7 @@ class WaitForPlayersWindow(UIElement):
         self.append_child(sub_elem)
 
         self.sock = socket.socket()
-        self.sock.bind((config['server']['ip'], config['server']['port']))
+        self.sock.bind((config.server.ip, config.server.port))
         self.sock.listen(1)
 
         manager = Manager()
@@ -183,10 +183,10 @@ class WaitForPlayersWindow(UIElement):
                     socket_id=connected_player.socket_id,
                     nick=connected_player.nick,
                     resources=PlayerResources(
-                        money=config['world']['start_money'],
-                        wood=config['world']['start_wood'],
-                        meat=config['world']['start_meat'],
-                        max_meat=config['world']['base_meat'],
+                        money=config.world.start_money,
+                        wood=config.world.start_wood,
+                        meat=config.world.start_meat,
+                        max_meat=config.world.base_meat,
                     )
                 ) for connected_player in self.connected_players}
 
@@ -267,7 +267,7 @@ class ServerGameWindow(UIElement):
         self.append_child(menu_parent)
 
         self.minimap = Minimap(self.ecs, self.camera)
-        self.minimap_elem = UIImage(Rect(0, config['screen']['size'][1] - 388, 0, 0), 'assets/sprite/minimap.png')
+        self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
         menu_parent.append_child(self.minimap_elem)
 
@@ -316,9 +316,9 @@ class ServerGameWindow(UIElement):
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode(config['screen']['size'])
+    screen = pygame.display.set_mode(config.screen.size)
 
-    elem = WaitForPlayersWindow(Rect(0, 0, *config['screen']['size']), Color('bisque'))
+    elem = WaitForPlayersWindow(Rect(0, 0, *config.screen.size), Color('bisque'))
 
     m = Main(elem, screen)
     m.loop()

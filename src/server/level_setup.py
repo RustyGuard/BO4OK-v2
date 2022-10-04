@@ -34,4 +34,4 @@ def setup_level(ecs: EntityComponentSystem, players: dict[int, PlayerInfo]):
 
     for i in range(300):
         ecs.create_entity(
-            create_tree(*spread_position((0, 0), config['world']['size'])))
+            create_tree(*spread_position((0, 0), config.world.size)))

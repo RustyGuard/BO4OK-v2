@@ -15,10 +15,8 @@ class Minimap(UIElement):
     def __init__(self, ecs: EntityComponentSystem, camera: Camera):
         self.ecs = ecs
         self.camera = camera
-        self.mark_size = config['minimap']['mark_size']
-        self.mark_color = config['minimap']['mark_color']
-        print(self.mark_color)
-        super().__init__(Rect(*config['minimap']['bounds']), None)
+        self.mark_size = config.minimap.mark_size
+        super().__init__(Rect(*config.minimap.bounds), None)
 
     def draw(self, screen):
         super().draw(screen)
@@ -33,33 +31,31 @@ class Minimap(UIElement):
             mark_rect.centery = self.absolute_bounds.y + pos[1]
 
             if shape == 'circle':
-                pygame.draw.ellipse(screen, self.mark_color, mark_rect)
-                pygame.draw.ellipse(screen, team_color, mark_rect, 2)
+                pygame.draw.ellipse(screen, team_color, mark_rect)
             elif shape == 'square':
-                pygame.draw.rect(screen, self.mark_color, mark_rect)
-                pygame.draw.rect(screen, team_color, mark_rect, 3)
+                pygame.draw.rect(screen, team_color, mark_rect)
             else:
                 print(f'Unknown marker shape: {shape}')
 
         camera_rect = Rect(
-            (config['world']['size'] - self.camera.offset_x) * self.world_ratio_width,
-            (config['world']['size'] - self.camera.offset_y) * self.world_ratio_height,
-            config['screen']['size'][0] * self.world_ratio_width,
-            config['screen']['size'][1] * self.world_ratio_height
+            (config.world.size - self.camera.offset_x) * self.world_ratio_width,
+            (config.world.size - self.camera.offset_y) * self.world_ratio_height,
+            config.screen.size[0] * self.world_ratio_width,
+            config.screen.size[1] * self.world_ratio_height
         )
         pygame.draw.rect(screen, Color('yellow'), camera_rect.move(self.absolute_bounds.x, self.absolute_bounds.y), 1)
 
     def worldpos_to_minimap(self, x, y):
-        return (x + config['world']['size']) * self.world_ratio_width, \
-               (y + config['world']['size']) * self.world_ratio_height
+        return (x + config.world.size) * self.world_ratio_width, \
+               (y + config.world.size) * self.world_ratio_height
 
     @property
     def world_ratio_width(self):
-        return self.relative_bounds.width / (2 * config['world']['size'])
+        return self.relative_bounds.width / (2 * config.world.size)
 
     @property
     def world_ratio_height(self):
-        return self.relative_bounds.height / (2 * config['world']['size'])
+        return self.relative_bounds.height / (2 * config.world.size)
 
     def minimap_to_worldpos(self, x, y):
         raise Exception('Not supported')

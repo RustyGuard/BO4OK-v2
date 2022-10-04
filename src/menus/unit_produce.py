@@ -38,8 +38,8 @@ class ProduceMenu(UIElement):
             print('unit can not produce')
             return
 
-        bottom_bar = UIElement(Rect(config['minimap']['bounds'][3] + config['minimap']['bounds'][1],
-                                    config['screen']['size'][1] - 120,
+        bottom_bar = UIElement(Rect(config.minimap.bounds[3] + config.minimap.bounds[1],
+                                    config.screen.size[1] - 120,
                                     450,
                                     120), Color(184, 187, 194),
                                border_top_left_radius=15,
