@@ -174,24 +174,21 @@ class ClientGameWindow(UIElement):
 
         menu_parent.append_child(self.damage_indicators)
 
-        self.minimap = Minimap(self.ecs, self.camera)
+        self.minimap = Minimap(self.ecs, self.camera, self.current_player.color)
         self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/sprite/minimap.png')
-        self.minimap_elem.append_child(self.minimap)
 
         self.resource_menu = ResourceDisplayMenu(self.current_player,
                                                  Rect(45, 108, 0, 0),
                                                  Font('assets/fonts/arial.ttf', 25))
-        self.minimap_elem.append_child(self.resource_menu)
-
-        menu_parent.append_child(self.minimap_elem)
 
         self.build_menu = BuildMenu(self.relative_bounds, self.resource_menu, self.action_sender,
                                     self.current_player, self.camera)
-        menu_parent.append_child(self.build_menu)
 
         self.produce_menu = ProduceMenu(self.relative_bounds, self.ecs, self.action_sender, self.camera,
                                         self.current_player, self.resource_menu)
-        menu_parent.append_child(self.produce_menu)
+
+        self.minimap_elem.append_child(self.minimap)
+        self.minimap_elem.append_child(self.resource_menu)
 
         self.unit_move_menu = UnitMoveMenu(
             self.ecs,
@@ -199,7 +196,10 @@ class ClientGameWindow(UIElement):
             self.camera,
             self.current_player,
         )
+        menu_parent.append_child(self.build_menu)
+        menu_parent.append_child(self.produce_menu)
         menu_parent.append_child(self.unit_move_menu)
+        menu_parent.append_child(self.minimap_elem)
 
         self.action_handler = ClientActionHandler(self.ecs, self.current_player)
         self.action_handler.add_hook(ClientCommands.POPUP, self.handle_show_label)

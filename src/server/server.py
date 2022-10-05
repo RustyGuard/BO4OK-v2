@@ -291,7 +291,7 @@ class ServerGameWindow(UIElement):
         menu_parent = UIElement(Rect(0, 0, 0, 0), None)
         self.append_child(menu_parent)
 
-        self.minimap = Minimap(self.ecs, self.camera)
+        self.minimap = Minimap(self.ecs, self.camera, Color('black'))
         self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
         menu_parent.append_child(self.minimap_elem)

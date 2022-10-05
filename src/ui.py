@@ -2,6 +2,7 @@ from typing import Optional, Callable
 
 import pygame
 from pygame import Color, Surface
+from pygame.event import Event
 from pygame.font import Font
 from pygame.rect import Rect
 
@@ -47,7 +48,7 @@ class UIElement:
         self.relative_bounds.move_ip(x, y)
         self.update_bounds()
 
-    def update(self, event):
+    def update(self, event: Event):
         for elem in reversed(self.childs):
             if elem.enabled and elem.update(event):
                 return True

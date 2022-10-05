@@ -31,9 +31,12 @@ class Camera:
                 self.speed = max(config.camera.min_speed, self.speed)
 
     def move(self, x, y):
-        world_size = config.world.size
         self.offset_x += x * self.speed
         self.offset_y += y * self.speed
+        self.validate_position()
+
+    def validate_position(self):
+        world_size = config.world.size
         if self.offset_x < -world_size + config.screen.size[0]:
             self.offset_x = -world_size + config.screen.size[0]
         if self.offset_x > world_size:
@@ -43,9 +46,9 @@ class Camera:
         if self.offset_y > world_size:
             self.offset_y = world_size
 
-    @property
-    def center(self):
-        return self.offset_x, self.offset_y
+    def set_center(self, center: tuple[float, float]):
+        self.offset_x, self.offset_y = center[0] + config.screen.size[0] / 2, center[1] + config.screen.size[1] / 2
+        self.validate_position()
 
     def get_in_game_mouse_position(self) -> tuple[float, float]:
         mouse_pos = pygame.mouse.get_pos()
