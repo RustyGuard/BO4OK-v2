@@ -37,9 +37,9 @@ from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerResources, PlayerInfo, EntityId, Component
 from src.main import Main
-from src.menus.entities_renderer import EntitiesRenderer
-from src.menus.grass_background import GrassBackground
-from src.menus.minimap import Minimap
+from src.elements.entities_renderer import EntitiesRenderer
+from src.elements.grass_background import GrassBackground
+from src.elements.minimap import Minimap
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
@@ -285,6 +285,9 @@ class ServerGameWindow(UIElement):
 
         self.camera = Camera()
 
+        self.append_child(GrassBackground(self.camera))
+        self.append_child(EntitiesRenderer(self.ecs, self.camera))
+
         menu_parent = UIElement(Rect(0, 0, 0, 0), None)
         self.append_child(menu_parent)
 
@@ -292,9 +295,6 @@ class ServerGameWindow(UIElement):
         self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
         menu_parent.append_child(self.minimap_elem)
-
-        self.append_child(EntitiesRenderer(self.ecs, self.camera))
-        self.append_child(GrassBackground(self.camera))
 
         setup_level(self.ecs, self.players)
 

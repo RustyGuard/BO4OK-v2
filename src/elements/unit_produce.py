@@ -15,7 +15,7 @@ from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, RequiredCost, EntityId
 from src.entities import entity_icons
-from src.menus.resources_display import ResourceDisplayMenu
+from src.elements.resources_display import ResourceDisplayMenu
 from src.ui import UIElement, Label, UIButton, UIImage
 
 

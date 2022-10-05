@@ -30,14 +30,14 @@ from src.constants import EVENT_UPDATE, ClientCommands
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
-from src.menus.building_place import BuildMenu
-from src.menus.damage_indicators import DamageIndicators
-from src.menus.entities_renderer import EntitiesRenderer
-from src.menus.grass_background import GrassBackground
-from src.menus.minimap import Minimap
-from src.menus.resources_display import ResourceDisplayMenu
-from src.menus.unit_move import UnitMoveMenu
-from src.menus.unit_produce import ProduceMenu
+from src.elements.building_place import BuildMenu
+from src.elements.damage_indicators import DamageIndicators
+from src.elements.entities_renderer import EntitiesRenderer
+from src.elements.grass_background import GrassBackground
+from src.elements.minimap import Minimap
+from src.elements.resources_display import ResourceDisplayMenu
+from src.elements.unit_move import UnitMoveMenu
+from src.elements.unit_produce import ProduceMenu
 from src.systems.base.colliders import collider_system
 from src.systems.base.velocity import velocity_system
 from src.systems.chase import chase_system
@@ -75,8 +75,8 @@ def send_function(sock: socket.socket, read_connection: Connection):
 
 
 class WaitForServerWindow(UIElement):
-    def __init__(self, rect: Rect, color: Optional[Color]):
-        super().__init__(rect, color)
+    def __init__(self, rect: Rect):
+        super().__init__(rect, None)
         self.main = None
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
@@ -166,8 +166,13 @@ class ClientGameWindow(UIElement):
         self.camera = Camera()
         self.damage_indicators = DamageIndicators(self.camera)
 
+        self.append_child(GrassBackground(self.camera))
+        self.append_child(EntitiesRenderer(self.ecs, self.camera))
+
         menu_parent = UIElement(Rect(0, 0, 0, 0), None)
         self.append_child(menu_parent)
+
+        menu_parent.append_child(self.damage_indicators)
 
         self.minimap = Minimap(self.ecs, self.camera)
         self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/sprite/minimap.png')
@@ -195,11 +200,6 @@ class ClientGameWindow(UIElement):
             self.current_player,
         )
         menu_parent.append_child(self.unit_move_menu)
-
-        menu_parent.append_child(self.damage_indicators)
-
-        self.append_child(EntitiesRenderer(self.ecs, self.camera))
-        self.append_child(GrassBackground(self.camera))
 
         self.action_handler = ClientActionHandler(self.ecs, self.current_player)
         self.action_handler.add_hook(ClientCommands.POPUP, self.handle_show_label)

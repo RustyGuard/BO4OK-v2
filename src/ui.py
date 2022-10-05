@@ -55,7 +55,7 @@ class UIElement:
 
     def render(self, screen: Surface):
         self.draw(screen)
-        for elem in reversed(self.childs):
+        for elem in self.childs:
             if elem.enabled:
                 elem.render(screen)
 
@@ -79,10 +79,12 @@ class UIElement:
 
 class Label(UIElement):
     def __init__(self, bounds: Rect, color: Color, font: Font, text: str):
-        super().__init__(bounds, color)
         self.font = font
         self.text = text
-        self.text_image = self.font.render(self.text, True, self.color)
+        self.text_image = self.font.render(self.text, True, color)
+        if bounds.width == 0 and bounds.height == 0:
+            bounds.size = self.text_image.get_size()
+        super().__init__(bounds, color)
 
     def update_text(self):
         self.text_image = self.font.render(self.text, True, self.color)

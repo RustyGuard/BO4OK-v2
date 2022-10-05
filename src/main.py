@@ -13,6 +13,7 @@ class Main:
     def __init__(self, main_element: UIElement, screen: Surface):
         self.main_element = main_element
         self.screen = screen
+        self.running = True
 
     @property
     def main_element(self):
@@ -26,12 +27,10 @@ class Main:
     def loop(self):
         clock = Clock()
 
-        running = True
-
         pygame.time.set_timer(EVENT_UPDATE, 1000 // 60)
         pygame.time.set_timer(EVENT_SEC, 1000 // 1)
 
-        while running:
+        while self.running:
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
@@ -54,12 +53,14 @@ class Main:
             pygame.display.flip()
             clock.tick(60)
 
+        self.main_element.shutdown()
+
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode(config.screen.size)
+    screen = pygame.display.set_mode(config.screen.size, pygame.FULLSCREEN if config.screen.fullscreen else 0)
 
-    elem = MainMenu(Rect((0, 0), config.screen.size), Color('aquamarine3'))
+    elem = MainMenu(Rect((0, 0), config.screen.size))
 
     m = Main(elem, screen)
     m.loop()
