@@ -1,3 +1,4 @@
+from src.components.base.collider import ColliderComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.chase import ChaseComponent
@@ -6,6 +7,7 @@ from src.components.fighting.health import HealthComponent
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import EntityId
 from src.server.action_sender import ServerActionSender
+from src.utils.collision import is_close_to_target
 
 
 def close_range_attack_system(entity_id: EntityId,
@@ -14,11 +16,12 @@ def close_range_attack_system(entity_id: EntityId,
                               position: PositionComponent,
                               ecs: EntityComponentSystem,
                               chase: ChaseComponent,
+                              collider: ColliderComponent,
                               action_sender: ServerActionSender):
     if chase.entity_id is None:
         return
 
-    if chase.chase_position.distance(position) > chase.distance_until_attack:
+    if not is_close_to_target(ecs, chase, collider, position):
         return
 
     if close_range_attack.current_delay < close_range_attack.delay:

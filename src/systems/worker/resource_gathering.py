@@ -1,26 +1,30 @@
+from src.components.base.collider import ColliderComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.chase import ChaseComponent
 from src.components.worker.depot import ResourceDepotComponent
 from src.components.worker.resource import ResourceComponent
 from src.components.worker.resource_gatherer import ResourceGathererComponent
+from src.components.worker.uncompleted_building import UncompletedBuildingComponent
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import EntityId, PlayerInfo
 from src.server.action_sender import ServerActionSender
+from src.utils.collision import is_close_to_target
 
 
-def resource_gathering_system(entity_id: EntityId,
-                              resource_gatherer: ResourceGathererComponent,
-                              owner: PlayerOwnerComponent,
-                              players: list[PlayerInfo],
-                              position: PositionComponent,
-                              ecs: EntityComponentSystem,
-                              chase: ChaseComponent,
-                              action_sender: ServerActionSender):
+def working_system(entity_id: EntityId,
+                   resource_gatherer: ResourceGathererComponent,
+                   owner: PlayerOwnerComponent,
+                   players: list[PlayerInfo],
+                   collider: ColliderComponent,
+                   position: PositionComponent,
+                   ecs: EntityComponentSystem,
+                   chase: ChaseComponent,
+                   action_sender: ServerActionSender):
     if chase.entity_id is None:
         return
 
-    if chase.chase_position.distance(position) > chase.distance_until_attack:
+    if not is_close_to_target(ecs, chase, collider, position):
         return
 
     if resource_gatherer.current_delay < resource_gatherer.delay:
@@ -29,10 +33,20 @@ def resource_gathering_system(entity_id: EntityId,
 
     resource_gatherer.current_delay = 0
 
+    uncompleted_building = ecs.get_component(chase.entity_id, UncompletedBuildingComponent)
     resource_source = ecs.get_component(chase.entity_id, ResourceComponent)
     resource_depot = ecs.get_component(chase.entity_id, ResourceDepotComponent)
 
-    if resource_source is not None:
+    if uncompleted_building is not None:
+        print(uncompleted_building.progress)
+        uncompleted_building.progress += 1
+        action_sender.update_component_info(chase.entity_id, uncompleted_building)
+
+        if uncompleted_building.progress >= uncompleted_building.required_progress:
+            chase.drop_target()
+            print('no chase')
+
+    elif resource_source is not None:
         taken_wood = min(resource_gatherer.gathering_speed, resource_source.wood)
         resource_source.wood -= taken_wood
         resource_gatherer.wood_carried += taken_wood
@@ -47,8 +61,7 @@ def resource_gathering_system(entity_id: EntityId,
 
         if resource_source.money == 0 and resource_source.wood == 0:
             ecs.remove_entity(chase.entity_id)
-            chase.entity_id = None
-            chase.chase_position = None
+            chase.drop_target()
 
         if resource_gatherer.is_backpack_full:
             nearest_depot = min(
@@ -88,8 +101,6 @@ def resource_gathering_system(entity_id: EntityId,
 
         action_sender.update_resource_info(player)
 
-        chase.entity_id = None
-        chase.chase_position = None
+        chase.drop_target()
     else:
-        chase.entity_id = None
-        chase.chase_position = None
+        chase.drop_target()

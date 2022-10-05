@@ -20,3 +20,7 @@ class ChaseComponent:
             self.chase_position = ecs.get_component(self.entity_id, PositionComponent)
             return
         self.chase_position = PositionComponent(**self.chase_position)
+
+    def drop_target(self):
+        self.chase_position = None
+        self.entity_id = None

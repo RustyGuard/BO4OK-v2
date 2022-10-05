@@ -1,3 +1,4 @@
+from src.components.base.collider import ColliderComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
@@ -5,17 +6,19 @@ from src.components.chase import ChaseComponent
 from src.components.fighting.projectile_throw import ProjectileThrowComponent
 from src.core.entity_component_system import EntityComponentSystem
 from src.entities import projectiles
+from src.utils.collision import is_close_to_target
 
 
 def projectile_throw_system(projectile_throw: ProjectileThrowComponent, position: PositionComponent,
                             chase: ChaseComponent,
                             texture: TextureComponent,
                             ecs: EntityComponentSystem,
+                            collider: ColliderComponent,
                             owner: PlayerOwnerComponent):
     if chase.entity_id is None:
         return
 
-    if chase.chase_position.distance(position) > chase.distance_until_attack:
+    if not is_close_to_target(ecs, chase, collider, position):
         return
 
     projectile_throw.current_delay += 1

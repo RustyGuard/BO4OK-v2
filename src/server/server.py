@@ -11,6 +11,7 @@ from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
+from src.components.base.collider import ColliderComponent
 from src.components.base.decay import DecayComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
@@ -28,6 +29,7 @@ from src.components.unit_production import UnitProductionComponent
 from src.components.worker.depot import ResourceDepotComponent
 from src.components.worker.resource import ResourceComponent
 from src.components.worker.resource_gatherer import ResourceGathererComponent
+from src.components.worker.uncompleted_building import UncompletedBuildingComponent
 from src.components.worker.work_finder import WorkFinderComponent
 from src.config import config
 from src.constants import EVENT_UPDATE, color_name_to_pygame_color
@@ -35,10 +37,13 @@ from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerResources, PlayerInfo, EntityId, Component
 from src.main import Main
+from src.menus.entities_renderer import EntitiesRenderer
+from src.menus.grass_background import GrassBackground
 from src.menus.minimap import Minimap
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
+from src.systems.base.colliders import collider_system
 from src.systems.base.death import death_system
 from src.systems.base.decay import decay_system
 from src.systems.base.velocity import velocity_system
@@ -49,7 +54,8 @@ from src.systems.fighting.enemy_finder import enemy_finder_system
 from src.systems.fighting.projectile_throw import projectile_throw_system
 from src.systems.max_meat_increase import max_meat_increase_system
 from src.systems.unit_production import unit_production_system
-from src.systems.worker.resource_gathering import resource_gathering_system
+from src.systems.worker.building_completion import building_completion_system
+from src.systems.worker.resource_gathering import working_system
 from src.systems.worker.work_finder import work_finder_system
 from src.ui import UIElement, FPSCounter, UIImage
 from src.utils.json_utils import PydanticEncoder
@@ -257,6 +263,8 @@ class ServerGameWindow(UIElement):
         self.ecs.init_component(ResourceComponent)
         self.ecs.init_component(ResourceDepotComponent)
         self.ecs.init_component(ResourceGathererComponent)
+        self.ecs.init_component(UncompletedBuildingComponent)
+        self.ecs.init_component(ColliderComponent)
 
         self.ecs.init_system(velocity_system)
         self.ecs.init_system(decay_system)
@@ -269,7 +277,9 @@ class ServerGameWindow(UIElement):
         self.ecs.init_system(death_system)
         self.ecs.init_system(max_meat_increase_system)
         self.ecs.init_system(work_finder_system)
-        self.ecs.init_system(resource_gathering_system)
+        self.ecs.init_system(working_system)
+        self.ecs.init_system(building_completion_system)
+        self.ecs.init_system(collider_system)
 
         self.action_handler = ServerActionHandler(self.ecs, self.players, self.action_sender)
 
@@ -282,6 +292,9 @@ class ServerGameWindow(UIElement):
         self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
         menu_parent.append_child(self.minimap_elem)
+
+        self.append_child(EntitiesRenderer(self.ecs, self.camera))
+        self.append_child(GrassBackground(self.camera))
 
         setup_level(self.ecs, self.players)
 
@@ -304,6 +317,9 @@ class ServerGameWindow(UIElement):
 
     def on_remove(self, entity_id: EntityId):
         self.action_sender.remove_entity(entity_id)
+        for chase_entity_id, (chase,) in self.ecs.get_entities_with_components((ChaseComponent,)):
+            if chase.entity_id == entity_id:
+                chase.drop_target()
 
     def update(self, event: pygame.event) -> bool:
         self.camera.update(event)
@@ -316,11 +332,6 @@ class ServerGameWindow(UIElement):
             self.ecs.update()
 
         return super().update(event)
-
-    def draw(self, screen) -> None:
-        super().draw(screen)
-        for _, (texture, position) in self.ecs.get_entities_with_components((TextureComponent, PositionComponent)):
-            texture.blit(screen, position.position_according_to_camera(self.camera))
 
     def shutdown(self) -> None:
         print('Shutdown')

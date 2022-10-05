@@ -1,3 +1,4 @@
+from src.components.base.collider import ColliderComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
@@ -15,4 +16,5 @@ def create_workshop(x: float, y: float, player_owner: PlayerOwnerComponent):
         player_owner,
         UnitProductionComponent(delay=15 * 60, producible_units={'ballista': RequiredCost(money=100, wood=500, meat=2)}),
         HealthComponent(max_amount=500),
+        ColliderComponent(radius=80, static=True),
     ]

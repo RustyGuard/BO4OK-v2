@@ -1,3 +1,4 @@
+from src.components.base.collider import ColliderComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
@@ -14,7 +15,7 @@ def create_casern(x: float, y: float, player_owner: PlayerOwnerComponent):
         MinimapIconComponent('circle', player_owner.color_name),
         player_owner,
         UnitProductionComponent(delay=60, producible_units={'archer': RequiredCost(money=1, wood=5, meat=1),
-                                                            'warrior': RequiredCost(money=2, meat=2),
-                                                            'worker': RequiredCost()}),
+                                                            'warrior': RequiredCost(money=2, meat=2)}),
         HealthComponent(max_amount=300),
+        ColliderComponent(radius=50, static=True),
     ]

@@ -1,3 +1,4 @@
+from src.components.base.collider import ColliderComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
@@ -14,4 +15,5 @@ def create_farm(x: float, y: float, player_owner: PlayerOwnerComponent):
         player_owner,
         HealthComponent(max_amount=500),
         MaxMeatIncreaseComponent(20),
+        ColliderComponent(radius=25, static=True),
     ]

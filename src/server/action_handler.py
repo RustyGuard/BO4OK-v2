@@ -4,11 +4,13 @@ from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
 from src.components.chase import ChaseComponent
+from src.components.fighting.health import HealthComponent
 from src.components.unit_production import UnitProductionComponent
+from src.components.worker.uncompleted_building import UncompletedBuildingComponent
 from src.constants import ServerCommands
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
-from src.entities import buildings, building_factories, entity_icons
+from src.entities import buildings, entity_icons
 from src.server.action_sender import ServerActionSender
 from src.utils.image import get_image
 from src.utils.math_utils import spread_position
@@ -53,7 +55,8 @@ class ServerActionHandler:
         if not player.has_enough(cost):
             return
 
-        building_texture = get_image(entity_icons[build_name].format(color_name='black'))
+        building_texture_path = entity_icons[build_name].format(color_name=player.color_name)
+        building_texture = get_image(building_texture_path)
         building_rect = building_texture.get_rect()
         building_rect.center = position_x, position_y
 
@@ -65,15 +68,18 @@ class ServerActionHandler:
                 print('Can not build on top of entity')
                 return
 
-        self.ecs.create_entity(building_factories[build_name](
-            x=position_x,
-            y=position_y,
-            player_owner=PlayerOwnerComponent(
+        self.ecs.create_entity([
+            PositionComponent(position_x, position_y),
+            UncompletedBuildingComponent(build_name, 10),
+            TextureComponent.create_from_filepath(building_texture_path),
+            PlayerOwnerComponent(
                 socket_id=player.socket_id,
                 color_name=player.color_name,
                 nick=player.nick,
-            )
-        ))
+            ),
+            HealthComponent(150),
+        ])
+
         player.spend(cost)
         self.action_sender.update_resource_info(player)
 

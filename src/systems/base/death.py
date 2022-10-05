@@ -38,8 +38,7 @@ def death_system(entity_id: EntityId, health: HealthComponent, action_sender: Se
         if chase.entity_id != entity_id:
             continue
 
-        chase.entity_id = None
-        chase.chase_position = None
+        chase.drop_target()
         action_sender.update_component_info(angry_entity_id, chase)
 
     bring_meat_back(entity_id, action_sender, ecs, players)

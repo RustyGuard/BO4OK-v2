@@ -1,5 +1,6 @@
 import random
 
+from src.components.base.collider import ColliderComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
@@ -20,4 +21,5 @@ def create_ballista(x: float, y: float, player_owner: PlayerOwnerComponent):
         HealthComponent(max_amount=500),
         ProjectileThrowComponent(delay=2 * 60, projectile_name='bolt'),
         EnemyFinderComponent(anger_range=1000),
+        ColliderComponent(15),
     ]
