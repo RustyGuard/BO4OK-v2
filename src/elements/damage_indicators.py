@@ -30,7 +30,7 @@ class DamageIndicator(Sprite):
 
 class DamageIndicators(UIElement):
     def __init__(self, camera: Camera):
-        super().__init__(Rect(0, 0, 0, 0), None)
+        super().__init__()
         self.indicators = Group()
         self.font = pygame.font.SysFont('Comic Sans MS', 20)
         self.camera = camera

@@ -15,7 +15,7 @@ from src.utils.math_utils import rect_by_two_points
 
 class UnitMoveMenu(UIElement):
     def __init__(self, ecs: EntityComponentSystem, action_sender: ClientActionSender, camera: Camera, current_player: PlayerInfo):
-        super().__init__(Rect(0, 0, 0, 0), None)
+        super().__init__()
         self.ecs = ecs
         self.action_sender = action_sender
         self.camera = camera

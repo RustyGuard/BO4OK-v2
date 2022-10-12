@@ -7,7 +7,7 @@ from src.ui import UIElement
 
 class GrassBackground(UIElement):
     def __init__(self, camera: Camera):
-        super().__init__(Rect(0, 0, 0, 0), None)
+        super().__init__()
         self.camera = camera
         self.grass_sprite = pygame.image.load('assets/sprite/small_map.png').convert()
 

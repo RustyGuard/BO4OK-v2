@@ -294,7 +294,7 @@ class ServerGameWindow(UIElement):
         self.append_child(GrassBackground(self.camera))
         self.append_child(EntitiesRenderer(self.ecs, self.camera))
 
-        menu_parent = UIElement(Rect(0, 0, 0, 0), None)
+        menu_parent = UIElement()
         self.append_child(menu_parent)
 
         self.minimap = Minimap(self.ecs, self.camera, Color('black'))

@@ -13,7 +13,7 @@ from src.ui import UIElement
 
 class EntitiesRenderer(UIElement):
     def __init__(self, ecs: EntityComponentSystem, camera: Camera):
-        super().__init__(Rect(0, 0, 0, 0), None)
+        super().__init__()
         self.ecs = ecs
         self.camera = camera
 
