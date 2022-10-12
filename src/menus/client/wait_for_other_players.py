@@ -11,20 +11,21 @@ from src.client.client import read_server_actions, send_function
 from src.config import config
 from src.constants import EVENT_UPDATE
 from src.core.types import PlayerInfo
+from src.elements.pause_menu import PauseMenu
 from src.main_loop_state import set_main_element
 from src.menus.client.game_menu import ClientGameMenu
 from src.ui import UIElement
 from src.ui.fps_counter import FPSCounter
+from src.ui.image import UIImage
 
 
 class WaitForServerMenu(UIElement):
     def __init__(self):
         super().__init__(config.screen.get_rect(), None)
         fps_font = Font('assets/fonts/arial.ttf', 20)
+        self.append_child(UIImage(self.relative_bounds, 'assets/data/faded_background.png'))
 
-        sub_elem = UIElement(Rect(50, 50, 50, 50), None)
-        sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
-        self.append_child(sub_elem)
+        self.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
 
         self.sock = socket.socket()
         self.sock.connect(('localhost', 9090))
@@ -41,6 +42,8 @@ class WaitForServerMenu(UIElement):
         self.send_process.start()
 
         self.parent_conn.send(['nick', "".join(random.sample(list(ascii_letters), 5))])
+
+        self.append_child(PauseMenu())
 
     def update(self, event: pygame.event):
         if event.type == EVENT_UPDATE:

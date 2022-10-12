@@ -20,14 +20,14 @@ def wait_for_new_connections(socket: socket.socket, connections: Connections,
     while True:
         conn, addr = socket.accept()
         connections[next_id] = (conn, addr)
-        send_process = Process(target=receive_data_from_socket, args=(next_id, conn, received_actions), daemon=True)
+        send_process = Process(target=receive_data_from_socket, args=(next_id, conn, received_actions, connections), daemon=True)
         send_process.start()
 
         print(f'Connection with id {next_id} opened')
         next_id += 1
 
 
-def receive_data_from_socket(socket_id: int, socket: socket.socket, submit_list: list[tuple[int, Any]]):
+def receive_data_from_socket(socket_id: int, socket: socket.socket, submit_list: list[tuple[int, Any]], connections: Connections):
     command_buffer = ''
     while True:
         try:
@@ -41,6 +41,7 @@ def receive_data_from_socket(socket_id: int, socket: socket.socket, submit_list:
                 splitter = command_buffer.find(';')
 
         except Exception as ex:
+            print(connections.pop(socket_id))
             print(ex)
             print(f'Disconnected: {socket_id}')
             return

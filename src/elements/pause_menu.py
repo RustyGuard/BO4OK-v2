@@ -2,10 +2,11 @@ import pygame.draw
 from pygame import Surface, Color, Rect
 from pygame.event import Event
 
+from src.config import config
 from src.main_loop_state import set_main_element
 
-from src.ui.button import UIButton
 from src.ui import UIElement
+from src.ui.clickable_label import ClickableLabel
 
 
 class PauseMenu(UIElement):
@@ -13,7 +14,15 @@ class PauseMenu(UIElement):
         super().__init__()
         self.opened = False
 
-        self.append_child(UIButton(Rect(0, 0, 150, 150), Color('black'), self.exit_game))
+        exit_game_label_rect = Rect((0, 0), (150, 75))
+        exit_game_label_rect.center = config.screen.get_rect().center
+        exit_game_label = ClickableLabel(exit_game_label_rect, self.exit_game,
+                                         'Выйти из игры',
+                                         pygame.font.SysFont('Comic Sans MS', 20),
+                                         mouse_hover_text_color=Color('beige'),
+                                         mouse_exit_text_color=Color('white'))
+
+        self.append_child(exit_game_label)
 
     def exit_game(self):
         from src.menus.main_menu import MainMenu

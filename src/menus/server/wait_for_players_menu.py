@@ -4,9 +4,8 @@ from dataclasses import dataclass
 from multiprocessing import Manager, Process, Pipe
 from typing import Any
 
+import pygame
 from pygame import Color
-from pygame.font import Font
-from pygame.rect import Rect
 
 from src.config import config
 from src.constants import EVENT_UPDATE, color_name_to_pygame_color
@@ -16,7 +15,9 @@ from src.main_loop_state import set_main_element
 from src.menus.server.game_menu import ServerGameMenu
 from src.server.server import Connections, wait_for_new_connections, send_player_actions
 from src.ui import UIElement
-from src.ui.fps_counter import FPSCounter
+from src.ui.image import UIImage
+from src.ui.text_label import TextLabel
+from src.utils.rect import rect_with_center
 
 
 @dataclass
@@ -26,14 +27,12 @@ class ConnectedPlayer:
 
 
 class WaitForPlayersMenu(UIElement):
-    REQUIRED_AMOUNT_OF_PLAYERS = 1
+    REQUIRED_AMOUNT_OF_PLAYERS = 2
 
     def __init__(self):
-        super().__init__(config.screen.get_rect(), Color('bisque'))
+        super().__init__(config.screen.get_rect(), None)
         self.connected_players: list[ConnectedPlayer] = []
-        fps_font = Font('assets/fonts/arial.ttf', 20)
-
-        self.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
+        self.append_child(UIImage(self.relative_bounds, 'assets/data/faded_background.png'))
 
         self.socket = socket.socket()
         self.socket.bind((config.server.ip, config.server.port))
@@ -52,7 +51,17 @@ class WaitForPlayersMenu(UIElement):
         self.send_process = Process(target=send_player_actions, args=(self.connections, self.read_connection),
                                     daemon=True)
         self.send_process.start()
+
+        self.font = pygame.font.SysFont('Comic Sans MS', 20)
+        players_count_rect = rect_with_center(config.screen.get_rect().center, (150, 75))
+        self.players_count = TextLabel(players_count_rect, Color('white'), self.font, f'0/{self.REQUIRED_AMOUNT_OF_PLAYERS}')
+        self.append_child(self.players_count)
         self.append_child(PauseMenu())
+
+    def clean_disconnected_players(self):
+        for player in self.connected_players.copy():
+            if player.socket_id not in self.connections:
+                self.connected_players.remove(player)
 
     def is_all_nicks_sent(self):
         connected_player_ids = {player.socket_id for player in self.connected_players}
@@ -71,9 +80,11 @@ class WaitForPlayersMenu(UIElement):
                         socket_id=sock_id,
                         nick=msg[1]
                     ))
+                self.clean_disconnected_players()
                 if len(self.connections) >= self.REQUIRED_AMOUNT_OF_PLAYERS and self.is_all_nicks_sent():
                     self.start()
                     return
+            self.players_count.set_text(f'{len(self.connections)}/{self.REQUIRED_AMOUNT_OF_PLAYERS}')
 
     def start(self):
         self.connection_process.terminate()
@@ -104,7 +115,7 @@ class WaitForPlayersMenu(UIElement):
                         meat=config.world.start_meat,
                         max_meat=config.world.base_meat,
                     )
-                ) for connected_player in self.connected_players}
+                ) for connected_player in self.connected_players if connected_player.socket_id in self.connections}
 
         players[-1] = PlayerInfo(  # Add host to game
             socket_id=-1,
