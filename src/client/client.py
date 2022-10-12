@@ -4,7 +4,6 @@ import socket
 from multiprocessing import Process, Manager, Pipe
 from multiprocessing.connection import Connection
 from string import ascii_letters
-from typing import Optional
 
 import pygame
 from pygame import Color
@@ -31,13 +30,16 @@ from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
 from src.elements.building_place import BuildMenu
+from src.elements.camera_input import CameraInputHandler
 from src.elements.damage_indicators import DamageIndicators
 from src.elements.entities_renderer import EntitiesRenderer
 from src.elements.grass_background import GrassBackground
 from src.elements.minimap import Minimap
+from src.elements.pause_menu import PauseMenu
 from src.elements.resources_display import ResourceDisplayMenu
 from src.elements.unit_move import UnitMoveMenu
 from src.elements.unit_produce import ProduceMenu
+from src.main_loop_state import set_main_element
 from src.systems.base.colliders import collider_system
 from src.systems.base.velocity import velocity_system
 from src.systems.chase import chase_system
@@ -77,7 +79,6 @@ def send_function(sock: socket.socket, read_connection: Connection):
 class WaitForServerWindow(UIElement):
     def __init__(self, rect: Rect):
         super().__init__(rect, None)
-        self.main = None
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
         sub_elem = UIElement(Rect(50, 50, 50, 50), None)
@@ -113,7 +114,7 @@ class WaitForServerWindow(UIElement):
     def start(self, team_id: int, players: dict[int, PlayerInfo]):
         w = ClientGameWindow(self.relative_bounds, self.sock, self.receive_list, self.socket_process, self.parent_conn,
                              self.child_conn, self.send_process, players, team_id)
-        self.main.main_element = w
+        set_main_element(w)
 
     def shutdown(self):
         self.sock.close()
@@ -200,6 +201,8 @@ class ClientGameWindow(UIElement):
         menu_parent.append_child(self.produce_menu)
         menu_parent.append_child(self.unit_move_menu)
         menu_parent.append_child(self.minimap_elem)
+        self.append_child(CameraInputHandler(self.camera))
+        self.append_child(PauseMenu())
 
         self.action_handler = ClientActionHandler(self.ecs, self.current_player)
         self.action_handler.add_hook(ClientCommands.POPUP, self.handle_show_label)
@@ -207,8 +210,6 @@ class ClientGameWindow(UIElement):
         self.action_handler.add_hook(ClientCommands.DEAD, self.handle_death)
 
     def update(self, event):
-        self.camera.update(event)
-
         if event.type == EVENT_UPDATE:
             while self.received_actions:
                 args = self.received_actions.pop(0)

@@ -10,30 +10,18 @@ class Camera:
         self.offset_y = config.screen.size[1] / 2
         self.speed = 1
 
-    def update(self, event):
-        if event.type == EVENT_UPDATE:
-            keys = pygame.key.get_pressed()
-            x_change, y_change = 0, 0
-            if keys[pygame.K_d]:
-                x_change -= 1
-            if keys[pygame.K_a]:
-                x_change += 1
-            if keys[pygame.K_s]:
-                y_change -= 1
-            if keys[pygame.K_w]:
-                y_change += 1
-            self.move(x_change, y_change)
-            if x_change != 0 or y_change != 0:
-                self.speed += config.camera.step_faster
-                self.speed = min(config.camera.max_speed, self.speed)
-            else:
-                self.speed -= config.camera.step_slower
-                self.speed = max(config.camera.min_speed, self.speed)
-
     def move(self, x, y):
         self.offset_x += x * self.speed
         self.offset_y += y * self.speed
         self.validate_position()
+
+    def increase_speed(self):
+        self.speed += config.camera.step_faster
+        self.speed = min(config.camera.max_speed, self.speed)
+
+    def decrease_speed(self):
+        self.speed -= config.camera.step_slower
+        self.speed = max(config.camera.min_speed, self.speed)
 
     def validate_position(self):
         world_size = config.world.size

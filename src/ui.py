@@ -10,13 +10,15 @@ from src.constants import EVENT_SEC, EVENT_UPDATE
 
 
 class UIElement:
-    def __init__(self, bounds: Rect, color: Optional[Color], border_top_left_radius=-1, border_top_right_radius=-1,
+    def __init__(self, bounds: Rect = None, color: Optional[Color] = None, border_top_left_radius=-1, border_top_right_radius=-1,
                  border_bottom_left_radius=-1, border_bottom_right_radius=-1):
         self.border_top_left_radius = border_top_left_radius
         self.border_top_right_radius = border_top_right_radius
         self.border_bottom_left_radius = border_bottom_left_radius
         self.border_bottom_right_radius = border_bottom_right_radius
 
+        if bounds is None:
+            bounds = Rect(0, 0, 0, 0)
         self.relative_bounds = bounds
         self.absolute_bounds = bounds.copy()
         self.color = color

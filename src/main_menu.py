@@ -1,14 +1,15 @@
 from functools import partial
-from typing import Optional
 
 from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
+from src import main_loop_state
 from src.client.client import WaitForServerWindow
 from src.config import config
+from src.main_loop_state import set_main_element
 from src.menus.setting_menu import SettingsMenu
-from src.ui import UIElement, FPSCounter, UIButton, UIPopup, UIImage, Label
+from src.ui import UIElement, UIButton, UIPopup, UIImage, Label
 
 
 class MainMenu(UIElement):
@@ -16,7 +17,6 @@ class MainMenu(UIElement):
 
         super().__init__(rect, None)
 
-        self.main = None
         self.font = Font('assets/fonts/arial.ttf', 20)
 
         self.append_child(UIImage(rect, 'assets/data/menu.png'))
@@ -26,7 +26,7 @@ class MainMenu(UIElement):
         for i, (button_name, button_action) in enumerate([
             ('Играть', self.go_to_client),
             ('Настройки', self.go_to_settings),
-            ('Выход', self.exit_game),
+            ('Выход', main_loop_state.close_game),
         ]):
             btn = UIButton(Rect(15 + 275 * i, config.screen.height - 100, 250, 75), None, button_action)
             self.append_child(btn)
@@ -38,14 +38,10 @@ class MainMenu(UIElement):
 
     def go_to_client(self):
         try:
-            w = WaitForServerWindow(self.relative_bounds)
-            self.main.main_element = w
+            set_main_element(WaitForServerWindow(self.relative_bounds))
         except ConnectionRefusedError:
             print('Not connected')
-            self.append_child(UIPopup(Rect(250, 75, 0, 0), Color('black'), self.font, 'Not connected', 180))
+            self.append_child(UIPopup(Rect(250, 75, 0, 0), Color('white'), self.font, 'Not connected', 180))
 
     def go_to_settings(self):
-        self.main.main_element = SettingsMenu(self.relative_bounds)
-
-    def exit_game(self):
-        self.main.running = False
+        set_main_element(SettingsMenu(self.relative_bounds))

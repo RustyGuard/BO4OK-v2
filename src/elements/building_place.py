@@ -1,7 +1,7 @@
+from functools import partial
 from typing import NamedTuple
 
 import pygame
-from pydantic.main import partial
 from pygame.rect import Rect
 from pygame.surface import Surface
 

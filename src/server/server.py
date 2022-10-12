@@ -36,10 +36,11 @@ from src.constants import EVENT_UPDATE, color_name_to_pygame_color
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerResources, PlayerInfo, EntityId, Component
-from src.main import Main
+from src.main import run_main_loop
 from src.elements.entities_renderer import EntitiesRenderer
 from src.elements.grass_background import GrassBackground
 from src.elements.minimap import Minimap
+from src.main_loop_state import set_main_element
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
@@ -126,7 +127,6 @@ class WaitForPlayersWindow(UIElement):
 
     def __init__(self, rect: Rect, color: Optional[Color]):
         super().__init__(rect, color)
-        self.main = None
         self.connected_players: list[ConnectedPlayer] = []
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
@@ -180,9 +180,8 @@ class WaitForPlayersWindow(UIElement):
         for socket_id in self.connections:
             self.write_action_connection.send((['start', socket_id, players], socket_id))
 
-        w = ServerGameWindow(self.relative_bounds, self.sock, self.connections, self.received_actions,
-                             self.write_action_connection, self.send_process, players)
-        self.main.main_element = w
+        set_main_element(ServerGameWindow(self.relative_bounds, self.sock, self.connections, self.received_actions,
+                                          self.write_action_connection, self.send_process, players))
 
     def get_players(self) -> dict[int, PlayerInfo]:
         colors = list(color_name_to_pygame_color.keys())
@@ -215,6 +214,13 @@ class WaitForPlayersWindow(UIElement):
             )
         )
         return players
+
+    def shutdown(self):
+        self.connection_process.terminate()
+
+        self.send_process.terminate()
+        self.write_action_connection.close()
+        self.sock.close()
 
 
 class ServerGameWindow(UIElement):
@@ -322,8 +328,6 @@ class ServerGameWindow(UIElement):
                 chase.drop_target()
 
     def update(self, event: pygame.event) -> bool:
-        self.camera.update(event)
-
         if event.type == EVENT_UPDATE:
             while self.received_actions:
                 sender, command = self.received_actions.pop(0)
@@ -344,10 +348,9 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode(config.screen.size)
 
-    elem = WaitForPlayersWindow(Rect(0, 0, *config.screen.size), Color('bisque'))
+    set_main_element(WaitForPlayersWindow(Rect(0, 0, *config.screen.size), Color('bisque')))
 
-    m = Main(elem, screen)
-    m.loop()
+    run_main_loop(screen)
 
 
 if __name__ == '__main__':

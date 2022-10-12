@@ -2,7 +2,9 @@ import pygame
 from pygame import Rect, Color
 from pygame.font import Font
 
+from src import main_loop_state
 from src.config import config, upload_config_to_disc
+from src.main_loop_state import set_main_element
 from src.ui import UIElement, UIImage, UIButton, Label
 
 
@@ -11,7 +13,6 @@ class SettingsMenu(UIElement):
 
         super().__init__(rect, None)
 
-        self.main = None
         self.init_menu()
 
     def init_menu(self):
@@ -55,4 +56,4 @@ class SettingsMenu(UIElement):
 
     def go_back(self):
         from src.main_menu import MainMenu
-        self.main.main_element = MainMenu(self.relative_bounds)
+        set_main_element(MainMenu(self.relative_bounds))
