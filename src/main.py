@@ -35,12 +35,12 @@ def run_main_loop(screen: Surface):
 
 
 def main():
-    from src.main_menu import MainMenu
+    from src.menus.main_menu import MainMenu
 
     pygame.init()
     screen = pygame.display.set_mode(config.screen.size, pygame.FULLSCREEN if config.screen.fullscreen else 0)
 
-    set_main_element(MainMenu(Rect((0, 0), config.screen.size)))
+    set_main_element(MainMenu())
 
     run_main_loop(screen)
 

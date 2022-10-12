@@ -1,6 +1,7 @@
 import pathlib
 
 from pydantic import BaseModel
+from pygame import Rect
 
 config_path: str = 'config.json'
 
@@ -51,6 +52,9 @@ class ScreenConfig(BaseModel):
     @property
     def height(self):
         return self.size[1]
+
+    def get_rect(self):
+        return Rect((0, 0), self.size)
 
 
 class CameraConfig(BaseModel):

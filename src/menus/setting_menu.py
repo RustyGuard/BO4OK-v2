@@ -4,6 +4,7 @@ from pygame.font import Font
 
 from src.config import config, upload_config_to_disc
 from src.main_loop_state import set_main_element
+from src.ui.clickable_label import ClickableLabel
 from src.ui.image import UIImage
 from src.ui.button import UIButton
 from src.ui.text_label import TextLabel
@@ -11,9 +12,9 @@ from src.ui import UIElement
 
 
 class SettingsMenu(UIElement):
-    def __init__(self, rect: Rect):
+    def __init__(self):
 
-        super().__init__(rect, None)
+        super().__init__(config.screen.get_rect(), None)
 
         self.init_menu()
 
@@ -36,11 +37,10 @@ class SettingsMenu(UIElement):
         self.fullscreen_toggle = UIButton(Rect(fullscreen_label.relative_bounds.w, 0, 50, 50), Color('green' if config.screen.fullscreen else 'red'), self.toggle_fullscreen)
         menu.append_child(self.fullscreen_toggle)
 
-        apply_changes_text = TextLabel(Rect(0, 0, 0, 0), Color('white'), menu_font, 'Применить')
-        apply_changes = UIButton(Rect((150, 450), apply_changes_text.relative_bounds.size), None, self.apply_changes)
-        apply_changes.append_child(apply_changes_text)
-        apply_changes_text.absolute_bounds.center = apply_changes.absolute_bounds.center
-        self.append_child(apply_changes)
+        self.append_child(ClickableLabel(Rect((150, 450), (150, 75)),
+                                         self.apply_changes, 'Применить', menu_font,
+                                         mouse_hover_text_color=Color('antiquewhite'),
+                                         mouse_exit_text_color=Color('white')))
 
     def toggle_fullscreen(self):
         self.fullscreen = not self.fullscreen
@@ -57,5 +57,5 @@ class SettingsMenu(UIElement):
         upload_config_to_disc()
 
     def go_back(self):
-        from src.main_menu import MainMenu
-        set_main_element(MainMenu(self.relative_bounds))
+        from src.menus.main_menu import MainMenu
+        set_main_element(MainMenu())

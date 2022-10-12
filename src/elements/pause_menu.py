@@ -16,8 +16,8 @@ class PauseMenu(UIElement):
         self.append_child(UIButton(Rect(0, 0, 150, 150), Color('black'), self.exit_game))
 
     def exit_game(self):
-        from src.main_menu import MainMenu
-        set_main_element(MainMenu(self.relative_bounds))
+        from src.menus.main_menu import MainMenu
+        set_main_element(MainMenu())
 
     def render(self, screen: Surface):
         if not self.opened:

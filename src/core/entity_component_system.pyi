@@ -17,6 +17,9 @@ class EntityComponentSystem(Protocol):
     on_create: Callable[[EntityId, list[Component]], None]
     on_remove: Callable[[EntityId], None]
 
+    def __init__(self, on_create: Callable[[EntityId, list[Component]], None] = None,
+                 on_remove: Callable[[EntityId], None] = None): ...
+
     @overload
     def _get_component(self, entity_id: str, component_class: Type[Component1]) -> Component1: ...
 
