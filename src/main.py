@@ -7,7 +7,6 @@ from src import main_loop_state
 from src.config import config
 from src.constants import EVENT_SEC, EVENT_UPDATE
 from src.main_loop_state import set_main_element, close_game
-from src.main_menu import MainMenu
 
 
 def run_main_loop(screen: Surface):
@@ -36,6 +35,8 @@ def run_main_loop(screen: Surface):
 
 
 def main():
+    from src.main_menu import MainMenu
+
     pygame.init()
     screen = pygame.display.set_mode(config.screen.size, pygame.FULLSCREEN if config.screen.fullscreen else 0)
 

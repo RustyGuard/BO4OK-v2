@@ -1,7 +1,6 @@
 import pygame
 from pygame.event import Event
 
-from src.config import config
 from src.constants import EVENT_UPDATE
 from src.core.camera import Camera
 from src.ui import UIElement

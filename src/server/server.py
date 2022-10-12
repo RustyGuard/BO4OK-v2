@@ -4,7 +4,7 @@ import socket
 from dataclasses import dataclass
 from multiprocessing import Process, Manager, Pipe
 from multiprocessing.connection import Connection
-from typing import Optional, Any
+from typing import Any
 
 import pygame
 from pygame import Color
@@ -36,6 +36,8 @@ from src.constants import EVENT_UPDATE, color_name_to_pygame_color
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerResources, PlayerInfo, EntityId, Component
+from src.elements.camera_input import CameraInputHandler
+from src.elements.pause_menu import PauseMenu
 from src.main import run_main_loop
 from src.elements.entities_renderer import EntitiesRenderer
 from src.elements.grass_background import GrassBackground
@@ -58,7 +60,9 @@ from src.systems.unit_production import unit_production_system
 from src.systems.worker.building_completion import building_completion_system
 from src.systems.worker.resource_gathering import working_system
 from src.systems.worker.work_finder import work_finder_system
-from src.ui import UIElement, FPSCounter, UIImage
+from src.ui.image import UIImage
+from src.ui.fps_counter import FPSCounter
+from src.ui import UIElement
 from src.utils.json_utils import PydanticEncoder
 
 Connections = dict[int, tuple[socket.socket, Any]]
@@ -125,8 +129,8 @@ class ConnectedPlayer:
 class WaitForPlayersWindow(UIElement):
     REQUIRED_AMOUNT_OF_PLAYERS = 1
 
-    def __init__(self, rect: Rect, color: Optional[Color]):
-        super().__init__(rect, color)
+    def __init__(self, rect: Rect):
+        super().__init__(rect, Color('bisque'))
         self.connected_players: list[ConnectedPlayer] = []
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
@@ -150,6 +154,7 @@ class WaitForPlayersWindow(UIElement):
         self.send_process = Process(target=send_player_actions, args=(self.connections, self.read_connection),
                                     daemon=True)
         self.send_process.start()
+        self.append_child(PauseMenu())
 
     def is_all_nicks_sent(self):
         connected_player_ids = {player.socket_id for player in self.connected_players}
@@ -301,6 +306,8 @@ class ServerGameWindow(UIElement):
         self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
         menu_parent.append_child(self.minimap_elem)
+        self.append_child(CameraInputHandler(self.camera))
+        self.append_child(PauseMenu())
 
         setup_level(self.ecs, self.players)
 
@@ -348,7 +355,7 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode(config.screen.size)
 
-    set_main_element(WaitForPlayersWindow(Rect(0, 0, *config.screen.size), Color('bisque')))
+    set_main_element(WaitForPlayersWindow(Rect(0, 0, *config.screen.size)))
 
     run_main_loop(screen)
 

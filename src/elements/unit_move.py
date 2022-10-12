@@ -1,5 +1,4 @@
 import pygame.event
-from pygame import Rect
 
 from src.client.action_sender import ClientActionSender
 from src.components.base.player_owner import PlayerOwnerComponent

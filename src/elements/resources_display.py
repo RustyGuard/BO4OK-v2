@@ -4,27 +4,28 @@ from pygame.font import Font
 from pygame.rect import Rect
 
 from src.core.types import PlayerInfo, RequiredCost
-from src.ui import UIElement, Label
+from src.ui.text_label import TextLabel
+from src.ui import UIElement
 
 
 class ResourceDisplayMenu(UIElement):
     def __init__(self, player: PlayerInfo, bounds: Rect, font: Font):
         super().__init__(bounds, None)
-        self.money_count = Label(Rect(0, 0, 500, 500), Color('yellow'), font, '-')
+        self.money_count = TextLabel(Rect(0, 0, 500, 500), Color('yellow'), font, '-')
         self.append_child(self.money_count)
-        self.wood_count = Label(Rect(105, 0, 500, 500), Color('brown'), font, '-')
+        self.wood_count = TextLabel(Rect(105, 0, 500, 500), Color('brown'), font, '-')
         self.append_child(self.wood_count)
-        self.meat_count = Label(Rect(220, 0, 500, 500), Color('pink'), font, '-/-')
+        self.meat_count = TextLabel(Rect(220, 0, 500, 500), Color('pink'), font, '-/-')
         self.append_child(self.meat_count)
 
         self.cost_display = UIElement(Rect(0, -32, 0, 0), None)
         self.append_child(self.cost_display)
 
-        self.money_cost = Label(Rect(0, 0, 500, 500), Color('black'), font, '-')
+        self.money_cost = TextLabel(Rect(0, 0, 500, 500), Color('black'), font, '-')
         self.cost_display.append_child(self.money_cost)
-        self.wood_cost = Label(Rect(105, 0, 500, 500), Color('black'), font, '')
+        self.wood_cost = TextLabel(Rect(105, 0, 500, 500), Color('black'), font, '')
         self.cost_display.append_child(self.wood_cost)
-        self.meat_cost = Label(Rect(220, 0, 500, 500), Color('black'), font, '')
+        self.meat_cost = TextLabel(Rect(220, 0, 500, 500), Color('black'), font, '')
         self.cost_display.append_child(self.meat_cost)
 
         self.cost_display.enabled = False

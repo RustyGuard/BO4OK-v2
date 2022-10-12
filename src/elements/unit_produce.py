@@ -16,7 +16,10 @@ from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, RequiredCost, EntityId
 from src.entities import entity_icons
 from src.elements.resources_display import ResourceDisplayMenu
-from src.ui import UIElement, Label, UIButton, UIImage
+from src.ui.image import UIImage
+from src.ui.button import UIButton
+from src.ui.text_label import TextLabel
+from src.ui import UIElement
 
 
 class ProduceMenu(UIElement):
@@ -45,7 +48,7 @@ class ProduceMenu(UIElement):
                                border_top_left_radius=15,
                                border_top_right_radius=15)
         bottom_bar.append_child(
-            Label(Rect(5, 5, 450, 60), Color('black'), Font('assets/fonts/arial.ttf', 20), 'Создание юнитов'))
+            TextLabel(Rect(5, 5, 450, 60), Color('black'), Font('assets/fonts/arial.ttf', 20), 'Создание юнитов'))
         self.append_child(bottom_bar)
 
         for i, (unit_name, unit_cost) in enumerate(produce_component.producible_units.items()):

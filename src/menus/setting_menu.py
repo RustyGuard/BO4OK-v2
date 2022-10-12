@@ -2,10 +2,12 @@ import pygame
 from pygame import Rect, Color
 from pygame.font import Font
 
-from src import main_loop_state
 from src.config import config, upload_config_to_disc
 from src.main_loop_state import set_main_element
-from src.ui import UIElement, UIImage, UIButton, Label
+from src.ui.image import UIImage
+from src.ui.button import UIButton
+from src.ui.text_label import TextLabel
+from src.ui import UIElement
 
 
 class SettingsMenu(UIElement):
@@ -29,12 +31,12 @@ class SettingsMenu(UIElement):
         self.append_child(menu)
 
         self.fullscreen = config.screen.fullscreen
-        fullscreen_label = Label(Rect(0, 0, 0, 0), Color('white'), menu_font, 'Полноэкранный режим ')
+        fullscreen_label = TextLabel(Rect(0, 0, 0, 0), Color('white'), menu_font, 'Полноэкранный режим ')
         menu.append_child(fullscreen_label)
         self.fullscreen_toggle = UIButton(Rect(fullscreen_label.relative_bounds.w, 0, 50, 50), Color('green' if config.screen.fullscreen else 'red'), self.toggle_fullscreen)
         menu.append_child(self.fullscreen_toggle)
 
-        apply_changes_text = Label(Rect(0, 0, 0, 0), Color('white'), menu_font, 'Применить')
+        apply_changes_text = TextLabel(Rect(0, 0, 0, 0), Color('white'), menu_font, 'Применить')
         apply_changes = UIButton(Rect((150, 450), apply_changes_text.relative_bounds.size), None, self.apply_changes)
         apply_changes.append_child(apply_changes_text)
         apply_changes_text.absolute_bounds.center = apply_changes.absolute_bounds.center

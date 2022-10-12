@@ -1,5 +1,5 @@
 import pygame
-from pygame import Rect, Color
+from pygame import Color
 from pygame.font import Font
 from pygame.sprite import Sprite, Group
 

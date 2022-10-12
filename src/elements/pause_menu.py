@@ -2,10 +2,10 @@ import pygame.draw
 from pygame import Surface, Color, Rect
 from pygame.event import Event
 
-from src import main_loop_state
 from src.main_loop_state import set_main_element
 
-from src.ui import UIElement, UIButton
+from src.ui.button import UIButton
+from src.ui import UIElement
 
 
 class PauseMenu(UIElement):

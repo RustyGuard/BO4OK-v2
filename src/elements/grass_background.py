@@ -1,5 +1,5 @@
 import pygame
-from pygame import Rect, Surface
+from pygame import Surface
 
 from src.core.camera import Camera
 from src.ui import UIElement

@@ -43,7 +43,9 @@ from src.main_loop_state import set_main_element
 from src.systems.base.colliders import collider_system
 from src.systems.base.velocity import velocity_system
 from src.systems.chase import chase_system
-from src.ui import UIElement, FPSCounter, UIImage
+from src.ui.image import UIImage
+from src.ui.fps_counter import FPSCounter
+from src.ui import UIElement
 from src.utils.json_utils import PydanticDecoder
 
 
