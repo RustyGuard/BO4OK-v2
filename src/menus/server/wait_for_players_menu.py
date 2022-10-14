@@ -13,7 +13,7 @@ from src.core.types import PlayerInfo, PlayerResources
 from src.elements.pause_menu import PauseMenu
 from src.main_loop_state import set_main_element
 from src.menus.server.game_menu import ServerGameMenu
-from src.server.server import Connections, wait_for_new_connections, send_player_actions
+from src.server.socket_threads import Connections, wait_for_new_connections, send_player_actions
 from src.ui import UIElement
 from src.ui.image import UIImage
 from src.ui.text_label import TextLabel
@@ -54,7 +54,8 @@ class WaitForPlayersMenu(UIElement):
 
         self.font = pygame.font.SysFont('Comic Sans MS', 20)
         players_count_rect = rect_with_center(config.screen.get_rect().center, (150, 75))
-        self.players_count = TextLabel(players_count_rect, Color('white'), self.font, f'0/{self.REQUIRED_AMOUNT_OF_PLAYERS}')
+        self.players_count = TextLabel(players_count_rect, Color('white'), self.font,
+                                       f'0/{self.REQUIRED_AMOUNT_OF_PLAYERS}')
         self.append_child(self.players_count)
         self.append_child(PauseMenu())
 
@@ -139,3 +140,22 @@ class WaitForPlayersMenu(UIElement):
         self.write_action_connection.close()
         self.socket.close()
         self.manager.shutdown()
+
+
+def main():
+    import pygame
+
+    from src.config import config
+    from src.main import run_main_loop
+    from src.main_loop_state import set_main_element
+
+    pygame.init()
+    screen = pygame.display.set_mode(config.screen.size)
+
+    set_main_element(WaitForPlayersMenu())
+
+    run_main_loop(screen)
+
+
+if __name__ == '__main__':
+    main()

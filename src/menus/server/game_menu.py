@@ -41,7 +41,7 @@ from src.elements.pause_menu import PauseMenu
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
-from src.server.server import Connections
+from src.server.socket_threads import Connections
 from src.systems.base.colliders import collider_system
 from src.systems.base.death import death_system
 from src.systems.base.decay import decay_system

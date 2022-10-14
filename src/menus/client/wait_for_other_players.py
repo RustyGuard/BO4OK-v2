@@ -7,7 +7,7 @@ import pygame
 from pygame.font import Font
 from pygame.rect import Rect
 
-from src.client.client import read_server_actions, send_function
+from src.client.socket_threads import read_server_actions, send_function
 from src.config import config
 from src.constants import EVENT_UPDATE
 from src.core.types import PlayerInfo
