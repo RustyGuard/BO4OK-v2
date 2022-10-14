@@ -8,6 +8,7 @@ from src.entities import create_archer, create_warrior
 from src.entities.buildings.fortress import create_fortress
 from src.entities.resources.mine import create_mine
 from src.entities.resources.tree import create_tree
+from src.utils.collision import can_be_placed
 from src.utils.math_utils import spread_position
 
 
@@ -33,5 +34,8 @@ def setup_level(ecs: EntityComponentSystem, players: dict[int, PlayerInfo]):
             ecs.create_entity(create_warrior(*spread_position(fortress_position, 250), owner))
 
     for i in range(300):
-        ecs.create_entity(
-            create_tree(*spread_position((0, 0), config.world.size)))
+        while True:
+            tree_position = spread_position((0, 0), config.world.size)
+            if can_be_placed(ecs, tree_position, (16, 16)):
+                ecs.create_entity(create_tree(*tree_position))
+                break

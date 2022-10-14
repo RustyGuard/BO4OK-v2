@@ -19,11 +19,11 @@ class SettingsMenu(UIElement):
         self.init_menu()
 
     def init_menu(self):
-        self.background = UIImage(self.relative_bounds, 'assets/data/faded_background.png')
+        self.background = UIImage(self.bounds, 'assets/data/faded_background.png')
         self.append_child(self.background)
 
         back_button = UIButton(Rect(5, 5, 75, 75), None, self.go_back)
-        back_button.append_child(UIImage(back_button.relative_bounds.move(0, 0), 'assets/buttons/left-arrow.png'))
+        back_button.append_child(UIImage(back_button.bounds.move(0, 0), 'assets/buttons/left-arrow.png'))
         self.append_child(back_button)
 
         menu_font = Font('assets/fonts/arial.ttf', 40)
@@ -34,7 +34,7 @@ class SettingsMenu(UIElement):
         self.fullscreen = config.screen.fullscreen
         fullscreen_label = TextLabel(Rect(0, 0, 0, 0), Color('white'), menu_font, 'Полноэкранный режим ')
         menu.append_child(fullscreen_label)
-        self.fullscreen_toggle = UIButton(Rect(fullscreen_label.relative_bounds.w, 0, 50, 50), Color('green' if config.screen.fullscreen else 'red'), self.toggle_fullscreen)
+        self.fullscreen_toggle = UIButton(Rect(fullscreen_label.bounds.w, 0, 50, 50), Color('green' if config.screen.fullscreen else 'red'), self.toggle_fullscreen)
         menu.append_child(self.fullscreen_toggle)
 
         self.append_child(ClickableLabel(Rect((150, 450), (150, 75)),
@@ -51,8 +51,8 @@ class SettingsMenu(UIElement):
         screen = pygame.display.set_mode(config.screen.size, pygame.FULLSCREEN if config.screen.fullscreen else 0)
         config.screen.size = screen.get_size()
         print(screen.get_size())
-        self.childs.clear()
-        self.relative_bounds.size = config.screen.size
+        self.children.clear()
+        self.bounds.size = config.screen.size
         self.init_menu()
         upload_config_to_disc()
 

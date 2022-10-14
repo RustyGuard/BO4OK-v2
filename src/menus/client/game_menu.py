@@ -89,22 +89,20 @@ class ClientGameMenu(UIElement):
         self.append_child(GrassBackground(self.camera))
         self.append_child(EntitiesRenderer(self.ecs, self.camera))
 
-        menu_parent = UIElement()
-        self.append_child(menu_parent)
-
-        menu_parent.append_child(self.damage_indicators)
+        self.append_child(self.damage_indicators)
 
         self.minimap = Minimap(self.ecs, self.camera, self.current_player.color)
-        self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/sprite/minimap.png')
+        self.minimap_elem = UIImage(None, 'assets/sprite/minimap.png')
+        self.minimap_elem.bounds.bottom = config.screen.height
 
         self.resource_menu = ResourceDisplayMenu(self.current_player,
-                                                 Rect(45, 108, 0, 0),
+                                                 Rect(self.minimap.bounds.move(0, -33).topleft, (0, 0)),
                                                  Font('assets/fonts/arial.ttf', 25))
 
-        self.build_menu = BuildMenu(self.relative_bounds, self.resource_menu, self.action_sender,
-                                    self.current_player, self.camera)
+        self.build_menu = BuildMenu(self.bounds, self.resource_menu, self.action_sender,
+                                    self.current_player, self.camera, self.ecs)
 
-        self.produce_menu = ProduceMenu(self.relative_bounds, self.ecs, self.action_sender, self.camera,
+        self.produce_menu = ProduceMenu(self.bounds, self.ecs, self.action_sender, self.camera,
                                         self.current_player, self.resource_menu)
 
         self.minimap_elem.append_child(self.minimap)
@@ -116,10 +114,10 @@ class ClientGameMenu(UIElement):
             self.camera,
             self.current_player,
         )
-        menu_parent.append_child(self.build_menu)
-        menu_parent.append_child(self.produce_menu)
-        menu_parent.append_child(self.unit_move_menu)
-        menu_parent.append_child(self.minimap_elem)
+        self.append_child(self.build_menu)
+        self.append_child(self.produce_menu)
+        self.append_child(self.unit_move_menu)
+        self.append_child(self.minimap_elem)
         self.append_child(CameraInputHandler(self.camera))
         self.append_child(PauseMenu())
 

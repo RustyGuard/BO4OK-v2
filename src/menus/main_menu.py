@@ -48,4 +48,4 @@ class MainMenu(UIElement):
         set_main_element(WaitForPlayersMenu())
 
     def go_to_settings(self):
-        set_main_element(SettingsMenu(self.relative_bounds))
+        set_main_element(SettingsMenu(self.bounds))

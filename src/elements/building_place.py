@@ -7,12 +7,14 @@ from pygame.surface import Surface
 
 from src.client.action_sender import ClientActionSender
 from src.core.camera import Camera
+from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import RequiredCost, PlayerInfo
 from src.entities import buildings, entity_icons
 from src.elements.resources_display import ResourceDisplayMenu
 from src.ui.image import UIImage
 from src.ui.button import UIButton
 from src.ui import UIElement
+from src.utils.collision import can_be_placed
 from src.utils.image import get_image
 
 
@@ -24,17 +26,18 @@ class SelectedBuilding(NamedTuple):
 
 class BuildMenu(UIElement):
     def __init__(self, bounds, resource_menu: ResourceDisplayMenu, action_sender: ClientActionSender,
-                 current_player: PlayerInfo, camera: Camera):
+                 current_player: PlayerInfo, camera: Camera, ecs: EntityComponentSystem):
         super().__init__(bounds, None)
         self.camera = camera
         self.current_player = current_player
         self.selected: SelectedBuilding | None = None
         self.resource_menu = resource_menu
         self.action_sender = action_sender
+        self.ecs = ecs
         for i, (build_name, cost) in enumerate(buildings.items()):
             image = get_image(entity_icons[build_name].format(color_name=self.current_player.color_name))
-            btn = UIButton(Rect(0, i * 55 + 15, 50, 50), None, partial(self.select_building, build_name, cost, image))
-            btn.append_child(UIImage(Rect((0, 0), btn.relative_bounds.size), None, image))
+            btn = UIButton(Rect(5, i * 55 + 15, 50, 50), None, partial(self.select_building, build_name, cost, image))
+            btn.append_child(UIImage(btn.bounds, None, image))
             self.append_child(btn)
 
     def draw(self, screen) -> None:
@@ -69,6 +72,13 @@ class BuildMenu(UIElement):
     def place_building(self, position: tuple[float, float]):
         if not self.current_player.has_enough(self.selected.cost):
             print('Not enough money')
+            return
+
+        building_texture_path = entity_icons[self.selected.build_name].format(color_name=self.current_player.color_name)
+        building_texture = get_image(building_texture_path)
+
+        if not can_be_placed(self.ecs, position, building_texture.get_rect().size):
+            print('Can not build on top of entity')
             return
 
         self.action_sender.place_building(self.selected.build_name, position)

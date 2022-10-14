@@ -12,6 +12,7 @@ from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
 from src.entities import buildings, entity_icons
 from src.server.action_sender import ServerActionSender
+from src.utils.collision import can_be_placed
 from src.utils.image import get_image
 from src.utils.math_utils import spread_position
 
@@ -57,16 +58,10 @@ class ServerActionHandler:
 
         building_texture_path = entity_icons[build_name].format(color_name=player.color_name)
         building_texture = get_image(building_texture_path)
-        building_rect = building_texture.get_rect()
-        building_rect.center = position_x, position_y
 
-        for entity_id, (position, texture) in self.ecs.get_entities_with_components((PositionComponent, TextureComponent)):
-            rect = texture.texture.get_rect()
-            rect.center = position.to_tuple()
-
-            if rect.colliderect(building_rect):
-                print('Can not build on top of entity')
-                return
+        if not can_be_placed(self.ecs, (position_x, position_y), building_texture.get_rect().size):
+            print('Can not build on top of entity')
+            return
 
         self.ecs.create_entity([
             PositionComponent(position_x, position_y),
@@ -92,11 +87,11 @@ class ServerActionHandler:
             chase, owner_component = components
 
             if owner_component.socket_id != socket_id:
-                print(f'''{socket_id=} trying to force to move {entity_id=} in other's({owner_component.socket_id}) team''')
+                print(
+                    f'''{socket_id=} trying to force to move {entity_id=} in other's({owner_component.socket_id}) team''')
                 return
 
             chase.chase_position = PositionComponent(*spread_position(position, 50))
             chase.entity_id = None
 
             self.action_sender.update_component_info(entity_id, chase)
-

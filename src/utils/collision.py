@@ -1,3 +1,5 @@
+from pygame import Rect
+
 from src.components.base.collider import ColliderComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
@@ -19,3 +21,15 @@ def is_close_to_target(ecs: EntityComponentSystem,
 
     distance += chase.distance_until_attack
     return position.distance(chase.chase_position) <= distance
+
+
+def can_be_placed(ecs: EntityComponentSystem, position: tuple[float, float], size: tuple[float, float]):
+    place_position = Rect((0, 0), size)
+    place_position.center = position
+    for _, (texture, entity_position) in ecs.get_entities_with_components((TextureComponent, PositionComponent)):
+        rect = texture.texture.get_rect()
+        rect.center = entity_position.to_tuple()
+
+        if rect.colliderect(place_position):
+            return False
+    return True

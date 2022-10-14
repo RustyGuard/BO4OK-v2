@@ -20,35 +20,36 @@ class Minimap(UIElement):
         self.pressed = False
         self.player_color = player_color
         super().__init__(Rect(*config.minimap.bounds), None)
+        self.bounds.bottom = config.screen.height
 
     def update(self, event: Event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.absolute_bounds.collidepoint(pygame.mouse.get_pos()):
+            if self.bounds.collidepoint(pygame.mouse.get_pos()):
                 self.pressed = True
                 return True
         if event.type == pygame.MOUSEBUTTONUP and self.pressed:
             self.pressed = False
-            if self.absolute_bounds.collidepoint(pygame.mouse.get_pos()):
+            if self.bounds.collidepoint(pygame.mouse.get_pos()):
                 self.move_to_mouse_click()
             return True
 
     def move_to_mouse_click(self):
         mouse_pos = pygame.mouse.get_pos()
-        relative_mouse_pos = mouse_pos[0] - self.absolute_bounds.x, mouse_pos[1] - self.absolute_bounds.y
+        relative_mouse_pos = mouse_pos[0] - self.bounds.x, mouse_pos[1] - self.bounds.y
         print(relative_mouse_pos)
         self.camera.set_center(self.minimap_to_worldpos(*relative_mouse_pos))
 
     def draw(self, screen):
         super().draw(screen)
-        mark_rect = Rect(self.absolute_bounds.x, self.absolute_bounds.y, self.mark_size, self.mark_size)
+        mark_rect = Rect(self.bounds.x, self.bounds.y, self.mark_size, self.mark_size)
 
         for _, (position, minimap_icon) in self.ecs.get_entities_with_components((PositionComponent, MinimapIconComponent)):
             shape = minimap_icon.mark_shape
             team_color = color_name_to_pygame_color[minimap_icon.team_color_name]
 
             pos = self.worldpos_to_minimap(position.x, position.y)
-            mark_rect.centerx = self.absolute_bounds.x + pos[0]
-            mark_rect.centery = self.absolute_bounds.y + pos[1]
+            mark_rect.centerx = self.bounds.x + pos[0]
+            mark_rect.centery = self.bounds.y + pos[1]
 
             if shape == 'circle':
                 pygame.draw.ellipse(screen, team_color, mark_rect)
@@ -65,7 +66,7 @@ class Minimap(UIElement):
             config.screen.size[0] * self.world_ratio_width,
             config.screen.size[1] * self.world_ratio_height
         )
-        pygame.draw.rect(screen, self.player_color, camera_rect.move(self.absolute_bounds.x, self.absolute_bounds.y), 1)
+        pygame.draw.rect(screen, self.player_color, camera_rect.move(self.bounds.x, self.bounds.y), 1)
 
     def worldpos_to_minimap(self, x, y):
         return (x + config.world.size) * self.world_ratio_width, \
@@ -73,15 +74,15 @@ class Minimap(UIElement):
 
     @property
     def world_ratio_width(self):
-        return self.relative_bounds.width / (2 * config.world.size)
+        return self.bounds.width / (2 * config.world.size)
 
     @property
     def world_ratio_height(self):
-        return self.relative_bounds.height / (2 * config.world.size)
+        return self.bounds.height / (2 * config.world.size)
 
     def minimap_to_worldpos(self, x, y):
-        normalized_x = 2 * x / self.relative_bounds.w - 1
-        normalized_y = 2 * y / self.relative_bounds.h - 1
+        normalized_x = 2 * x / self.bounds.w - 1
+        normalized_y = 2 * y / self.bounds.h - 1
         print(normalized_x, normalized_y)
 
         return -normalized_x * config.world.size, -normalized_y * config.world.size

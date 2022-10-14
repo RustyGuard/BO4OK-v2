@@ -23,7 +23,7 @@ class WaitForServerMenu(UIElement):
     def __init__(self):
         super().__init__(config.screen.get_rect(), None)
         fps_font = Font('assets/fonts/arial.ttf', 20)
-        self.append_child(UIImage(self.relative_bounds, 'assets/data/faded_background.png'))
+        self.append_child(UIImage(self.bounds, 'assets/data/faded_background.png'))
 
         self.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
 

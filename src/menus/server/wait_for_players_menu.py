@@ -27,12 +27,13 @@ class ConnectedPlayer:
 
 
 class WaitForPlayersMenu(UIElement):
-    REQUIRED_AMOUNT_OF_PLAYERS = 2
+    REQUIRED_AMOUNT_OF_PLAYERS = 1
+    PLAYER_AMOUNT_MASK = 'Подключено игроков {current_amount}/{required_amount}'
 
     def __init__(self):
         super().__init__(config.screen.get_rect(), None)
         self.connected_players: list[ConnectedPlayer] = []
-        self.append_child(UIImage(self.relative_bounds, 'assets/data/faded_background.png'))
+        self.append_child(UIImage(self.bounds, 'assets/data/faded_background.png'))
 
         self.socket = socket.socket()
         self.socket.bind((config.server.ip, config.server.port))
@@ -53,9 +54,10 @@ class WaitForPlayersMenu(UIElement):
         self.send_process.start()
 
         self.font = pygame.font.SysFont('Comic Sans MS', 20)
-        players_count_rect = rect_with_center(config.screen.get_rect().center, (150, 75))
-        self.players_count = TextLabel(players_count_rect, Color('white'), self.font,
-                                       f'0/{self.REQUIRED_AMOUNT_OF_PLAYERS}')
+        self.players_count = TextLabel(None, Color('white'), self.font,
+                                       self.PLAYER_AMOUNT_MASK.format(current_amount=0,
+                                                                      required_amount=self.REQUIRED_AMOUNT_OF_PLAYERS),
+                                       center=config.screen.get_rect().center)
         self.append_child(self.players_count)
         self.append_child(PauseMenu())
 
@@ -85,7 +87,8 @@ class WaitForPlayersMenu(UIElement):
                 if len(self.connections) >= self.REQUIRED_AMOUNT_OF_PLAYERS and self.is_all_nicks_sent():
                     self.start()
                     return
-            self.players_count.set_text(f'{len(self.connections)}/{self.REQUIRED_AMOUNT_OF_PLAYERS}')
+            self.players_count.set_text(self.PLAYER_AMOUNT_MASK.format(current_amount=len(self.connections),
+                                                                       required_amount=self.REQUIRED_AMOUNT_OF_PLAYERS))
 
     def start(self):
         self.connection_process.terminate()

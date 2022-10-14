@@ -34,7 +34,7 @@ class ProduceMenu(UIElement):
         self.resource_menu = resource_menu
 
     def set_selected(self, build_entity_id: EntityId):
-        self.childs.clear()
+        self.children.clear()
 
         produce_component = self.ecs.get_component(build_entity_id, UnitProductionComponent)
         if produce_component is None:
@@ -48,24 +48,24 @@ class ProduceMenu(UIElement):
                                border_top_left_radius=15,
                                border_top_right_radius=15)
         bottom_bar.append_child(
-            TextLabel(Rect(5, 5, 450, 60), Color('black'), Font('assets/fonts/arial.ttf', 20), 'Создание юнитов'))
+            TextLabel(Rect(5, 5, 5, 5).move(bottom_bar.bounds.x, bottom_bar.bounds.y), Color('black'), Font('assets/fonts/arial.ttf', 20), 'Создание юнитов'))
         self.append_child(bottom_bar)
 
         for i, (unit_name, unit_cost) in enumerate(produce_component.producible_units.items()):
             icon_path = entity_icons[unit_name].format(color_name=self.current_player.color_name)
 
-            btn = UIButton(Rect(5 + 85 * i, 35, 80, 80), None,
+            btn = UIButton(Rect(5 + 85 * i, 35, 80, 80).move(bottom_bar.bounds.x, bottom_bar.bounds.y), None,
                            callback_func=partial(self.produce_unit, unit_name, unit_cost),
                            on_mouse_hover=partial(self.resource_menu.display_cost, unit_cost),
                            on_mouse_exit=partial(self.resource_menu.hide_cost, unit_cost))
-            btn.append_child(UIImage(Rect((0, 0), btn.relative_bounds.size), None, pygame.image.load(icon_path)))
+            btn.append_child(UIImage(btn.bounds, None, pygame.image.load(icon_path)))
 
             bottom_bar.append_child(btn)
 
         self.selected_unit = build_entity_id
 
     def unselect(self):
-        self.childs.clear()
+        self.children.clear()
         self.selected_unit = None
 
     def produce_unit(self, unit_name: str, unit_cost: RequiredCost) -> None:

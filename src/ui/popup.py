@@ -15,6 +15,6 @@ class UIPopup(TextLabel):
         if event.type == EVENT_UPDATE:
             self.life_time -= 1
             if self.life_time <= 0:
-                self.parent.childs.remove(self)
+                self.parent.children.remove(self)
                 return
         super().update(event)

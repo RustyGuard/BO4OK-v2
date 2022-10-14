@@ -38,13 +38,11 @@ def working_system(entity_id: EntityId,
     resource_depot = ecs.get_component(chase.entity_id, ResourceDepotComponent)
 
     if uncompleted_building is not None:
-        print(uncompleted_building.progress)
         uncompleted_building.progress += 1
         action_sender.update_component_info(chase.entity_id, uncompleted_building)
 
         if uncompleted_building.progress >= uncompleted_building.required_progress:
             chase.drop_target()
-            print('no chase')
 
     elif resource_source is not None:
         taken_wood = min(resource_gatherer.gathering_speed, resource_source.wood)
