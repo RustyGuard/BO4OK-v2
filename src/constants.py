@@ -38,6 +38,14 @@ class SoundCode(Enum):
     WOOD_CHOP = 'assets/music/wood_chop.wav'
     PICKAXE_SWIPE = 'assets/music/pickaxe_swipe.wav'
     CONSTRUCTION_COMPLETED = 'assets/music/construction_completed.ogg'
+    GOLD_REQUIRED = 'assets/music/resources/gold_required.ogg'
+    WOOD_REQUIRED = 'assets/music/resources/wood_required.ogg'
+    MEAT_REQUIRED = 'assets/music/resources/meat_required.ogg'
+    PLACE_OCCUPIED = 'assets/music/place_occupied.ogg'
+
+    @property
+    def blocked_by_itself(self):
+        return self in {self.GOLD_REQUIRED, self.WOOD_REQUIRED, self.MEAT_REQUIRED, self.PLACE_OCCUPIED}
 
 
 class ServerCommands:

@@ -16,12 +16,12 @@ class PauseMenu(UIElement):
         super().__init__()
         self.opened = False
 
-        fade_image = pygame.Surface(config.screen.get_rect().size, pygame.SRCALPHA)
+        fade_image = pygame.Surface(config.screen.rect.size, pygame.SRCALPHA)
         fade_image.fill((0, 0, 0, 100))
-        self.append_child(UIImage(config.screen.get_rect(), image=fade_image))
+        self.append_child(UIImage(config.screen.rect, image=fade_image))
 
         menu_bounds = Rect((0, 0), (300, 300))
-        menu_bounds.center = config.screen.get_rect().center
+        menu_bounds.center = config.screen.rect.center
 
         self.append_child(UIElement(menu_bounds.copy(), Color('gray24')))
 
@@ -31,11 +31,11 @@ class PauseMenu(UIElement):
                                          'Выйти из игры', font,
                                          mouse_hover_text_color=Color('beige'),
                                          mouse_exit_text_color=Color('white'),
-                                         center=config.screen.get_rect().center)
+                                         center=config.screen.rect.center)
 
         self.append_child(exit_game_label)
 
-        pause_label = TextLabel(None, Color('slategray'), font, 'Пауза', center=config.screen.get_rect().center)
+        pause_label = TextLabel(None, Color('slategray'), font, 'Пауза', center=config.screen.rect.center)
         pause_label.bounds.centerx = menu_bounds.centerx
         pause_label.bounds.centery = menu_bounds.top + 45
         self.append_child(pause_label)

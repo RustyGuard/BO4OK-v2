@@ -20,16 +20,14 @@ from src.ui.image import UIImage
 
 
 class WaitForServerMenu(UIElement):
-    def __init__(self):
-        super().__init__(config.screen.get_rect(), None)
+    def __init__(self, server_connection: socket, nick: str):
+        super().__init__(config.screen.rect, None)
         fps_font = Font('assets/fonts/arial.ttf', 20)
         self.append_child(UIImage(self.bounds, 'assets/data/faded_background.png'))
 
         self.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
 
-        self.sock = socket.socket()
-        self.sock.connect(('localhost', 9090))
-        print('Connected')
+        self.sock = server_connection
 
         manager = Manager()
         self.receive_list = manager.list()
@@ -41,7 +39,7 @@ class WaitForServerMenu(UIElement):
         self.send_process.daemon = True
         self.send_process.start()
 
-        self.parent_conn.send(['nick', "".join(random.sample(list(ascii_letters), 5))])
+        self.parent_conn.send(['nick', nick])
 
         self.append_child(PauseMenu())
 

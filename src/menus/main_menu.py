@@ -3,6 +3,7 @@ from pygame.font import Font
 from pygame.rect import Rect
 
 from src import main_loop_state
+from src.menus.client.connect_to_game import ConnectToGame
 from src.menus.client.wait_for_other_players import WaitForServerMenu
 from src.config import config
 from src.main_loop_state import set_main_element
@@ -17,7 +18,7 @@ from src.ui import UIElement
 
 class MainMenu(UIElement):
     def __init__(self):
-        screen_rect = config.screen.get_rect()
+        screen_rect = config.screen.rect
         super().__init__(screen_rect)
 
         self.font = Font('assets/fonts/arial.ttf', 20)
@@ -41,7 +42,7 @@ class MainMenu(UIElement):
 
     def go_to_client(self):
         try:
-            set_main_element(WaitForServerMenu())
+            set_main_element(ConnectToGame())
         except ConnectionRefusedError:
             print('Not connected')
             self.append_child(UIPopup(Rect(250, 75, 0, 0), Color('white'), self.font, 'Not connected', 180))
@@ -50,4 +51,4 @@ class MainMenu(UIElement):
         set_main_element(WaitForPlayersMenu())
 
     def go_to_settings(self):
-        set_main_element(SettingsMenu(self.bounds))
+        set_main_element(SettingsMenu())

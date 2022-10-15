@@ -1,4 +1,5 @@
 import pathlib
+from functools import cached_property
 
 from pydantic import BaseModel
 from pygame import Rect
@@ -54,7 +55,8 @@ class ScreenConfig(BaseModel):
     def height(self):
         return self.size[1]
 
-    def get_rect(self):
+    @property
+    def rect(self):
         return Rect((0, 0), self.size)
 
 

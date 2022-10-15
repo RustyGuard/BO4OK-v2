@@ -16,7 +16,6 @@ class Minimap(UIElement):
     def __init__(self, ecs: EntityComponentSystem, camera: Camera, player_color: Color):
         self.ecs = ecs
         self.camera = camera
-        self.mark_size = config.minimap.mark_size
         self.pressed = False
         self.player_color = player_color
         super().__init__(Rect(*config.minimap.bounds), None)
@@ -41,9 +40,9 @@ class Minimap(UIElement):
 
     def draw(self, screen):
         super().draw(screen)
-        mark_rect = Rect(self.bounds.x, self.bounds.y, self.mark_size, self.mark_size)
 
         for _, (position, minimap_icon) in self.ecs.get_entities_with_components((PositionComponent, MinimapIconComponent)):
+            mark_rect = Rect(0, 0, minimap_icon.icon_size, minimap_icon.icon_size)
             shape = minimap_icon.mark_shape
             team_color = color_name_to_pygame_color[minimap_icon.team_color_name]
 
@@ -53,10 +52,12 @@ class Minimap(UIElement):
 
             if shape == 'circle':
                 pygame.draw.ellipse(screen, team_color, mark_rect)
-                pygame.draw.ellipse(screen, Color('black'), mark_rect, 1)
+                if minimap_icon.icon_border:
+                    pygame.draw.ellipse(screen, Color('white'), mark_rect, 1)
             elif shape == 'square':
                 pygame.draw.rect(screen, team_color, mark_rect)
-                pygame.draw.rect(screen, Color('black'), mark_rect, 1)
+                if minimap_icon.icon_border:
+                    pygame.draw.rect(screen, Color('white'), mark_rect, 1)
             else:
                 print(f'Unknown marker shape: {shape}')
 

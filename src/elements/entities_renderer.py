@@ -1,7 +1,6 @@
 import pygame
 from pygame import Rect, Surface, Color
 
-from src.components.base.collider import ColliderComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
 from src.components.fighting.health import HealthComponent
@@ -41,6 +40,3 @@ class EntitiesRenderer(UIElement):
             health_rect.width = health_rect.width * uncompleted_building.progress / uncompleted_building.required_progress
             pygame.draw.rect(screen, Color('yellow'), health_rect)
 
-        for _, (collider, position) in self.ecs.get_entities_with_components(
-                (ColliderComponent, PositionComponent)):
-            pygame.draw.circle(screen, Color('green') if collider.static else Color('lightgreen'), position.position_according_to_camera(self.camera), collider.radius, 1)

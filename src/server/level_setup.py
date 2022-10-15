@@ -1,4 +1,5 @@
 import math
+import random
 
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.config import config
@@ -13,9 +14,10 @@ from src.utils.math_utils import spread_position
 
 
 def setup_level(ecs: EntityComponentSystem, players: dict[int, PlayerInfo]):
+    players = random.sample(list(players.values()), counts=[15] * len(players), k=6)
     angle_step = 2 * math.pi / len(players)
     distance_from_center = 1000
-    for i, player in enumerate(players.values()):
+    for i, player in enumerate(players):
         fortress_position = (math.cos(i * angle_step) * distance_from_center,
                              math.sin(i * angle_step) * distance_from_center)
 
@@ -25,7 +27,7 @@ def setup_level(ecs: EntityComponentSystem, players: dict[int, PlayerInfo]):
 
         ecs.create_entity(create_fortress(*fortress_position, owner))
         ecs.create_entity(create_mine(math.cos(i * angle_step) * distance_from_center * 0.75,
-                             math.sin(i * angle_step) * distance_from_center * 0.75))
+                                      math.sin(i * angle_step) * distance_from_center * 0.75))
 
         # if player.nick != 'Admin':
         #     continue

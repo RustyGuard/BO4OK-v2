@@ -11,8 +11,8 @@ class ClickableLabel(UIButton):
     def __init__(self, bounds, callback_func,
                  text: str,
                  text_font: Font,
-                 mouse_hover_text_color: Color,
-                 mouse_exit_text_color: Color,
+                 mouse_hover_text_color: Color = Color('antiquewhite'),
+                 mouse_exit_text_color: Color = Color('white'),
                  center: tuple[int, int] = None):
         super().__init__(bounds, None, callback_func, center=center)
         self.label = TextLabel(Rect((0, 0), (0, 0)), Color('white'), text_font, text, center=self.bounds.center)

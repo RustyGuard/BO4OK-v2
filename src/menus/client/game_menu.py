@@ -48,7 +48,7 @@ class ClientGameMenu(UIElement):
     def __init__(self, socket: socket.socket, received_actions: list[list], read_socket_process: Process,
                  write_action_connection: Connection, read_action_connection: Connection, send_process: Process,
                  players: dict[int, PlayerInfo], socket_id: int):
-        super().__init__(config.screen.get_rect(), Color(93, 161, 48))
+        super().__init__(config.screen.rect, Color(93, 161, 48))
 
         self.current_player = players[socket_id]
 
@@ -126,6 +126,8 @@ class ClientGameMenu(UIElement):
         self.action_handler.add_hook(ClientCommands.POPUP, self.handle_show_label)
         self.action_handler.add_hook(ClientCommands.RESOURCE_INFO, lambda *_: self.resource_menu.update_values())
         self.action_handler.add_hook(ClientCommands.DEAD, self.handle_death)
+
+        self.append_child(FPSCounter(Rect(0, 0, 150, 75), fps_font))
 
         play_music('assets/music/game1.ogg')
 

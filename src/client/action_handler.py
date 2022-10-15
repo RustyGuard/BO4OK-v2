@@ -76,8 +76,8 @@ class ClientActionHandler:
         volume = 1
         if sound_position is not None:
             distance = self.camera.distance_to(sound_position)
-            volume = 2 ** (- (distance / config.screen.width * 2) ** 8)
+            volume = 2 ** (- (distance / config.screen.width * 2) ** 4)
             if volume <= 10 ** -3:
                 return
         sound = SoundCode[sound_name]
-        play_sound(sound.value, volume)
+        play_sound(sound, volume)

@@ -1,4 +1,3 @@
-import pygame.draw
 from pygame import Color, Surface
 from pygame.font import Font
 from pygame.rect import Rect
@@ -17,6 +16,7 @@ class TextLabel(UIElement):
 
     def update_text(self):
         self.text_image = self.font.render(self.text, True, self.color)
+        self.bounds.size = self.text_image.get_size()
 
     def set_text(self, text: str):
         if self.text != text:

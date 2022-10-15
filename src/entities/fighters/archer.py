@@ -8,6 +8,7 @@ from src.components.chase import ChaseComponent
 from src.components.fighting.enemy_finder import EnemyFinderComponent
 from src.components.fighting.health import HealthComponent
 from src.components.fighting.projectile_throw import ProjectileThrowComponent
+from src.components.minimap_icon import MinimapIconComponent
 
 
 def create_archer(x: float, y: float, player_owner: PlayerOwnerComponent):
@@ -22,4 +23,5 @@ def create_archer(x: float, y: float, player_owner: PlayerOwnerComponent):
         ProjectileThrowComponent(delay=60, projectile_name='arrow'),
         EnemyFinderComponent(anger_range=1000),
         ColliderComponent(7),
+        MinimapIconComponent('circle', player_owner.color_name, icon_size=3),
     ]

@@ -1,4 +1,5 @@
 import inspect
+import time
 from typing import Callable, Type, Any, Iterator
 
 from src.core.types import EntityId, Component, StoredSystem
@@ -81,13 +82,9 @@ class EntityComponentSystem:
 
     def get_entities_with_components(self, component_classes: list[Type[Component]]) -> Iterator[tuple[
         EntityId, list[Component]]]:
-        for entity_id in self.entities:
-            try:
-                components = tuple(self.components[component_class][entity_id] for component_class in component_classes)
-                yield entity_id, components
-
-            except KeyError:
-                pass
+        for entity_id in self.get_entity_ids_with_components(component_classes):
+            components = tuple(self.components[component_class][entity_id] for component_class in component_classes)
+            yield entity_id, components
 
     def update(self) -> None:
         for system_function, system in self.systems.items():

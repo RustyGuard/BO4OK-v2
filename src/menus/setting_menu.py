@@ -14,7 +14,7 @@ from src.ui import UIElement
 class SettingsMenu(UIElement):
     def __init__(self):
 
-        super().__init__(config.screen.get_rect(), None)
+        super().__init__(config.screen.rect, None)
 
         self.init_menu()
 

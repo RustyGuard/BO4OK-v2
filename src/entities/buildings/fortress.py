@@ -13,7 +13,7 @@ def create_fortress(x: float, y: float, player_owner: PlayerOwnerComponent):
     return [
         PositionComponent(x, y),
         TextureComponent.create_from_filepath(f'assets/building/fortress/{player_owner.color_name}.png'),
-        MinimapIconComponent('square', player_owner.color_name),
+        MinimapIconComponent('square', player_owner.color_name, icon_size=15, icon_border=True),
         player_owner,
         UnitProductionComponent(delay=3 * 60,
                                 producible_units={'worker': RequiredCost(money=1, wood=1, meat=1)}),

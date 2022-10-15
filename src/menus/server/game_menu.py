@@ -64,7 +64,7 @@ from src.ui.image import UIImage
 class ServerGameMenu(UIElement):
     def __init__(self, socket: socket.socket, connections: Connections, received_actions: list[tuple[int, Any]],
                  write_action_connection: Connection, send_process: Process, players: dict[int, PlayerInfo]):
-        super().__init__(config.screen.get_rect(), Color(93, 161, 48))
+        super().__init__(config.screen.rect, Color(93, 161, 48))
 
         self.players = players
 

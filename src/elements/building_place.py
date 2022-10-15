@@ -6,6 +6,7 @@ from pygame.rect import Rect
 from pygame.surface import Surface
 
 from src.client.action_sender import ClientActionSender
+from src.constants import SoundCode
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import RequiredCost, PlayerInfo
@@ -81,7 +82,7 @@ class BuildMenu(UIElement):
 
         if not can_be_placed(self.ecs, position, building_texture.get_rect().size):
             print('Can not build on top of entity')
-            play_sound('assets/music/no_place.ogg')
+            play_sound(SoundCode.PLACE_OCCUPIED)
             return
 
         self.action_sender.place_building(self.selected.build_name, position)
