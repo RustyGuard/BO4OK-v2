@@ -35,6 +35,7 @@ from src.elements.pause_menu import PauseMenu
 from src.elements.resources_display import ResourceDisplayMenu
 from src.elements.unit_move import UnitMoveMenu
 from src.elements.unit_produce import ProduceMenu
+from src.sound_player import play_music
 from src.systems.base.colliders import collider_system
 from src.systems.base.velocity import velocity_system
 from src.systems.chase import chase_system
@@ -121,10 +122,12 @@ class ClientGameMenu(UIElement):
         self.append_child(CameraInputHandler(self.camera))
         self.append_child(PauseMenu())
 
-        self.action_handler = ClientActionHandler(self.ecs, self.current_player)
+        self.action_handler = ClientActionHandler(self.ecs, self.current_player, self.camera)
         self.action_handler.add_hook(ClientCommands.POPUP, self.handle_show_label)
         self.action_handler.add_hook(ClientCommands.RESOURCE_INFO, lambda *_: self.resource_menu.update_values())
         self.action_handler.add_hook(ClientCommands.DEAD, self.handle_death)
+
+        play_music('assets/music/game1.ogg')
 
     def update(self, event):
         if event.type == EVENT_UPDATE:

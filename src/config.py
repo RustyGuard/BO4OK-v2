@@ -18,6 +18,7 @@ def load_config_from_disc():
             screen=ScreenConfig(),
             camera=CameraConfig(),
             server=ServerConfig(),
+            sound=SoundConfig(),
         )
     print(config)
 
@@ -69,12 +70,17 @@ class ServerConfig(BaseModel):
     port: int = 9090
 
 
+class SoundConfig(BaseModel):
+    volume: float = 0.5
+
+
 class Config(BaseModel):
     minimap: MinimapConfig
     world: WorldConfig
     screen: ScreenConfig
     camera: CameraConfig
     server: ServerConfig
+    sound: SoundConfig
 
 
 config: Config

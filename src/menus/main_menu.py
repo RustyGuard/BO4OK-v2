@@ -8,6 +8,7 @@ from src.config import config
 from src.main_loop_state import set_main_element
 from src.menus.setting_menu import SettingsMenu
 from src.menus.server.wait_for_players_menu import WaitForPlayersMenu
+from src.sound_player import play_music
 from src.ui.clickable_label import ClickableLabel
 from src.ui.popup import UIPopup
 from src.ui.image import UIImage
@@ -36,6 +37,7 @@ class MainMenu(UIElement):
                                              button_action, button_name, buttons_font,
                                              mouse_hover_text_color=Color('antiquewhite'),
                                              mouse_exit_text_color=Color('white')))
+        play_music('assets/music/menu.ogg')
 
     def go_to_client(self):
         try:

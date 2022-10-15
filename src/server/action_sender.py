@@ -3,7 +3,7 @@ from multiprocessing.connection import Connection
 from typing import Any
 
 from src.components.base.position import PositionComponent
-from src.constants import ClientCommands
+from src.constants import ClientCommands, SoundCode
 from src.core.types import Component, EntityId
 from src.core.types import PlayerInfo
 
@@ -48,3 +48,6 @@ class ServerActionSender:
 
     def show_popup(self, label: str, position: PositionComponent, color: str):
         self.send([ClientCommands.POPUP, label, position.x, position.y, color])
+
+    def play_sound(self, sound: SoundCode, sound_position: tuple[float, float] = None):
+        self.send([ClientCommands.SOUND, sound.name, sound_position])

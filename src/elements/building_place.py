@@ -11,6 +11,7 @@ from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import RequiredCost, PlayerInfo
 from src.entities import buildings, entity_icons
 from src.elements.resources_display import ResourceDisplayMenu
+from src.sound_player import play_sound
 from src.ui.image import UIImage
 from src.ui.button import UIButton
 from src.ui import UIElement
@@ -71,6 +72,7 @@ class BuildMenu(UIElement):
 
     def place_building(self, position: tuple[float, float]):
         if not self.current_player.has_enough(self.selected.cost):
+            self.current_player.play_not_enough_sound(self.selected.cost)
             print('Not enough money')
             return
 
@@ -79,6 +81,7 @@ class BuildMenu(UIElement):
 
         if not can_be_placed(self.ecs, position, building_texture.get_rect().size):
             print('Can not build on top of entity')
+            play_sound('assets/music/no_place.ogg')
             return
 
         self.action_sender.place_building(self.selected.build_name, position)

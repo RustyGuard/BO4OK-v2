@@ -3,6 +3,7 @@ from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
 from src.components.fighting.damage_on_contact import DamageOnContactComponent
 from src.components.fighting.health import HealthComponent
+from src.constants import SoundCode
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import EntityId
 from src.server.action_sender import ServerActionSender
@@ -42,5 +43,6 @@ def damage_on_contact_system(entity_id: EntityId,
 
         if damage_on_contact.die_on_contact:
             ecs.remove_entity(entity_id)
+            action_sender.play_sound(SoundCode.ARROW_CONTACT, position.to_tuple())
 
             return

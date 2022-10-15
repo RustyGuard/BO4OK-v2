@@ -1,3 +1,5 @@
+import math
+
 import pygame
 
 from src.config import config
@@ -44,3 +46,6 @@ class Camera:
 
     def to_screen_position(self, pos: tuple[float, float]):
         return pos[0] + self.offset_x, pos[1] + self.offset_y
+
+    def distance_to(self, position: tuple[float, float]):
+        return math.sqrt((position[0] + self.offset_x - config.screen.width / 2) ** 2 + (position[1] + self.offset_y - config.screen.height / 2) ** 2)

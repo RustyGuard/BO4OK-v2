@@ -1,14 +1,18 @@
 from typing import Any, Callable
 
-from src.constants import ClientCommands
+from src.config import config
+from src.constants import ClientCommands, SoundCode
+from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
+from src.sound_player import play_sound
 
 
 class ClientActionHandler:
-    def __init__(self, ecs: EntityComponentSystem, current_player: PlayerInfo):
+    def __init__(self, ecs: EntityComponentSystem, current_player: PlayerInfo, camera: Camera):
         self.ecs = ecs
         self.current_player = current_player
+        self.camera = camera
         self.hooks = {}
 
     def add_hook(self, command_id: int, hook: Callable[..., Any]):
@@ -29,6 +33,9 @@ class ClientActionHandler:
 
         elif command == ClientCommands.POPUP:
             pass
+
+        elif command == ClientCommands.SOUND:
+            self.handle_play_sound(args[0], args[1])
 
         else:
             print(f'Unknown command: {command}({args})')
@@ -64,3 +71,13 @@ class ClientActionHandler:
         if hasattr(component, 'assemble_on_client'):
             component.assemble_on_client(self.ecs)
         self.ecs.components[component_class][entity_id] = component
+
+    def handle_play_sound(self, sound_name: str, sound_position: tuple[float, float] | None):
+        volume = 1
+        if sound_position is not None:
+            distance = self.camera.distance_to(sound_position)
+            volume = 2 ** (- (distance / config.screen.width * 2) ** 8)
+            if volume <= 10 ** -3:
+                return
+        sound = SoundCode[sound_name]
+        play_sound(sound.value, volume)

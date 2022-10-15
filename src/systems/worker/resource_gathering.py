@@ -6,6 +6,7 @@ from src.components.worker.depot import ResourceDepotComponent
 from src.components.worker.resource import ResourceComponent
 from src.components.worker.resource_gatherer import ResourceGathererComponent
 from src.components.worker.uncompleted_building import UncompletedBuildingComponent
+from src.constants import SoundCode
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import EntityId, PlayerInfo
 from src.server.action_sender import ServerActionSender
@@ -50,12 +51,14 @@ def working_system(entity_id: EntityId,
         resource_gatherer.wood_carried += taken_wood
         if taken_wood:
             action_sender.show_popup(str(taken_wood), chase.chase_position, 'brown')
+            action_sender.play_sound(SoundCode.WOOD_CHOP, position.to_tuple())
 
         taken_money = min(resource_gatherer.gathering_speed, resource_source.money)
         resource_source.money -= taken_money
         resource_gatherer.money_carried += taken_money
         if taken_money:
             action_sender.show_popup(str(taken_money), chase.chase_position, 'yellow')
+            action_sender.play_sound(SoundCode.PICKAXE_SWIPE, position.to_tuple())
 
         if resource_source.money == 0 and resource_source.wood == 0:
             ecs.remove_entity(chase.entity_id)

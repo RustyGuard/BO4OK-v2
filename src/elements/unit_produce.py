@@ -70,6 +70,7 @@ class ProduceMenu(UIElement):
 
     def produce_unit(self, unit_name: str, unit_cost: RequiredCost) -> None:
         if not self.current_player.has_enough(unit_cost):
+            self.current_player.play_not_enough_sound(unit_cost)
             return
 
         self.action_sender.produce_unit(self.selected_unit, unit_name)

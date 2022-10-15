@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from pygame import Color
 
 from src.constants import color_name_to_pygame_color
+from src.sound_player import play_sound
 
 
 @dataclass
@@ -36,6 +37,17 @@ class PlayerInfo(BaseModel):
         return self.resources.money >= cost.money and self.resources.wood >= cost.wood and (
                 self.resources.meat + cost.meat <= self.resources.max_meat)
 
+    def play_not_enough_sound(self, cost: RequiredCost):
+        if self.resources.money < cost.money:
+            play_sound('assets/music/need_gold.ogg')
+            return
+        if self.resources.wood < cost.wood:
+            play_sound('assets/music/not_enough_wood.ogg')
+            return
+        if self.resources.meat + cost.meat > self.resources.max_meat:
+            play_sound('assets/music/build_a_farm.ogg')
+            return
+
     def spend(self, cost: RequiredCost):
         self.resources.money -= cost.money
         self.resources.wood -= cost.wood
@@ -44,6 +56,7 @@ class PlayerInfo(BaseModel):
 
 EntityId = str
 Component = object
+
 
 @dataclass
 class StoredSystem:

@@ -1,3 +1,5 @@
+from enum import Enum
+
 from pygame import Color
 
 EVENT_UPDATE = 27
@@ -26,6 +28,16 @@ class ClientCommands:
     COMPONENT_INFO = 5
     DEAD = 6
     POPUP = 7
+    SOUND = 8
+
+
+class SoundCode(Enum):
+    SWORD_SLASH = 'assets/music/sword_slash.wav'
+    ARROW_THROW = 'assets/music/arrow_throw.wav'
+    ARROW_CONTACT = 'assets/music/arrow_contact.wav'
+    WOOD_CHOP = 'assets/music/wood_chop.wav'
+    PICKAXE_SWIPE = 'assets/music/pickaxe_swipe.wav'
+    CONSTRUCTION_COMPLETED = 'assets/music/construction_completed.ogg'
 
 
 class ServerCommands:
