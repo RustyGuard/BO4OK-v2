@@ -49,7 +49,8 @@ class ConnectToGame(UIElement):
         if self.nick_input.value == '':
             return
 
-        host, port = self.host_input.value.split(':')
+        host_ip = self.host_input.value or 'localhost:9090'
+        host, port = host_ip.split(':')
         sock = socket.socket()
         print(socket.gethostbyname('localhost'))
         try:
