@@ -3,11 +3,11 @@ from multiprocessing import Process
 from multiprocessing.connection import Connection
 from typing import Any
 
-import pygame
 from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
+from src.client.action_sender import ClientActionSender
 from src.components.base.collider import ColliderComponent
 from src.components.base.decay import DecayComponent
 from src.components.base.player_owner import PlayerOwnerComponent
@@ -29,19 +29,22 @@ from src.components.worker.resource_gatherer import ResourceGathererComponent
 from src.components.worker.uncompleted_building import UncompletedBuildingComponent
 from src.components.worker.work_finder import WorkFinderComponent
 from src.config import config
-from src.constants import EVENT_UPDATE
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, Component, EntityId
+from src.elements.building_place import BuildMenu
 from src.elements.camera_input import CameraInputHandler
 from src.elements.entities_renderer import EntitiesRenderer
 from src.elements.grass_background import GrassBackground
 from src.elements.minimap import Minimap
 from src.elements.pause_menu import PauseMenu
+from src.elements.resources_display import ResourceDisplayMenu
+from src.elements.unit_produce import ProduceMenu
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
 from src.server.socket_threads import Connections
+from src.sound_player import play_music
 from src.systems.base.colliders import collider_system
 from src.systems.base.death import death_system
 from src.systems.base.decay import decay_system
@@ -62,7 +65,7 @@ from src.ui.image import UIImage
 
 
 class ServerGameMenu(UIElement):
-    def __init__(self, socket: socket.socket, connections: Connections, received_actions: list[tuple[int, Any]],
+    def __init__(self, server_socket: socket.socket, connections: Connections, received_actions: list[tuple[int, Any]],
                  write_action_connection: Connection, send_process: Process, players: dict[int, PlayerInfo]):
         super().__init__(config.screen.rect, Color(93, 161, 48))
 
@@ -74,13 +77,18 @@ class ServerGameMenu(UIElement):
         sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
         self.append_child(sub_elem)
 
-        self.socket = socket
+        self.socket = server_socket
         self.connections = connections
         self.received_actions = received_actions
         self.write_action_connection = write_action_connection
         self.send_process = send_process
 
-        self.action_sender = ServerActionSender(self.write_action_connection)
+        self.camera = Camera()
+
+        self.action_sender = ServerActionSender(self.write_action_connection, self.camera)
+
+        self.local_action_sender = ClientActionSender(self.write_local_action)
+        self.local_player = players[-1]
 
         self.ecs = EntityComponentSystem(self.on_create, self.on_remove)
 
@@ -126,22 +134,35 @@ class ServerGameMenu(UIElement):
 
         self.action_handler = ServerActionHandler(self.ecs, self.players, self.action_sender)
 
-        self.camera = Camera()
-
         self.append_child(GrassBackground(self.camera))
         self.append_child(EntitiesRenderer(self.ecs, self.camera))
-
-        menu_parent = UIElement()
-        self.append_child(menu_parent)
 
         self.minimap = Minimap(self.ecs, self.camera, Color('black'))
         self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/sprite/minimap.png')
         self.minimap_elem.append_child(self.minimap)
-        menu_parent.append_child(self.minimap_elem)
+        self.resource_menu = ResourceDisplayMenu(self.local_player,
+                                                 Rect(self.minimap.bounds.move(0, -33).topleft, (0, 0)),
+                                                 Font('assets/fonts/arial.ttf', 25))
+
+        self.build_menu = BuildMenu(self.bounds, self.resource_menu, self.local_action_sender,
+                                    self.local_player, self.camera, self.ecs)
+        self.append_child(self.build_menu)
+
+        self.produce_menu = ProduceMenu(self.bounds, self.ecs, self.local_action_sender, self.camera,
+                                        self.local_player, self.resource_menu)
+        self.append_child(self.produce_menu)
+
+        self.append_child(self.minimap_elem)
+        self.append_child(self.resource_menu)
         self.append_child(CameraInputHandler(self.camera))
         self.append_child(PauseMenu())
 
         setup_level(self.ecs, self.players)
+
+        play_music('assets/music/game1.ogg')
+
+    def write_local_action(self, action: list):
+        self.received_actions.append((-1, action))
 
     def on_create(self, entity_id, components: list[Component]):
         components_to_exclude = (
@@ -166,15 +187,13 @@ class ServerGameMenu(UIElement):
             if chase.entity_id == entity_id:
                 chase.drop_target()
 
-    def update(self, event: pygame.event) -> bool:
-        if event.type == EVENT_UPDATE:
-            while self.received_actions:
-                sender, command = self.received_actions.pop(0)
-                self.action_handler.handle_action(command[0], command[1:], sender)
+    def on_update(self):
+        while self.received_actions:
+            sender, command = self.received_actions.pop(0)
+            self.action_handler.handle_action(command[0], command[1:], sender)
 
-            self.ecs.update()
-
-        return super().update(event)
+        self.ecs.update()
+        self.resource_menu.update_values()
 
     def shutdown(self) -> None:
         self.send_process.terminate()

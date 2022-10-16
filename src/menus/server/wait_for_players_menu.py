@@ -28,18 +28,15 @@ class ConnectedPlayer:
 class WaitForPlayersMenu(UIElement):
     PLAYER_AMOUNT_MASK = 'Подключено игроков {current_amount}/{required_amount}'
 
-    def __init__(self, server_socket: socket, required_player_amount: int = 1, nick: str = 'Host'):
+    def __init__(self, server_socket: socket.socket, required_player_amount: int, local_player_nick: str):
         super().__init__(config.screen.rect, None)
 
         self.socket = server_socket
         self.required_player_amount = required_player_amount
+        self.local_player_nick = local_player_nick
 
         self.connected_players: list[ConnectedPlayer] = []
         self.append_child(UIImage(self.bounds, 'assets/data/faded_background.png'))
-
-        self.socket = socket.socket()
-        self.socket.bind((config.server.ip, config.server.port))
-        self.socket.listen(1)
 
         manager = Manager()
         self.manager = manager
@@ -124,21 +121,19 @@ class WaitForPlayersMenu(UIElement):
                 ) for connected_player in self.connected_players if connected_player.socket_id in self.connections}
 
         players[-1] = PlayerInfo(  # Add host to game
+            color_name=colors.pop(),
             socket_id=-1,
-            color_name='black',
-            nick='Admin',
+            nick=self.local_player_nick,
             resources=PlayerResources(
-                money=50000,
-                wood=50000,
-
-                meat=0,
-                max_meat=50000
+                money=config.world.start_money,
+                wood=config.world.start_wood,
+                meat=config.world.start_meat,
+                max_meat=config.world.base_meat,
             )
         )
         return players
 
     def shutdown(self):
-        print('dsadjasjkdhakjdhs')
         self.connection_process.terminate()
         self.send_process.terminate()
 

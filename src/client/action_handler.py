@@ -1,11 +1,11 @@
 from typing import Any, Callable
 
-from src.config import config
 from src.constants import ClientCommands, SoundCode
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
 from src.sound_player import play_sound
+from src.utils.sound_volume import get_sound_volume_from_distance
 
 
 class ClientActionHandler:
@@ -76,7 +76,7 @@ class ClientActionHandler:
         volume = 1
         if sound_position is not None:
             distance = self.camera.distance_to(sound_position)
-            volume = 2 ** (- (distance / config.screen.width * 2) ** 4)
+            volume = get_sound_volume_from_distance(distance)
             if volume <= 10 ** -3:
                 return
         sound = SoundCode[sound_name]

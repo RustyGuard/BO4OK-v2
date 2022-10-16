@@ -63,7 +63,7 @@ class ClientGameMenu(UIElement):
 
         self.append_child(FPSCounter(Rect(config.screen.size[0] - 100, 5, 0, 0), fps_font))
 
-        self.action_sender = ClientActionSender(self.write_action_connection)
+        self.action_sender = ClientActionSender(self.write_action)
 
         self.ecs = EntityComponentSystem()
 
@@ -130,6 +130,9 @@ class ClientGameMenu(UIElement):
         self.append_child(FPSCounter(Rect(0, 0, 150, 75), fps_font))
 
         play_music('assets/music/game1.ogg')
+
+    def write_action(self, action: list):
+        self.write_action_connection.send(action)
 
     def update(self, event):
         if event.type == EVENT_UPDATE:

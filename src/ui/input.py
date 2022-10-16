@@ -1,10 +1,8 @@
 import pygame.event
 import pyperclip
 from pygame import Rect, Color, Surface
-from pygame.event import Event
 from pygame.font import Font
 
-from src.constants import EVENT_UPDATE
 from src.ui import UIElement
 from src.ui.text_label import TextLabel
 

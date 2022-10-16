@@ -60,13 +60,17 @@ class HostGame(UIElement):
         host_ip = self.host_input.value or 'localhost:9090'
 
         host, port = host_ip.split(':')
+        port = int(port)
         sock = socket.socket()
-        sock.bind((host, int(port)))
+        sock.bind((host, port))
+
         try:
-            sock.listen(1)
+            sock.listen()
         except ConnectionRefusedError:
             print('Not connected')
             return
 
         players_amount = int(self.players_input.value or '1')
-        set_main_element(WaitForPlayersMenu(sock, required_player_amount=players_amount, nick=self.nick_input.value))
+        set_main_element(WaitForPlayersMenu(sock,
+                                            required_player_amount=players_amount,
+                                            local_player_nick=self.nick_input.value))
