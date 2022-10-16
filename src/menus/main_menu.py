@@ -3,17 +3,15 @@ from pygame.font import Font
 from pygame.rect import Rect
 
 from src import main_loop_state
-from src.menus.client.connect_to_game import ConnectToGame
-from src.menus.client.wait_for_other_players import WaitForServerMenu
 from src.config import config
 from src.main_loop_state import set_main_element
+from src.menus.client.connect_to_game import ConnectToGame
+from src.menus.server.host_game import HostGame
 from src.menus.setting_menu import SettingsMenu
-from src.menus.server.wait_for_players_menu import WaitForPlayersMenu
 from src.sound_player import play_music
-from src.ui.clickable_label import ClickableLabel
-from src.ui.popup import UIPopup
-from src.ui.image import UIImage
 from src.ui import UIElement
+from src.ui.clickable_label import ClickableLabel
+from src.ui.image import UIImage
 
 
 class MainMenu(UIElement):
@@ -41,14 +39,10 @@ class MainMenu(UIElement):
         play_music('assets/music/menu.ogg')
 
     def go_to_client(self):
-        try:
-            set_main_element(ConnectToGame())
-        except ConnectionRefusedError:
-            print('Not connected')
-            self.append_child(UIPopup(Rect(250, 75, 0, 0), Color('white'), self.font, 'Not connected', 180))
+        set_main_element(ConnectToGame())
 
     def host_server(self):
-        set_main_element(WaitForPlayersMenu())
+        set_main_element(HostGame())
 
     def go_to_settings(self):
         set_main_element(SettingsMenu())

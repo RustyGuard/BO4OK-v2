@@ -17,7 +17,6 @@ from src.server.socket_threads import Connections, wait_for_new_connections, sen
 from src.ui import UIElement
 from src.ui.image import UIImage
 from src.ui.text_label import TextLabel
-from src.utils.rect import rect_with_center
 
 
 @dataclass
@@ -27,11 +26,14 @@ class ConnectedPlayer:
 
 
 class WaitForPlayersMenu(UIElement):
-    REQUIRED_AMOUNT_OF_PLAYERS = 1
     PLAYER_AMOUNT_MASK = 'Подключено игроков {current_amount}/{required_amount}'
 
-    def __init__(self):
+    def __init__(self, server_socket: socket, required_player_amount: int = 1, nick: str = 'Host'):
         super().__init__(config.screen.rect, None)
+
+        self.socket = server_socket
+        self.required_player_amount = required_player_amount
+
         self.connected_players: list[ConnectedPlayer] = []
         self.append_child(UIImage(self.bounds, 'assets/data/faded_background.png'))
 
@@ -56,7 +58,7 @@ class WaitForPlayersMenu(UIElement):
         self.font = pygame.font.SysFont('Comic Sans MS', 20)
         self.players_count = TextLabel(None, Color('white'), self.font,
                                        self.PLAYER_AMOUNT_MASK.format(current_amount=0,
-                                                                      required_amount=self.REQUIRED_AMOUNT_OF_PLAYERS),
+                                                                      required_amount=self.required_player_amount),
                                        center=config.screen.rect.center)
         self.append_child(self.players_count)
         self.append_child(PauseMenu())
@@ -84,11 +86,11 @@ class WaitForPlayersMenu(UIElement):
                         nick=msg[1]
                     ))
                 self.clean_disconnected_players()
-                if len(self.connections) >= self.REQUIRED_AMOUNT_OF_PLAYERS and self.is_all_nicks_sent():
+                if len(self.connections) >= self.required_player_amount and self.is_all_nicks_sent():
                     self.start()
                     return
             self.players_count.set_text(self.PLAYER_AMOUNT_MASK.format(current_amount=len(self.connections),
-                                                                       required_amount=self.REQUIRED_AMOUNT_OF_PLAYERS))
+                                                                       required_amount=self.required_player_amount))
 
     def start(self):
         self.connection_process.terminate()
@@ -155,7 +157,13 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode(config.screen.size)
 
-    set_main_element(WaitForPlayersMenu())
+    host_ip = 'localhost:9090'
+
+    host, port = host_ip.split(':')
+    sock = socket.socket()
+    sock.bind((host, int(port)))
+
+    set_main_element(WaitForPlayersMenu(sock))
 
     run_main_loop(screen)
 
