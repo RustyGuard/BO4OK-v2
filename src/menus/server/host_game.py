@@ -41,14 +41,6 @@ class HostGame(UIElement):
                                   center=config.screen.rect.move(150, -95).center, limit=20)
         self.append_child(self.host_input)
 
-        players_label = TextLabel(None, font=font, color=Color('white'), text='Количество игроков: ',
-                                  center=config.screen.rect.move(-150, -40).center)
-        self.append_child(players_label)
-
-        self.players_input = UIInput(Rect(0, 0, 300, 50), Color('white'), Color('grey'), font,
-                                     center=config.screen.rect.move(150, -40).center, limit=20)
-        self.append_child(self.players_input)
-
         connect_button = ClickableLabel(Rect((0, 0), (150, 75)), self.connect, 'Создать', font,
                                         center=config.screen.rect.move(0, 15).center)
         self.append_child(connect_button)
@@ -70,7 +62,5 @@ class HostGame(UIElement):
             print('Not connected')
             return
 
-        players_amount = int(self.players_input.value or '1')
         set_main_element(WaitForPlayersMenu(sock,
-                                            required_player_amount=players_amount,
                                             local_player_nick=self.nick_input.value))

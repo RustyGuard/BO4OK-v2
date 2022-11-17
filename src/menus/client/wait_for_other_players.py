@@ -1,15 +1,11 @@
-import random
 import socket
 from multiprocessing import Manager, Process, Pipe
-from string import ascii_letters
 
-import pygame
 from pygame.font import Font
 from pygame.rect import Rect
 
 from src.client.socket_threads import read_server_actions, send_function
 from src.config import config
-from src.constants import EVENT_UPDATE
 from src.core.types import PlayerInfo
 from src.elements.pause_menu import PauseMenu
 from src.main_loop_state import set_main_element
@@ -43,15 +39,17 @@ class WaitForServerMenu(UIElement):
 
         self.append_child(PauseMenu())
 
-    def update(self, event: pygame.event):
-        if event.type == EVENT_UPDATE:
-            while self.receive_list:
-                msg = self.receive_list.pop(0)
-                if msg[0] == 'start':
-                    players = {int(i): j for i, j in msg[2].items()}
-                    self.start(int(msg[1]), players)
-                    return
-        super().update(event)
+    def on_update(self):
+        while self.receive_list:
+            msg = self.receive_list.pop(0)
+            if msg[0] == 'start':
+                players = {int(i): j for i, j in msg[2].items()}
+                self.start(int(msg[1]), players)
+                return
+            elif msg[0] == 'disconnect':
+                from src.menus.main_menu import MainMenu
+                set_main_element(MainMenu())
+                return
 
     def start(self, team_id: int, players: dict[int, PlayerInfo]):
         set_main_element(

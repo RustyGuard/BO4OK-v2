@@ -5,7 +5,7 @@ from pygame import Color, Surface
 from pygame.event import Event
 from pygame.rect import Rect
 
-from src.constants import EVENT_UPDATE
+from src.constants import EVENT_UPDATE, EVENT_SEC
 
 
 class UIElement:
@@ -14,10 +14,15 @@ class UIElement:
                  color: Optional[Color] = None,
                  border_top_left_radius=-1, border_top_right_radius=-1,
                  border_bottom_left_radius=-1, border_bottom_right_radius=-1,
+                 border_width=0,
+                 border_color=Color('black'),
                  center: tuple[int, int] = None,
                  focusable: bool = False,
                  focused: bool = False
                  ):
+        self.border_width = border_width
+        self.border_color = border_color
+
         self.border_top_left_radius = border_top_left_radius
         self.border_top_right_radius = border_top_right_radius
         self.border_bottom_left_radius = border_bottom_left_radius
@@ -40,9 +45,15 @@ class UIElement:
     def move(self, x, y):
         self.bounds.move_ip(x, y)
 
+    def set_color(self, color: Color):
+        self.color = color
+
     def update(self, event: Event):
         if event.type == EVENT_UPDATE:
             self.on_update()
+
+        if event.type == EVENT_SEC:
+            self.on_second_passed()
 
         if event.type == pygame.MOUSEMOTION:
             if self.on_mouse_motion(event.pos, event.rel):
@@ -85,6 +96,9 @@ class UIElement:
     def on_update(self):
         pass
 
+    def on_second_passed(self):
+        pass
+
     def on_mouse_motion(self, mouse_position: tuple[int, int], relative_position: tuple[int, int]) -> bool | None:
         pass
 
@@ -115,6 +129,14 @@ class UIElement:
     def draw(self, screen: Surface):
         if self.color is not None:
             pygame.draw.rect(screen, self.color, self.bounds,
+                             border_top_left_radius=self.border_top_left_radius,
+                             border_top_right_radius=self.border_top_right_radius,
+                             border_bottom_left_radius=self.border_bottom_left_radius,
+                             border_bottom_right_radius=self.border_bottom_right_radius,
+                             )
+        if self.border_width:
+            pygame.draw.rect(screen, self.border_color, self.bounds,
+                             width=self.border_width,
                              border_top_left_radius=self.border_top_left_radius,
                              border_top_right_radius=self.border_top_right_radius,
                              border_bottom_left_radius=self.border_bottom_left_radius,

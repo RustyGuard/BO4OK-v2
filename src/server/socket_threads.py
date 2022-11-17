@@ -29,19 +29,21 @@ def receive_data_from_socket(socket_id: int, socket: socket.socket, submit_list:
     while True:
         try:
             command_buffer += socket.recv(1024).decode('utf8')
-            splitter = command_buffer.find(';')
-            while splitter != -1:
-                command = command_buffer[:splitter]
-                if command != '':
-                    submit_list.append((socket_id, json.loads(command)))
-                command_buffer = command_buffer[splitter + 1:]
-                splitter = command_buffer.find(';')
-
         except Exception as ex:
-            connections.pop(socket_id)
+            submit_list.append((socket_id, ['disconnected']))
+            if socket_id is connections:
+                connections.pop(socket_id)
             print(ex)
             print(f'Disconnected: {socket_id}')
             return
+
+        splitter = command_buffer.find(';')
+        while splitter != -1:
+            command = command_buffer[:splitter]
+            if command != '':
+                submit_list.append((socket_id, json.loads(command)))
+            command_buffer = command_buffer[splitter + 1:]
+            splitter = command_buffer.find(';')
 
 
 def send_player_actions(connections: Connections, read_connection: Connection):

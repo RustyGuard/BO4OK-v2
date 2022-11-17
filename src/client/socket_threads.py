@@ -10,18 +10,26 @@ def read_server_actions(socket: socket.socket, submit_list: list[list]):
     while True:
         try:
             command_buffer += socket.recv(1024).decode('utf8')
-            splitter = command_buffer.find(';')
-            while splitter != -1:
-                command = command_buffer[:splitter]
-                if command != '':
-                    submit_list.append(json.loads(command, cls=PydanticDecoder))
-                command_buffer = command_buffer[splitter + 1:]
-                splitter = command_buffer.find(';')
 
         except Exception as ex:
+            submit_list.append(['disconnect'])
             print(ex)
             print('Disconnected')
             return
+
+        if command_buffer == '':
+            submit_list.append(['disconnect'])
+            print('Disconnected')
+            return
+
+        splitter = command_buffer.find(';')
+        while splitter != -1:
+            command = command_buffer[:splitter]
+            if command != '':
+                submit_list.append(json.loads(command, cls=PydanticDecoder))
+            command_buffer = command_buffer[splitter + 1:]
+            splitter = command_buffer.find(';')
+
 
 
 def send_function(sock: socket.socket, read_connection: Connection):

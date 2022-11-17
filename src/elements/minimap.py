@@ -35,7 +35,6 @@ class Minimap(UIElement):
     def move_to_mouse_click(self):
         mouse_pos = pygame.mouse.get_pos()
         relative_mouse_pos = mouse_pos[0] - self.bounds.x, mouse_pos[1] - self.bounds.y
-        print(relative_mouse_pos)
         self.camera.set_center(self.minimap_to_worldpos(*relative_mouse_pos))
 
     def draw(self, screen):
@@ -84,6 +83,5 @@ class Minimap(UIElement):
     def minimap_to_worldpos(self, x, y):
         normalized_x = 2 * x / self.bounds.w - 1
         normalized_y = 2 * y / self.bounds.h - 1
-        print(normalized_x, normalized_y)
 
         return -normalized_x * config.world.size, -normalized_y * config.world.size

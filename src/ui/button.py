@@ -1,7 +1,5 @@
 from typing import Callable
 
-import pygame
-
 from src.ui import UIElement
 
 

@@ -35,6 +35,7 @@ from src.elements.pause_menu import PauseMenu
 from src.elements.resources_display import ResourceDisplayMenu
 from src.elements.unit_move import UnitMoveMenu
 from src.elements.unit_produce import ProduceMenu
+from src.main_loop_state import set_main_element
 from src.sound_player import play_music
 from src.systems.base.colliders import collider_system
 from src.systems.base.velocity import velocity_system
@@ -119,6 +120,7 @@ class ClientGameMenu(UIElement):
         self.append_child(self.produce_menu)
         self.append_child(self.unit_move_menu)
         self.append_child(self.minimap_elem)
+
         self.append_child(CameraInputHandler(self.camera))
         self.append_child(PauseMenu())
 
@@ -134,15 +136,18 @@ class ClientGameMenu(UIElement):
     def write_action(self, action: list):
         self.write_action_connection.send(action)
 
-    def update(self, event):
-        if event.type == EVENT_UPDATE:
-            while self.received_actions:
-                args = self.received_actions.pop(0)
-                self.action_handler.handle_action(args[0], args[1:])
+    def on_update(self):
+        while self.received_actions:
+            command, *args = self.received_actions.pop(0)
 
-            self.ecs.update()
+            if command == 'disconnect':
+                from src.menus.main_menu import MainMenu
+                set_main_element(MainMenu())
+                return
 
-        return super().update(event)
+            self.action_handler.handle_action(command, args)
+
+        self.ecs.update()
 
     def shutdown(self):
         self.sock.close()

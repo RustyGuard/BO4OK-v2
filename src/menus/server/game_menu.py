@@ -39,6 +39,7 @@ from src.elements.grass_background import GrassBackground
 from src.elements.minimap import Minimap
 from src.elements.pause_menu import PauseMenu
 from src.elements.resources_display import ResourceDisplayMenu
+from src.elements.unit_move import UnitMoveMenu
 from src.elements.unit_produce import ProduceMenu
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
@@ -152,8 +153,17 @@ class ServerGameMenu(UIElement):
                                         self.local_player, self.resource_menu)
         self.append_child(self.produce_menu)
 
-        self.append_child(self.minimap_elem)
+        self.unit_move_menu = UnitMoveMenu(
+            self.ecs,
+            self.local_action_sender,
+            self.camera,
+            self.local_player,
+        )
+
         self.append_child(self.resource_menu)
+        self.append_child(self.unit_move_menu)
+        self.append_child(self.minimap_elem)
+
         self.append_child(CameraInputHandler(self.camera))
         self.append_child(PauseMenu())
 
