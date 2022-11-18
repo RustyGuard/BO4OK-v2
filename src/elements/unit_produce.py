@@ -84,6 +84,10 @@ class ProduceMenu(UIElement):
             rect.center = position.x + self.camera.offset_x, position.y + self.camera.offset_y
             pygame.draw.rect(screen, self.current_player.color, rect, 1, 15)
 
+    def on_death(self, entity_id: EntityId):
+        if self.selected_unit == entity_id:
+            self.unselect()
+
     def update(self, event) -> bool:
         if super().update(event):
             return True

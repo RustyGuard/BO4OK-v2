@@ -126,18 +126,20 @@ class ClientGameMenu(UIElement):
         self.append_child(CameraInputHandler(self.camera))
         self.append_child(PauseMenu())
 
-        self.action_handler = ClientActionHandler(self.ecs, self.current_player, self.camera)
-        self.action_handler.add_hook(ClientCommands.POPUP, self.handle_show_label)
-        self.action_handler.add_hook(ClientCommands.RESOURCE_INFO, lambda *_: self.resource_menu.update_values())
-        self.action_handler.add_hook(ClientCommands.DEAD, self.handle_death)
-
-        self.append_child(FPSCounter(Rect(0, 0, 150, 75), fps_font))
-
         self.defeat_screen = DefeatScreen()
         self.append_child(self.defeat_screen)
 
         self.victory_screen = VictoryScreen()
         self.append_child(self.victory_screen)
+
+        self.action_handler = ClientActionHandler(self.ecs, self.current_player, self.camera)
+        self.action_handler.add_hook(ClientCommands.POPUP, self.handle_show_label)
+        self.action_handler.add_hook(ClientCommands.RESOURCE_INFO, lambda *_: self.resource_menu.update_values())
+        self.action_handler.add_hook(ClientCommands.DEAD, self.handle_death)
+        self.action_handler.add_hook(ClientCommands.DEFEAT, self.defeat_screen.show_screen)
+        self.action_handler.add_hook(ClientCommands.VICTORY, self.victory_screen.show_screen)
+
+        self.append_child(FPSCounter(Rect(0, 0, 150, 75), fps_font))
 
         play_music('assets/music/game1.ogg')
 
@@ -170,8 +172,5 @@ class ClientGameMenu(UIElement):
         self.damage_indicators.show_indicator(label, position, color)
 
     def handle_death(self, entity_id: EntityId):
-        if self.produce_menu.selected_unit == entity_id:
-            self.produce_menu.unselect()
-
-        if entity_id in self.unit_move_menu.selected_entities:
-            self.unit_move_menu.selected_entities.remove(entity_id)
+        self.produce_menu.on_death(entity_id)
+        self.unit_move_menu.on_death(entity_id)

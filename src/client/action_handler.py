@@ -31,13 +31,10 @@ class ClientActionHandler:
         elif command == ClientCommands.COMPONENT_INFO:
             self.handle_update_component_info(args[0], args[1], args[2])
 
-        elif command == ClientCommands.POPUP:
-            pass
-
         elif command == ClientCommands.SOUND:
             self.handle_play_sound(args[0], args[1])
 
-        else:
+        elif command not in self.hooks:
             print(f'Unknown command: {command}({args})')
 
         hook = self.hooks.get(command, None)

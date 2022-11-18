@@ -64,3 +64,9 @@ class ServerActionSender:
                 return
         play_sound(sound, volume)
 
+    def show_defeat(self, player_id: int):
+        self.send([ClientCommands.DEFEAT], player_id)
+
+    def show_victory(self, player_id: int):
+        self.send([ClientCommands.VICTORY], player_id)
+

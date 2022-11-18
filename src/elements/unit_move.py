@@ -33,14 +33,23 @@ class UnitMoveMenu(UIElement):
             if not(render_rect.width <= 40 and render_rect.height <= 40):
                 pygame.draw.rect(screen, self.current_player.color, render_rect, 2)
 
-        if self.selected_entities:
-            for entity_id in self.selected_entities:
-                components = self.ecs.get_components(entity_id, (PositionComponent, TextureComponent))
+        for entity_id in self.selected_entities.copy():
+            components = self.ecs.get_components(entity_id, (PositionComponent, TextureComponent))
 
-                position, texture = components
-                rect = texture.texture.get_rect()
-                rect.center = self.camera.to_screen_position(position.to_tuple())
-                pygame.draw.ellipse(screen, self.current_player.color, rect, 1)
+            if components is None:
+                self.selected_entities.remove(entity_id)
+                continue
+
+            position, texture = components
+
+            rect = texture.texture.get_rect()
+            rect.center = self.camera.to_screen_position(position.to_tuple())
+            pygame.draw.ellipse(screen, self.current_player.color, rect, 1)
+
+    def on_death(self, entity_id: EntityId):
+        if entity_id is self.selected_entities:
+            print(entity_id, 'removed')
+            self.selected_entities.remove(entity_id)
 
     def update(self, event: pygame.event.Event):
         if event.type == pygame.MOUSEBUTTONDOWN:

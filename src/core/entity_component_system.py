@@ -98,11 +98,11 @@ class EntityComponentSystem:
                                    system.components.items()} | system.variables | special_args)
 
     def remove_entity(self, entity_id: EntityId):
+        if self.on_remove is not None:
+            self.on_remove(entity_id)
         for components in self.components.values():
             components.pop(entity_id, None)
         self.entities.remove(entity_id)
-        if self.on_remove is not None:
-            self.on_remove(entity_id)
 
     def get_component(self, entity_id: EntityId, component_class: Type[Component]):
         return self.components[component_class].get(entity_id, None)

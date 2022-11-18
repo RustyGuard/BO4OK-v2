@@ -5,6 +5,8 @@ from pygame import Color
 EVENT_UPDATE = 27
 EVENT_SEC = 28
 
+HOST_PLAYER_ID = -1
+
 color_name_to_pygame_color = {
     'aqua': Color('aquamarine'),
     'blue': Color('blue'),
@@ -23,12 +25,13 @@ class ClientCommands:
     """Команды, отправляемые клиенту"""
     CREATE = 1
     UPDATE = 2
-    TARGET_CHANGE = 3
     RESOURCE_INFO = 4
     COMPONENT_INFO = 5
     DEAD = 6
     POPUP = 7
     SOUND = 8
+    VICTORY = 9
+    DEFEAT = 10
 
 
 class SoundCode(Enum):

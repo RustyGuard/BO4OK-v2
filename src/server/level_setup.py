@@ -3,6 +3,7 @@ import random
 
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.config import config
+from src.constants import HOST_PLAYER_ID
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo
 from src.entities import create_archer, create_warrior
@@ -29,9 +30,9 @@ def setup_level(ecs: EntityComponentSystem, players: dict[int, PlayerInfo]):
         ecs.create_entity(create_mine(math.cos(i * angle_step) * distance_from_center * 0.75,
                                       math.sin(i * angle_step) * distance_from_center * 0.75))
 
-        # if player.nick != 'Admin':
+        # if player.socket_id != -1:
         #     continue
-        for _ in range(5):
+        for _ in range(5 if player.socket_id != HOST_PLAYER_ID else 2):
             ecs.create_entity(create_archer(*spread_position(fortress_position, 250), owner))
             ecs.create_entity(create_warrior(*spread_position(fortress_position, 250), owner))
 

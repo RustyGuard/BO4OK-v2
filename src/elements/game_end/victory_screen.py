@@ -46,6 +46,7 @@ class VictoryScreen(UIElement):
         self.opened = True
 
     def close_screen(self):
+        play_music('assets/music/game1.ogg')
         self.opened = False
 
     def exit_game(self):

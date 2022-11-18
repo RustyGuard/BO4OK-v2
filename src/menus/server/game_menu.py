@@ -29,6 +29,7 @@ from src.components.worker.resource_gatherer import ResourceGathererComponent
 from src.components.worker.uncompleted_building import UncompletedBuildingComponent
 from src.components.worker.work_finder import WorkFinderComponent
 from src.config import config
+from src.constants import HOST_PLAYER_ID
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, Component, EntityId
@@ -162,7 +163,7 @@ class ServerGameMenu(UIElement):
             self.local_player,
         )
 
-        self.append_child(self.resource_menu)
+        self.minimap_elem.append_child(self.resource_menu)
         self.append_child(self.unit_move_menu)
         self.append_child(self.minimap_elem)
 
@@ -178,7 +179,6 @@ class ServerGameMenu(UIElement):
         self.append_child(self.victory_screen)
 
         play_music('assets/music/game1.ogg')
-
 
     def write_local_action(self, action: list):
         self.received_actions.append((-1, action))
@@ -200,16 +200,59 @@ class ServerGameMenu(UIElement):
 
         self.action_sender.send_entity(entity_id, components)
 
-    def on_remove(self, entity_id: EntityId):
-        self.action_sender.remove_entity(entity_id)
+    def is_defeated(self, player_id: int, entity_to_ignore: EntityId):
+        for entity, (owner,) in self.ecs.get_entities_with_components((PlayerOwnerComponent,)):
+            if entity != entity_to_ignore and owner.socket_id == player_id:
+                return False
+        return True
+
+    def is_winner(self, player_id: int, entity_to_ignore: EntityId):
+        for entity, (owner,) in self.ecs.get_entities_with_components((PlayerOwnerComponent,)):
+            if entity != entity_to_ignore and owner.socket_id != player_id:
+                print(f'{player_id} Not winner because of {entity} {owner.nick}')
+                return False
+        return True
+
+    def show_defeat(self, player_id: int):
+        if player_id == HOST_PLAYER_ID:
+            self.defeat_screen.show_screen()
+            return
+        self.action_sender.show_defeat(player_id)
+
+    def show_victory(self, player_id: int):
+        if player_id == HOST_PLAYER_ID:
+            self.victory_screen.show_screen()
+            return
+        self.action_sender.show_victory(player_id)
+
+    def check_for_game_over_on_death(self, entity_id: EntityId):
+        owner = self.ecs.get_component(entity_id, PlayerOwnerComponent)
+        if owner is None:
+            return
+
+        if self.is_defeated(owner.socket_id, entity_id):
+            self.show_defeat(owner.socket_id)
+        if self.is_winner(owner.socket_id, entity_id):
+            self.show_victory(owner.socket_id)
+
+    def drop_chase_targets(self, entity_id: EntityId):
         for chase_entity_id, (chase,) in self.ecs.get_entities_with_components((ChaseComponent,)):
             if chase.entity_id == entity_id:
                 chase.drop_target()
 
+    def on_remove(self, entity_id: EntityId):
+        self.produce_menu.on_death(entity_id)
+        self.unit_move_menu.on_death(entity_id)
+
+        self.drop_chase_targets(entity_id)
+        self.check_for_game_over_on_death(entity_id)
+
+        self.action_sender.remove_entity(entity_id)
+
     def on_update(self):
         while self.received_actions:
-            sender, command = self.received_actions.pop(0)
-            self.action_handler.handle_action(command[0], command[1:], sender)
+            sender, (command, *args) = self.received_actions.pop(0)
+            self.action_handler.handle_action(command, args, sender)
 
         self.ecs.update()
         self.resource_menu.update_values()
