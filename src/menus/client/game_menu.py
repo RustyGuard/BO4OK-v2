@@ -21,17 +21,19 @@ from src.components.unit_production import UnitProductionComponent
 from src.components.worker.resource import ResourceComponent
 from src.components.worker.uncompleted_building import UncompletedBuildingComponent
 from src.config import config
-from src.constants import ClientCommands, EVENT_UPDATE
+from src.constants import ClientCommands
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, EntityId
 from src.elements.building_place import BuildMenu
 from src.elements.camera_input import CameraInputHandler
 from src.elements.damage_indicators import DamageIndicators
-from src.elements.entities_renderer import EntitiesRenderer
-from src.elements.grass_background import GrassBackground
+from src.elements.game_end.defeat_screen import DefeatScreen
+from src.elements.game_end.victory_screen import VictoryScreen
 from src.elements.minimap import Minimap
 from src.elements.pause_menu import PauseMenu
+from src.elements.renderers.entities_renderer import EntitiesRenderer
+from src.elements.renderers.grass_background import GrassBackground
 from src.elements.resources_display import ResourceDisplayMenu
 from src.elements.unit_move import UnitMoveMenu
 from src.elements.unit_produce import ProduceMenu
@@ -130,6 +132,12 @@ class ClientGameMenu(UIElement):
         self.action_handler.add_hook(ClientCommands.DEAD, self.handle_death)
 
         self.append_child(FPSCounter(Rect(0, 0, 150, 75), fps_font))
+
+        self.defeat_screen = DefeatScreen()
+        self.append_child(self.defeat_screen)
+
+        self.victory_screen = VictoryScreen()
+        self.append_child(self.victory_screen)
 
         play_music('assets/music/game1.ogg')
 

@@ -34,10 +34,12 @@ from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, Component, EntityId
 from src.elements.building_place import BuildMenu
 from src.elements.camera_input import CameraInputHandler
-from src.elements.entities_renderer import EntitiesRenderer
-from src.elements.grass_background import GrassBackground
+from src.elements.game_end.defeat_screen import DefeatScreen
+from src.elements.game_end.victory_screen import VictoryScreen
 from src.elements.minimap import Minimap
 from src.elements.pause_menu import PauseMenu
+from src.elements.renderers.entities_renderer import EntitiesRenderer
+from src.elements.renderers.grass_background import GrassBackground
 from src.elements.resources_display import ResourceDisplayMenu
 from src.elements.unit_move import UnitMoveMenu
 from src.elements.unit_produce import ProduceMenu
@@ -138,7 +140,7 @@ class ServerGameMenu(UIElement):
         self.append_child(GrassBackground(self.camera))
         self.append_child(EntitiesRenderer(self.ecs, self.camera))
 
-        self.minimap = Minimap(self.ecs, self.camera, Color('black'))
+        self.minimap = Minimap(self.ecs, self.camera, self.local_player.color)
         self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/ui/minimap.png')
         self.minimap_elem.append_child(self.minimap)
         self.resource_menu = ResourceDisplayMenu(self.local_player,
@@ -169,7 +171,14 @@ class ServerGameMenu(UIElement):
 
         setup_level(self.ecs, self.players)
 
+        self.defeat_screen = DefeatScreen()
+        self.append_child(self.defeat_screen)
+
+        self.victory_screen = VictoryScreen()
+        self.append_child(self.victory_screen)
+
         play_music('assets/music/game1.ogg')
+
 
     def write_local_action(self, action: list):
         self.received_actions.append((-1, action))
