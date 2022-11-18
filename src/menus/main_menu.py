@@ -21,7 +21,7 @@ class MainMenu(UIElement):
 
         self.font = Font('assets/fonts/arial.ttf', 20)
 
-        self.append_child(UIImage(screen_rect, 'assets/data/menu.png'))
+        self.append_child(UIImage(screen_rect, 'assets/background/menu.png'))
 
         buttons_font = Font('assets/fonts/arial.ttf', 40)
         buttons_data = [

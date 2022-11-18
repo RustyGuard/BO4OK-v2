@@ -19,11 +19,11 @@ class SettingsMenu(UIElement):
         self.init_menu()
 
     def init_menu(self):
-        self.background = UIImage(self.bounds, 'assets/data/faded_background.png')
+        self.background = UIImage(self.bounds, 'assets/background/faded_background.png')
         self.append_child(self.background)
 
         back_button = UIButton(Rect(5, 5, 75, 75), None, self.go_back)
-        back_button.append_child(UIImage(back_button.bounds.move(0, 0), 'assets/buttons/left-arrow.png'))
+        back_button.append_child(UIImage(back_button.bounds.move(0, 0), 'assets/ui/left-arrow.png'))
         self.append_child(back_button)
 
         menu_font = Font('assets/fonts/arial.ttf', 40)

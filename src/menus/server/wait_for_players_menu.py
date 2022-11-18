@@ -51,7 +51,7 @@ class WaitForPlayersMenu(UIElement):
         self.connected_players: list[ConnectedPlayer] = [
             ConnectedPlayer(self.ADMIN_SOCKET_ID, 'Вы', self.available_player_colors.pop(), kickable=False)
         ]
-        self.append_child(UIImage(self.bounds, 'assets/data/faded_background.png'))
+        self.append_child(UIImage(self.bounds, 'assets/background/faded_background.png'))
 
         manager = Manager()
         self.manager = manager
@@ -102,7 +102,7 @@ class WaitForPlayersMenu(UIElement):
                 remove_button = UIButton(Rect((0, 0), (24, 24)), None, partial(self.kick_player, player),
                                          center=player_box.bounds.move(-15, 0).midright)
                 self.players_list_element.append_child(remove_button)
-                self.players_list_element.append_child(UIImage(remove_button.bounds.copy(), 'assets/buttons/cross.png'))
+                self.players_list_element.append_child(UIImage(remove_button.bounds.copy(), 'assets/ui/cross.png'))
                 remove_button.on_mouse_hover = partial(remove_button.set_color, Color('darkred'))
                 remove_button.on_mouse_exit = partial(remove_button.set_color, None)
 

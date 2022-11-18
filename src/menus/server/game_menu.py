@@ -139,7 +139,7 @@ class ServerGameMenu(UIElement):
         self.append_child(EntitiesRenderer(self.ecs, self.camera))
 
         self.minimap = Minimap(self.ecs, self.camera, Color('black'))
-        self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/sprite/minimap.png')
+        self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/ui/minimap.png')
         self.minimap_elem.append_child(self.minimap)
         self.resource_menu = ResourceDisplayMenu(self.local_player,
                                                  Rect(self.minimap.bounds.move(0, -33).topleft, (0, 0)),

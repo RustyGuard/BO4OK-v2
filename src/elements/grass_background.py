@@ -9,7 +9,7 @@ class GrassBackground(UIElement):
     def __init__(self, camera: Camera):
         super().__init__()
         self.camera = camera
-        self.grass_sprite = pygame.image.load('assets/sprite/small_map.png').convert()
+        self.grass_sprite = pygame.image.load('assets/background/grass.png').convert()
 
     def draw(self, screen: Surface):
         sprite_width = self.grass_sprite.get_width()

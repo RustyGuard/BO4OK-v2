@@ -18,7 +18,7 @@ class HostGame(UIElement):
         super().__init__(config.screen.rect)
         font = pygame.font.SysFont('Comic Sans MS', 20)
 
-        self.background = UIImage(self.bounds, 'assets/data/faded_background.png')
+        self.background = UIImage(self.bounds, 'assets/background/faded_background.png')
         self.append_child(self.background)
 
         header = TextLabel(None, font=font, color=Color('white'), text='Создание сервера')

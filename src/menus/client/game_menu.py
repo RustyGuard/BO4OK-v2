@@ -94,7 +94,7 @@ class ClientGameMenu(UIElement):
         self.append_child(self.damage_indicators)
 
         self.minimap = Minimap(self.ecs, self.camera, self.current_player.color)
-        self.minimap_elem = UIImage(None, 'assets/sprite/minimap.png')
+        self.minimap_elem = UIImage(None, 'assets/ui/minimap.png')
         self.minimap_elem.bounds.bottom = config.screen.height
 
         self.resource_menu = ResourceDisplayMenu(self.current_player,
