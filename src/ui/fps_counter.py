@@ -5,26 +5,23 @@ from pygame.font import Font
 
 from src.constants import EVENT_SEC
 from src.ui import UIAnchor, BorderParams
-from src.ui.text_label import TextLabel, TextAlign
+from src.ui.text_label import TextLabel
 
 
 class FPSCounter(TextLabel):
     def __init__(self, *,
                  font: Font = None,
-                 text_align: TextAlign = TextAlign.LEFT,
                  text_color: Color = Color('green'),
 
-                 position: tuple[int, int] = (0, 0), size: tuple[int, int] = None,
+                 position: tuple[int, int] = (0, 0),
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
                  background_color: Optional[Color] = None,
                  border_params: Optional[BorderParams] = None):
         super().__init__(text='FPS:',
                          font=font,
-                         text_align=text_align,
                          text_color=text_color,
                          position=position,
-                         size=size,
                          anchor=anchor,
                          background_color=background_color,
                          border_params=border_params)

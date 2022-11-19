@@ -1,7 +1,7 @@
 import socket
 from multiprocessing import Manager, Process, Pipe
 
-from pygame.font import Font
+from pygame.font import Font, SysFont
 
 from src.client.socket_threads import read_server_actions, send_function
 from src.config import config
@@ -39,7 +39,9 @@ class WaitForServerMenu(UIElement):
 
         self.connected_players: list[ConnectedPlayer] = []
 
-        self.players_list_element = PlayersListElement(fps_font, self.connected_players)
+        font = SysFont('Comic Sans MS', 20)
+
+        self.players_list_element = PlayersListElement(font, self.connected_players)
         self.append_child(self.players_list_element)
 
         self.append_child(PauseMenu())
@@ -47,7 +49,6 @@ class WaitForServerMenu(UIElement):
     def on_update(self):
         while self.receive_list:
             command, *args = self.receive_list.pop(0)
-            print(command, args)
             if command == 'start':
                 players = {int(i): j for i, j in args[1].items()}
                 self.start(int(args[0]), players)
