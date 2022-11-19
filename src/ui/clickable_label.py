@@ -11,26 +11,21 @@ from src.ui.text_label import TextLabel
 
 class ClickableLabel(UIButton):
     def __init__(self, *,
+                 text: str,
+                 text_font: Font = None,
+
                  position: tuple[int, int] = (0, 0),
                  size: tuple[int, int] = (0, 0),
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
-                 color: Optional[Color] = None,
+                 background_color: Optional[Color] = None,
                  border_params: Optional[BorderParams] = None,
 
                  on_click: Callable[[], None] = None,
-
-                 text: str = '',
-                 text_font: Font = None,
                  mouse_hover_text_color: Color = Color('antiquewhite'),
-                 mouse_exit_text_color: Color = Color('white')
-                 ):
-        super().__init__(position=position,
-                         size=size,
-                         anchor=anchor,
-                         color=color,
-                         border_params=border_params,
-                         on_click=on_click)
+                 mouse_exit_text_color: Color = Color('white')):
+        super().__init__(position=position, size=size, anchor=anchor, background_color=background_color,
+                         border_params=border_params, on_click=on_click)
 
         self.label = TextLabel(text=text, text_color=mouse_exit_text_color, font=text_font,
                                position=self.bounds.center, anchor=UIAnchor.CENTER)

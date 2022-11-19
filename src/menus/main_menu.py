@@ -30,13 +30,11 @@ class MainMenu(UIElement):
         ]
         buttons_width = config.screen.width // len(buttons_data)
         for i, (button_name, button_action) in enumerate(buttons_data):
-            self.append_child(ClickableLabel(position=(buttons_width * i, config.screen.height - 100),
-                                             size=(buttons_width, 100),
-                                             on_click=button_action,
-                                             text=button_name,
-                                             text_font=buttons_font,
-                                             mouse_hover_text_color=Color('antiquewhite'),
-                                             mouse_exit_text_color=Color('white')))
+            self.append_child(
+                ClickableLabel(text=button_name, text_font=buttons_font,
+                               position=(buttons_width * i, config.screen.height - 100), size=(buttons_width, 100),
+                               on_click=button_action, mouse_hover_text_color=Color('antiquewhite'),
+                               mouse_exit_text_color=Color('white')))
         play_music('assets/music/menu.ogg')
 
     def go_to_client(self):

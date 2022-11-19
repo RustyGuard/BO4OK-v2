@@ -21,7 +21,7 @@ class WaitForServerMenu(UIElement):
         fps_font = Font('assets/fonts/arial.ttf', 20)
         self.append_child(UIImage(image='assets/background/faded_background.png', size=config.screen.size))
 
-        self.append_child(FPSCounter(position=(50, 50), font=fps_font))
+        self.append_child(FPSCounter(font=fps_font, position=(50, 50)))
 
         self.sock = server_connection
 

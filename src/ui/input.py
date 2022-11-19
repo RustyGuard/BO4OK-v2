@@ -22,15 +22,10 @@ class UIInput(UIElement):
                  size: tuple[int, int] = None,
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
-                 color: Optional[Color] = None,
+                 background_color: Optional[Color] = None,
                  border_params: Optional[BorderParams] = None):
-        super().__init__(position=position,
-                         size=size,
-                         anchor=anchor,
-                         color=color,
-                         border_params=border_params,
-                         focusable=True,
-                         focused=focused)
+        super().__init__(position=position, size=size, anchor=anchor, background_color=background_color,
+                         border_params=border_params, focusable=True, focused=focused)
 
         self.value = ''
 

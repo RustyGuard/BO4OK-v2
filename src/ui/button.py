@@ -11,18 +11,14 @@ class UIButton(UIElement):
                  size: tuple[int, int] = (0, 0),
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
-                 color: Optional[Color] = None,
+                 background_color: Optional[Color] = None,
                  border_params: Optional[BorderParams] = None,
 
                  on_click: Callable[[], None] = None,
-
                  on_mouse_hover=None,
                  on_mouse_exit=None):
 
-        super().__init__(position=position,
-                         size=size,
-                         anchor=anchor,
-                         color=color,
+        super().__init__(position=position, size=size, anchor=anchor, background_color=background_color,
                          border_params=border_params)
 
         self._callback_func = on_click

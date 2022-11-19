@@ -24,10 +24,8 @@ class TextLabel(UIElement):
                  size: tuple[int, int] = None,
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
-                 color: Optional[Color] = None,
-                 border_params: Optional[BorderParams] = None,
-
-                 ):
+                 background_color: Optional[Color] = None,
+                 border_params: Optional[BorderParams] = None):
         if font is None:
             font = Font('assets/fonts/arial.ttf', 20)
         self.font = font
@@ -42,10 +40,7 @@ class TextLabel(UIElement):
         # else:
         #     self.text_image =
 
-        super().__init__(position=position,
-                         size=size,
-                         anchor=anchor,
-                         color=color,
+        super().__init__(position=position, size=size, anchor=anchor, background_color=background_color,
                          border_params=border_params)
 
     def update_text(self):

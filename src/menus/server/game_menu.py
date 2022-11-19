@@ -78,7 +78,7 @@ class ServerGameMenu(UIElement):
 
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
-        self.append_child(FPSCounter(position=(50, 50), font=fps_font))
+        self.append_child(FPSCounter(font=fps_font, position=(50, 50)))
 
         self.socket = server_socket
         self.connections = connections

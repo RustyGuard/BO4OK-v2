@@ -47,13 +47,12 @@ class UIElement:
                  size: tuple[int, int] = None,
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
-                 color: Optional[Color] = None,
+                 background_color: Optional[Color] = None,
                  border_params: Optional[BorderParams] = None,
 
                  focusable: bool = False,
-                 focused: bool = False
-                 ):
-        self.color = color
+                 focused: bool = False):
+        self.background_color = background_color
         self.border_params = border_params
 
         self.children = []
@@ -71,8 +70,8 @@ class UIElement:
     def move(self, x, y):
         self.bounds.move_ip(x, y)
 
-    def set_color(self, color: Color):
-        self.color = color
+    def set_background_color(self, color: Color):
+        self.background_color = color
 
     def update(self, event: Event):
         if event.type == EVENT_UPDATE:
@@ -153,8 +152,8 @@ class UIElement:
                 elem.render(screen)
 
     def draw(self, screen: Surface):
-        if self.color is not None:
-            pygame.draw.rect(screen, self.color, self.bounds,
+        if self.background_color is not None:
+            pygame.draw.rect(screen, self.background_color, self.bounds,
                              border_top_left_radius=(
                                  self.border_params.top_left_radius if self.border_params else -1),
                              border_top_right_radius=(

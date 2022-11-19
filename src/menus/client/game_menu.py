@@ -63,7 +63,7 @@ class ClientGameMenu(UIElement):
 
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
-        self.append_child(FPSCounter(position=(config.screen.size[0] - 100, 5), font=fps_font))
+        self.append_child(FPSCounter(font=fps_font, position=(config.screen.size[0] - 100, 5)))
 
         self.action_sender = ClientActionSender(self.write_action)
 

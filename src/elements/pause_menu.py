@@ -22,16 +22,14 @@ class PauseMenu(UIElement):
         menu_bounds = Rect((0, 0), (300, 300))
         menu_bounds.center = config.screen.rect.center
 
-        self.append_child(UIElement(position=config.screen.rect.center, size=(300, 300), anchor=UIAnchor.CENTER, color=Color('gray24')))
+        self.append_child(UIElement(position=config.screen.rect.center, size=(300, 300), anchor=UIAnchor.CENTER,
+                                    background_color=Color('gray24')))
 
         font = pygame.font.SysFont('Comic Sans MS', 20)
 
-        exit_game_label = ClickableLabel(position=config.screen.rect.center, size=(150, 75), anchor=UIAnchor.CENTER,
-                                         on_click=self.exit_game,
-                                         text='Выйти из игры',
-                                         text_font=font,
-                                         mouse_hover_text_color=Color('beige'),
-                                         mouse_exit_text_color=Color('white'))
+        exit_game_label = ClickableLabel(text='Выйти из игры', text_font=font, position=config.screen.rect.center,
+                                         size=(150, 75), anchor=UIAnchor.CENTER, on_click=self.exit_game,
+                                         mouse_hover_text_color=Color('beige'), mouse_exit_text_color=Color('white'))
 
         self.append_child(exit_game_label)
 

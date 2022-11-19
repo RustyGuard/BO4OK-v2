@@ -28,19 +28,14 @@ class VictoryScreen(UIElement):
 
         font = pygame.font.SysFont('Comic Sans MS', 20)
 
-        exit_game_label = ClickableLabel(position=config.screen.rect.center, anchor=UIAnchor.CENTER,
-                                         on_click=self.exit_game,
-                                         text='Выйти из игры',
-                                         text_font=font,
-                                         mouse_hover_text_color=Color('beige'),
-                                         mouse_exit_text_color=Color('white'))
+        exit_game_label = ClickableLabel(text='Выйти из игры', text_font=font, position=config.screen.rect.center,
+                                         anchor=UIAnchor.CENTER, on_click=self.exit_game,
+                                         mouse_hover_text_color=Color('beige'), mouse_exit_text_color=Color('white'))
         self.append_child(exit_game_label)
 
-        close_screen_label = ClickableLabel(position=config.screen.rect.move(0, 50).center, anchor=UIAnchor.CENTER,
-                                            on_click=self.close_screen,
-                                            text='Осмотреть свои владения',
-                                            text_font=font,
-                                            mouse_hover_text_color=Color('beige'),
+        close_screen_label = ClickableLabel(text='Осмотреть свои владения', text_font=font,
+                                            position=config.screen.rect.move(0, 50).center, anchor=UIAnchor.CENTER,
+                                            on_click=self.close_screen, mouse_hover_text_color=Color('beige'),
                                             mouse_exit_text_color=Color('white'))
 
         self.append_child(close_screen_label)

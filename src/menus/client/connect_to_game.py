@@ -33,7 +33,7 @@ class ConnectToGame(UIElement):
                                   size=(300, 50),
                                   anchor=UIAnchor.CENTER,
                                   text_color=Color('white'),
-                                  color=Color('grey'),
+                                  background_color=Color('grey'),
                                   font=font,
                                   max_length=20,
                                   focused=True)
@@ -47,15 +47,13 @@ class ConnectToGame(UIElement):
                                   size=(300, 50),
                                   anchor=UIAnchor.CENTER,
                                   text_color=Color('white'),
-                                  color=Color('grey'),
+                                  background_color=Color('grey'),
                                   font=font,
                                   max_length=20)
         self.append_child(self.host_input)
 
-        connect_button = ClickableLabel(position=config.screen.rect.center, size=(150, 75), anchor=UIAnchor.CENTER,
-                                        on_click=self.connect,
-                                        text='Подключиться',
-                                        text_font=font)
+        connect_button = ClickableLabel(text='Подключиться', text_font=font, position=config.screen.rect.center,
+                                        size=(150, 75), anchor=UIAnchor.CENTER, on_click=self.connect)
         self.append_child(connect_button)
 
     def connect(self):

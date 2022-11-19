@@ -53,12 +53,9 @@ class WaitForPlayersMenu(UIElement):
         self.append_child(self.players_list_element)
         self.players_list_element.update_players()
 
-        start_button = ClickableLabel(position=config.screen.rect.move(0, 100).center,
-                                      size=(150, 75),
-                                      anchor=UIAnchor.CENTER,
-                                      on_click=self.start,
-                                      text='Начать',
-                                      text_font=self.font)
+        start_button = ClickableLabel(text='Начать', text_font=self.font,
+                                      position=config.screen.rect.move(0, 100).center, size=(150, 75),
+                                      anchor=UIAnchor.CENTER, on_click=self.start)
         self.append_child(start_button)
 
         self.append_child(PauseMenu())

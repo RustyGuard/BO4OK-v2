@@ -35,22 +35,19 @@ class SettingsMenu(UIElement):
         self.fullscreen = config.screen.fullscreen
         fullscreen_label = TextLabel(text='Полноэкранный режим', text_color=Color('white'), font=menu_font)
         menu.append_child(fullscreen_label)
-        self.fullscreen_toggle = UIButton(position=(fullscreen_label.bounds.w, 0),
-                                          size=(50, 50),
-                                          color=Color('green' if config.screen.fullscreen else 'red'),
+        self.fullscreen_toggle = UIButton(position=(fullscreen_label.bounds.w, 0), size=(50, 50),
+                                          background_color=Color('green' if config.screen.fullscreen else 'red'),
                                           on_click=self.toggle_fullscreen)
         menu.append_child(self.fullscreen_toggle)
 
-        self.append_child(ClickableLabel(position=(150, 450), size=(150, 75),
-                                         on_click=self.apply_changes,
-                                         text='Применить',
-                                         text_font=menu_font,
-                                         mouse_hover_text_color=Color('antiquewhite'),
-                                         mouse_exit_text_color=Color('white')))
+        self.append_child(
+            ClickableLabel(text='Применить', text_font=menu_font, position=(150, 450), size=(150, 75),
+                           on_click=self.apply_changes, mouse_hover_text_color=Color('antiquewhite'),
+                           mouse_exit_text_color=Color('white')))
 
     def toggle_fullscreen(self):
         self.fullscreen = not self.fullscreen
-        self.fullscreen_toggle.color = Color('green' if self.fullscreen else 'red')
+        self.fullscreen_toggle.background_color = Color('green' if self.fullscreen else 'red')
 
     def apply_changes(self):
         config.screen.fullscreen = self.fullscreen

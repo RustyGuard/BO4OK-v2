@@ -15,9 +15,8 @@ class UIImage(UIElement):
                  size: tuple[int, int] = None,
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
-                 color: Optional[Color] = None,
-                 border_params: Optional[BorderParams] = None,
-                 ):
+                 background_color: Optional[Color] = None,
+                 border_params: Optional[BorderParams] = None):
         if isinstance(image, Surface):
             self.image = image
         else:
@@ -28,10 +27,7 @@ class UIImage(UIElement):
         else:
             self.image = pygame.transform.smoothscale(self.image, size)
 
-        super().__init__(position=position,
-                         size=size,
-                         anchor=anchor,
-                         color=color,
+        super().__init__(position=position, size=size, anchor=anchor, background_color=background_color,
                          border_params=border_params)
 
     def draw(self, screen: Surface):

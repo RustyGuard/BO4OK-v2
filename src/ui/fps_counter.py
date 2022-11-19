@@ -11,16 +11,14 @@ from src.ui.text_label import TextLabel, TextAlign
 class FPSCounter(TextLabel):
     def __init__(self, *,
                  font: Font = None,
-                 text_align: TextAlign = TextAlign.LEFT,  # todo
+                 text_align: TextAlign = TextAlign.LEFT,
                  text_color: Color = Color('green'),
 
-                 position: tuple[int, int] = (0, 0),
-                 size: tuple[int, int] = None,
+                 position: tuple[int, int] = (0, 0), size: tuple[int, int] = None,
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
-                 color: Optional[Color] = None,
-                 border_params: Optional[BorderParams] = None,
-                 ):
+                 background_color: Optional[Color] = None,
+                 border_params: Optional[BorderParams] = None):
         super().__init__(text='FPS:',
                          font=font,
                          text_align=text_align,
@@ -28,7 +26,7 @@ class FPSCounter(TextLabel):
                          position=position,
                          size=size,
                          anchor=anchor,
-                         color=color,
+                         background_color=background_color,
                          border_params=border_params)
         self.frames = 0
 
