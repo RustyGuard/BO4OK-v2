@@ -57,6 +57,7 @@ def send_player_actions(connections: Connections, read_connection: Connection):
         else:
             for i, client in list(connections.items()):
                 try:
+                    print(json.dumps(task))
                     client[0].send((json.dumps(task) + ';').encode('utf8'))
                 except Exception as ex:
                     connections.pop(i)

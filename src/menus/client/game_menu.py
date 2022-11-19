@@ -88,11 +88,11 @@ class ClientGameMenu(UIElement):
         self.ecs.init_system(collider_system)
 
         self.camera = Camera()
-        self.damage_indicators = DamageIndicators(self.camera)
 
         self.append_child(GrassBackground(self.camera))
         self.append_child(EntitiesRenderer(self.ecs, self.camera))
 
+        self.damage_indicators = DamageIndicators(self.camera)
         self.append_child(self.damage_indicators)
 
         self.minimap = Minimap(self.ecs, self.camera, self.current_player.color)
@@ -136,12 +136,21 @@ class ClientGameMenu(UIElement):
         self.action_handler.add_hook(ClientCommands.POPUP, self.handle_show_label)
         self.action_handler.add_hook(ClientCommands.RESOURCE_INFO, lambda *_: self.resource_menu.update_values())
         self.action_handler.add_hook(ClientCommands.DEAD, self.handle_death)
-        self.action_handler.add_hook(ClientCommands.DEFEAT, self.defeat_screen.show_screen)
+        self.action_handler.add_hook(ClientCommands.DEFEAT, self.on_defeat)
         self.action_handler.add_hook(ClientCommands.VICTORY, self.victory_screen.show_screen)
 
         self.append_child(FPSCounter(Rect(0, 0, 150, 75), fps_font))
 
         play_music('assets/music/game1.ogg')
+
+    def disable_player_actions(self):
+        self.children.remove(self.build_menu)
+        self.children.remove(self.produce_menu)
+        self.children.remove(self.unit_move_menu)
+
+    def on_defeat(self):
+        self.disable_player_actions()
+        self.defeat_screen.show_screen()
 
     def write_action(self, action: list):
         self.write_action_connection.send(action)

@@ -68,6 +68,9 @@ class PlayerInfo(BaseModel):
         self.resources.wood -= cost.wood
         self.resources.meat += cost.meat
 
+    def __str__(self):
+        return f'{self.nick} with socket_id={self.socket_id}'
+
 
 EntityId = str
 Component = object
@@ -79,3 +82,15 @@ class StoredSystem:
     components: dict[str, Type[Component]]  # key is argument name
     has_entity_id_argument: bool
     has_ecs_argument: bool
+
+
+@dataclass
+class ConnectedPlayer:
+    socket_id: int
+    nick: str
+    color_name: str
+    kickable: bool = True
+
+    @property
+    def color(self):
+        return color_name_to_pygame_color[self.color_name]

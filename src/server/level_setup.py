@@ -10,14 +10,15 @@ from src.entities import create_archer, create_warrior
 from src.entities.buildings.fortress import create_fortress
 from src.entities.resources.mine import create_mine
 from src.entities.resources.tree import create_tree
+from src.entities.resources.worker import create_worker
 from src.utils.collision import can_be_placed
 from src.utils.math_utils import spread_position
 
 
 def setup_level(ecs: EntityComponentSystem, players: dict[int, PlayerInfo]):
-    players = random.sample(list(players.values()), counts=[15] * len(players), k=6)
+    players = list(players.values())
     angle_step = 2 * math.pi / len(players)
-    distance_from_center = 1000
+    distance_from_center = config.world.size * 0.75
     for i, player in enumerate(players):
         fortress_position = (math.cos(i * angle_step) * distance_from_center,
                              math.sin(i * angle_step) * distance_from_center)
@@ -30,11 +31,8 @@ def setup_level(ecs: EntityComponentSystem, players: dict[int, PlayerInfo]):
         ecs.create_entity(create_mine(math.cos(i * angle_step) * distance_from_center * 0.75,
                                       math.sin(i * angle_step) * distance_from_center * 0.75))
 
-        # if player.socket_id != -1:
-        #     continue
-        for _ in range(5 if player.socket_id != HOST_PLAYER_ID else 2):
-            ecs.create_entity(create_archer(*spread_position(fortress_position, 250), owner))
-            ecs.create_entity(create_warrior(*spread_position(fortress_position, 250), owner))
+        for _ in range(5 if player.socket_id == HOST_PLAYER_ID else 2):
+            ecs.create_entity(create_worker(*spread_position(fortress_position, 250), owner))
 
     for i in range(300):
         while True:

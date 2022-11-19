@@ -1,43 +1,26 @@
+import dataclasses
 import random
 import socket
-from dataclasses import dataclass
-from functools import partial
 from multiprocessing import Manager, Process, Pipe
 from typing import Any
 
 import pygame
-from pygame import Color, Rect
+from pygame import Rect
 
 from src.config import config
-from src.constants import EVENT_UPDATE, color_name_to_pygame_color
-from src.core.types import PlayerInfo, PlayerResources
+from src.constants import color_name_to_pygame_color, HOST_PLAYER_ID
+from src.core.types import PlayerInfo, PlayerResources, ConnectedPlayer
 from src.elements.pause_menu import PauseMenu
+from src.elements.players_list import PlayersListElement
 from src.main_loop_state import set_main_element
 from src.menus.server.game_menu import ServerGameMenu
 from src.server.socket_threads import Connections, wait_for_new_connections, send_player_actions
 from src.ui import UIElement
-from src.ui.button import UIButton
 from src.ui.clickable_label import ClickableLabel
 from src.ui.image import UIImage
-from src.ui.text_label import TextLabel
-
-
-@dataclass
-class ConnectedPlayer:
-    socket_id: int
-    nick: str
-    color_name: str
-    kickable: bool = True
-
-    @property
-    def color(self):
-        return color_name_to_pygame_color[self.color_name]
 
 
 class WaitForPlayersMenu(UIElement):
-    PLAYER_AMOUNT_MASK = 'Подключено игроков: {current_amount}'
-    ADMIN_SOCKET_ID = -1
-
     def __init__(self, server_socket: socket.socket, local_player_nick: str):
         super().__init__(config.screen.rect, None)
         self.available_player_colors = list(color_name_to_pygame_color.keys())
@@ -49,7 +32,7 @@ class WaitForPlayersMenu(UIElement):
         self.local_player_nick = local_player_nick
 
         self.connected_players: list[ConnectedPlayer] = [
-            ConnectedPlayer(self.ADMIN_SOCKET_ID, 'Вы', self.available_player_colors.pop(), kickable=False)
+            ConnectedPlayer(HOST_PLAYER_ID, local_player_nick, self.available_player_colors.pop(), kickable=False)
         ]
         self.append_child(UIImage(self.bounds, 'assets/background/faded_background.png'))
 
@@ -67,14 +50,9 @@ class WaitForPlayersMenu(UIElement):
                                     daemon=True)
         self.send_process.start()
 
-        self.players_count = TextLabel(None, Color('white'), self.font,
-                                       self.PLAYER_AMOUNT_MASK.format(current_amount=1),
-                                       center=config.screen.rect.move(0, -175).center)
-        self.append_child(self.players_count)
-
-        self.players_list_element = UIElement()
+        self.players_list_element = PlayersListElement(self.font, self.connected_players, self.kick_player)
         self.append_child(self.players_list_element)
-        self.update_players_list()
+        self.players_list_element.update_players()
 
         start_button = ClickableLabel(Rect((0, 0), (150, 75)), self.start, 'Начать', self.font,
                                       center=config.screen.rect.move(0, 100).center)
@@ -82,40 +60,19 @@ class WaitForPlayersMenu(UIElement):
 
         self.append_child(PauseMenu())
 
-    def update_players_list(self):
-        self.players_count.set_text(self.PLAYER_AMOUNT_MASK.format(current_amount=len(self.connected_players)))
-
-        self.players_list_element.children.clear()
-        offset_y = -125
-        for i, player in enumerate(self.connected_players):
-            player_box = UIElement(Rect(0, 0, 500, 30), Color('gray'),
-                                   center=config.screen.rect.move(0, offset_y + i * 35).center)
-            self.players_list_element.append_child(player_box)
-            self.players_list_element.append_child(
-                UIElement(Rect((0, 0), (24, 24)), color=player.color, border_width=1,
-                          center=player_box.bounds.move(15, 0).midleft))
-            self.players_list_element.append_child(
-                TextLabel(Rect(0, 0, 400, 25), Color('black'), self.font, player.nick,
-                          center=config.screen.rect.move(0, offset_y - 2 + i * 35).center))
-
-            if player.kickable:
-                remove_button = UIButton(Rect((0, 0), (24, 24)), None, partial(self.kick_player, player),
-                                         center=player_box.bounds.move(-15, 0).midright)
-                self.players_list_element.append_child(remove_button)
-                self.players_list_element.append_child(UIImage(remove_button.bounds.copy(), 'assets/ui/cross.png'))
-                remove_button.on_mouse_hover = partial(remove_button.set_color, Color('darkred'))
-                remove_button.on_mouse_exit = partial(remove_button.set_color, None)
+    def update_player_list_for_clients(self):
+        self.write_action_connection.send((['players', [dataclasses.asdict(player) for player in self.connected_players]], None))
 
     def kick_player(self, player: ConnectedPlayer):
         self.connected_players.remove(player)
         player_socket, address = self.connections.pop(player.socket_id)
         player_socket.shutdown(socket.SHUT_RDWR)
         player_socket.close()
-        self.update_players_list()
+        self.players_list_element.update_players()
 
     def clean_disconnected_players(self):
         for player in self.connected_players.copy():
-            if player.socket_id not in self.connections and player.socket_id != self.ADMIN_SOCKET_ID:
+            if player.socket_id not in self.connections and player.socket_id != HOST_PLAYER_ID:
                 self.connected_players.remove(player)
 
     def on_second_passed(self):
@@ -131,15 +88,19 @@ class WaitForPlayersMenu(UIElement):
                     color_name=self.available_player_colors.pop(),
                 ))
             self.clean_disconnected_players()
-            self.update_players_list()
+            self.update_player_list_for_clients()
+            self.players_list_element.update_players()
 
     def start(self):
         self.connection_process.terminate()
 
         players = self.get_players()
 
-        for socket_id in self.connections:
-            self.write_action_connection.send((['start', socket_id, players], socket_id))
+        for player in self.connected_players:
+            if player.socket_id == HOST_PLAYER_ID:
+                continue
+
+            self.write_action_connection.send((['start', player.socket_id, players], player.socket_id))
 
         set_main_element(
             ServerGameMenu(self.socket, self.connections, self.received_actions, self.write_action_connection,
@@ -160,7 +121,7 @@ class WaitForPlayersMenu(UIElement):
                         max_meat=config.world.base_meat,
                     )
                 ) for connected_player in self.connected_players if
-            (connected_player.socket_id in self.connections or connected_player.socket_id == self.ADMIN_SOCKET_ID)}
+            (connected_player.socket_id in self.connections or connected_player.socket_id == HOST_PLAYER_ID)}
 
     def shutdown(self):
         self.connection_process.terminate()

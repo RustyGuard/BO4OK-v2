@@ -36,6 +36,7 @@ from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, Component, EntityId, PlayerState
 from src.elements.building_place import BuildMenu
 from src.elements.camera_input import CameraInputHandler
+from src.elements.damage_indicators import DamageIndicators
 from src.elements.game_end.defeat_screen import DefeatScreen
 from src.elements.game_end.victory_screen import VictoryScreen
 from src.elements.minimap import Minimap
@@ -90,7 +91,9 @@ class ServerGameMenu(UIElement):
 
         self.camera = Camera()
 
-        self.action_sender = ServerActionSender(self.write_action_connection, self.camera)
+        self.damage_indicators = DamageIndicators(self.camera)
+
+        self.action_sender = ServerActionSender(self.write_action_connection, self.camera, self.damage_indicators)
 
         self.local_action_sender = ClientActionSender(self.write_local_action)
         self.local_player = players[-1]
@@ -142,6 +145,7 @@ class ServerGameMenu(UIElement):
 
         self.append_child(GrassBackground(self.camera))
         self.append_child(EntitiesRenderer(self.ecs, self.camera))
+        self.append_child(self.damage_indicators)
 
         self.minimap = Minimap(self.ecs, self.camera, self.local_player.color)
         self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/ui/minimap.png')
@@ -221,6 +225,11 @@ class ServerGameMenu(UIElement):
                 return False
         return True
 
+    def disable_player_actions(self):
+        self.children.remove(self.build_menu)
+        self.children.remove(self.produce_menu)
+        self.children.remove(self.unit_move_menu)
+
     def mark_as_defeated(self, player_id: int):
         if self.players[player_id].current_state != PlayerState.BATTLER:
             return
@@ -228,6 +237,7 @@ class ServerGameMenu(UIElement):
         self.players[player_id].current_state = PlayerState.SPECTATOR
 
         if player_id == HOST_PLAYER_ID:
+            self.disable_player_actions()
             self.defeat_screen.show_screen()
             return
         self.action_sender.show_defeat(player_id)

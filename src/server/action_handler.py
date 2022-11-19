@@ -9,7 +9,7 @@ from src.components.unit_production import UnitProductionComponent
 from src.components.worker.uncompleted_building import UncompletedBuildingComponent
 from src.constants import ServerCommands
 from src.core.entity_component_system import EntityComponentSystem
-from src.core.types import PlayerInfo, EntityId
+from src.core.types import PlayerInfo, EntityId, PlayerState
 from src.entities import buildings, entity_icons
 from src.server.action_sender import ServerActionSender
 from src.utils.collision import can_be_placed
@@ -24,33 +24,40 @@ class ServerActionHandler:
         self.action_sender = action_sender
 
     def handle_action(self, command: str, args: list[Any], socket_id: int):
+        player = self.players[socket_id]
+
         if command == ServerCommands.PRODUCE_UNIT:
-            self.handle_produce(socket_id, args[0], args[1])
+            self.handle_produce(player, args[0], args[1])
         elif command == ServerCommands.PLACE_UNIT:
-            self.handle_place(socket_id, args[0], args[1], args[2])
+            self.handle_place(player, args[0], args[1], args[2])
         elif command == ServerCommands.SET_TARGET_MOVE:
-            self.handle_force_move(socket_id, args[0], tuple(args[1]))
+            self.handle_force_move(player, args[0], tuple(args[1]))
 
         else:
             print(f'Unknown command: {command}({args})')
 
-    def handle_produce(self, socket_id: int, build_entity_id: EntityId, unit_name: str):
-        player = self.players[socket_id]
+    def handle_produce(self, player: PlayerInfo, build_entity_id: EntityId, unit_name: str):
+        if player.current_state == PlayerState.SPECTATOR:
+            print(f'''{player=} trying to produce units in spectator''')
+            return
+
         components = self.ecs.get_components(build_entity_id, (UnitProductionComponent, PlayerOwnerComponent))
         if components is None:
-            print(f'This entity({build_entity_id=}) can not produce anything, you are stupid, {socket_id=}')
+            print(f'This entity({build_entity_id=}) can not produce anything, you are stupid, {player=}')
             return
 
         producing_component, owner_component = components
-        if owner_component.socket_id != socket_id:
-            print(f'''{socket_id=} trying to produce units in other's({owner_component.socket_id}) building''')
+        if owner_component.socket_id != player.socket_id:
+            print(f'''{player=} trying to produce units in other's({owner_component.socket_id}) building''')
             return
 
         if producing_component.add_to_queue(unit_name, player):
             self.action_sender.update_resource_info(player)
 
-    def handle_place(self, socket_id: int, build_name: str, position_x: float, position_y: float):
-        player = self.players[socket_id]
+    def handle_place(self, player: PlayerInfo, build_name: str, position_x: float, position_y: float):
+        if player.current_state == PlayerState.SPECTATOR:
+            print(f'''{player=} trying to build in spectator''')
+            return
 
         cost = buildings[build_name]
         if not player.has_enough(cost):
@@ -78,17 +85,21 @@ class ServerActionHandler:
         player.spend(cost)
         self.action_sender.update_resource_info(player)
 
-    def handle_force_move(self, socket_id: int, entities: list[EntityId], position: tuple[float, float]):
+    def handle_force_move(self, player: PlayerInfo, entities: list[EntityId], position: tuple[float, float]):
+        if player.current_state == PlayerState.SPECTATOR:
+            print(f'''{player=} trying to build in spectator''')
+            return
+
         for entity_id in entities:
             components = self.ecs.get_components(entity_id, (ChaseComponent, PlayerOwnerComponent))
             if components is None:
-                print(f'This entity({entity_id=}) can not chase anything, you are stupid, {socket_id=}')
+                print(f'This entity({entity_id=}) can not chase anything, you are stupid, {player=}')
                 return
             chase, owner_component = components
 
-            if owner_component.socket_id != socket_id:
+            if owner_component.socket_id != player.socket_id:
                 print(
-                    f'''{socket_id=} trying to force to move {entity_id=} in other's({owner_component.socket_id}) team''')
+                    f'''{player=} trying to force to move {entity_id=} in other's({owner_component.socket_id}) team''')
                 return
 
             chase.chase_position = PositionComponent(*spread_position(position, 50))

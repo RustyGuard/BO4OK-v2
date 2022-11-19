@@ -7,14 +7,16 @@ from src.constants import ClientCommands, SoundCode
 from src.core.camera import Camera
 from src.core.types import Component, EntityId
 from src.core.types import PlayerInfo
+from src.elements.damage_indicators import DamageIndicators
 from src.sound_player import play_sound
 from src.utils.sound_volume import get_sound_volume_from_distance
 
 
 class ServerActionSender:
-    def __init__(self, write_action_connection: Connection, camera: Camera):
+    def __init__(self, write_action_connection: Connection, camera: Camera, damage_indicators: DamageIndicators):
         self.write_action_connection = write_action_connection
         self.camera = camera
+        self.damage_indicators = damage_indicators
 
     def send(self, command: list[Any], player_id: int | None = None) -> None:
         """Если player_id не указан - будет отправлено всем"""
@@ -52,6 +54,7 @@ class ServerActionSender:
 
     def show_popup(self, label: str, position: PositionComponent, color: str):
         self.send([ClientCommands.POPUP, label, position.x, position.y, color])
+        self.damage_indicators.show_indicator(label, position, color)
 
     def play_sound(self, sound: SoundCode, sound_position: tuple[float, float] = None):
         self.send([ClientCommands.SOUND, sound.name, sound_position])
