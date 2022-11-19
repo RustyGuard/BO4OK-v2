@@ -1,11 +1,11 @@
 import pygame.draw
-from pygame import Surface, Color, Rect
+from pygame import Surface, Color
 from pygame.event import Event
 
 from src.config import config
 from src.main_loop_state import set_main_element
 from src.sound_player import play_music
-from src.ui import UIElement
+from src.ui import UIAnchor, UIElement
 from src.ui.clickable_label import ClickableLabel
 from src.ui.image import UIImage
 
@@ -17,27 +17,31 @@ class DefeatScreen(UIElement):
 
         fade_image = pygame.Surface(config.screen.rect.size, pygame.SRCALPHA)
         fade_image.fill((0, 0, 0, 100))
-        self.append_child(UIImage(config.screen.rect, image=fade_image))
+        self.append_child(UIImage(image=fade_image, size=config.screen.rect.size))
 
         image_aspect_ratio = 5.72
         image_width = 500
-        self.append_child(UIImage(Rect((0, 0), (image_width, image_width / image_aspect_ratio)), 'assets/ui/game_over/loose.png',
-                                  center=config.screen.rect.move(0, -150).center))
+        self.append_child(UIImage(image='assets/ui/game_over/loose.png',
+                                  position=config.screen.rect.move(0, -150).center,
+                                  size=(image_width, int(image_width / image_aspect_ratio)),
+                                  anchor=UIAnchor.CENTER))
 
         font = pygame.font.SysFont('Comic Sans MS', 20)
 
-        exit_game_label = ClickableLabel(Rect(0, 0, 0, 0), self.exit_game,
-                                         'Выйти из игры', font,
+        exit_game_label = ClickableLabel(position=config.screen.rect.center, anchor=UIAnchor.CENTER,
+                                         on_click=self.exit_game,
+                                         text='Выйти из игры',
+                                         text_font=font,
                                          mouse_hover_text_color=Color('beige'),
-                                         mouse_exit_text_color=Color('white'),
-                                         center=config.screen.rect.center)
+                                         mouse_exit_text_color=Color('white'))
         self.append_child(exit_game_label)
 
-        close_screen_label = ClickableLabel(Rect(0, 0, 0, 0), self.close_screen,
-                                            'Продолжить в качестве наблюдателя', font,
+        close_screen_label = ClickableLabel(position=config.screen.rect.move(0, 50).center, anchor=UIAnchor.CENTER,
+                                            on_click=self.close_screen,
+                                            text='Продолжить в качестве наблюдателя',
+                                            text_font=font,
                                             mouse_hover_text_color=Color('beige'),
-                                            mouse_exit_text_color=Color('white'),
-                                            center=config.screen.rect.move(0, 50).center)
+                                            mouse_exit_text_color=Color('white'))
 
         self.append_child(close_screen_label)
 

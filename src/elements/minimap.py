@@ -18,7 +18,7 @@ class Minimap(UIElement):
         self.camera = camera
         self.pressed = False
         self.player_color = player_color
-        super().__init__(Rect(*config.minimap.bounds), None)
+        super().__init__(position=config.minimap.bounds[:2], size=config.minimap.bounds[2:])
         self.bounds.bottom = config.screen.height
 
     def update(self, event: Event):

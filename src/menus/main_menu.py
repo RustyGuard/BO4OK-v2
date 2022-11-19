@@ -1,6 +1,5 @@
 from pygame import Color
 from pygame.font import Font
-from pygame.rect import Rect
 
 from src import main_loop_state
 from src.config import config
@@ -16,12 +15,11 @@ from src.ui.image import UIImage
 
 class MainMenu(UIElement):
     def __init__(self):
-        screen_rect = config.screen.rect
-        super().__init__(screen_rect)
+        super().__init__()
 
         self.font = Font('assets/fonts/arial.ttf', 20)
 
-        self.append_child(UIImage(screen_rect, 'assets/background/menu.png'))
+        self.append_child(UIImage(image='assets/background/menu.png', size=config.screen.size))
 
         buttons_font = Font('assets/fonts/arial.ttf', 40)
         buttons_data = [
@@ -32,8 +30,11 @@ class MainMenu(UIElement):
         ]
         buttons_width = config.screen.width // len(buttons_data)
         for i, (button_name, button_action) in enumerate(buttons_data):
-            self.append_child(ClickableLabel(Rect(buttons_width * i, config.screen.height - 100, buttons_width, 100),
-                                             button_action, button_name, buttons_font,
+            self.append_child(ClickableLabel(position=(buttons_width * i, config.screen.height - 100),
+                                             size=(buttons_width, 100),
+                                             on_click=button_action,
+                                             text=button_name,
+                                             text_font=buttons_font,
                                              mouse_hover_text_color=Color('antiquewhite'),
                                              mouse_exit_text_color=Color('white')))
         play_music('assets/music/menu.ogg')

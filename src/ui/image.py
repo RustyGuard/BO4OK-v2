@@ -1,19 +1,38 @@
+from typing import Optional
+
 import pygame
-from pygame import Rect
+from pygame import Color
 from pygame.surface import Surface
 
-from src.ui import UIElement
+from src.ui import UIElement, UIAnchor, BorderParams
 
 
 class UIImage(UIElement):
-    def __init__(self, bounds: Rect | None = None, image_path: str = None, image: Surface = None,
-                 center: tuple[int, int] = None):
-        super().__init__(bounds, None, center=center)
-        self.image = pygame.image.load(image_path) if (image_path is not None) else image
-        if self.bounds.width != 0 and self.bounds.height != 0:
-            self.image = pygame.transform.smoothscale(self.image, self.bounds.size)
+    def __init__(self, *,
+                 image: str | Surface,
+
+                 position: tuple[int, int] = (0, 0),
+                 size: tuple[int, int] = None,
+                 anchor: UIAnchor = UIAnchor.TOP_LEFT,
+
+                 color: Optional[Color] = None,
+                 border_params: Optional[BorderParams] = None,
+                 ):
+        if isinstance(image, Surface):
+            self.image = image
         else:
-            self.bounds.size = self.image.get_size()
+            self.image = pygame.image.load(image)
+
+        if size is None:
+            size = self.image.get_size()
+        else:
+            self.image = pygame.transform.smoothscale(self.image, size)
+
+        super().__init__(position=position,
+                         size=size,
+                         anchor=anchor,
+                         color=color,
+                         border_params=border_params)
 
     def draw(self, screen: Surface):
         screen.blit(self.image, self.bounds.topleft)

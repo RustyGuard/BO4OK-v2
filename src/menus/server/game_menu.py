@@ -3,7 +3,6 @@ from multiprocessing import Process
 from multiprocessing.connection import Connection
 from typing import Any
 
-from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
@@ -65,7 +64,7 @@ from src.systems.unit_production import unit_production_system
 from src.systems.worker.building_completion import building_completion_system
 from src.systems.worker.resource_gathering import working_system
 from src.systems.worker.work_finder import work_finder_system
-from src.ui import UIElement
+from src.ui import UIAnchor, UIElement
 from src.ui.fps_counter import FPSCounter
 from src.ui.image import UIImage
 
@@ -73,15 +72,13 @@ from src.ui.image import UIImage
 class ServerGameMenu(UIElement):
     def __init__(self, server_socket: socket.socket, connections: Connections, received_actions: list[tuple[int, Any]],
                  write_action_connection: Connection, send_process: Process, players: dict[int, PlayerInfo]):
-        super().__init__(config.screen.rect, Color(93, 161, 48))
+        super().__init__()
 
         self.players = players
 
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
-        sub_elem = UIElement(Rect(50, 50, 50, 50), None)
-        sub_elem.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
-        self.append_child(sub_elem)
+        self.append_child(FPSCounter(position=(50, 50), font=fps_font))
 
         self.socket = server_socket
         self.connections = connections
@@ -148,18 +145,20 @@ class ServerGameMenu(UIElement):
         self.append_child(self.damage_indicators)
 
         self.minimap = Minimap(self.ecs, self.camera, self.local_player.color)
-        self.minimap_elem = UIImage(Rect(0, config.screen.size[1] - 388, 0, 0), 'assets/ui/minimap.png')
+        self.minimap_elem = UIImage(image='assets/ui/minimap.png',
+                                    position=(0, config.screen.height),
+                                    anchor=UIAnchor.BOTTOM_LEFT)
         self.minimap_elem.append_child(self.minimap)
         self.resource_menu = ResourceDisplayMenu(self.local_player,
                                                  Rect(self.minimap.bounds.move(0, -33).topleft, (0, 0)),
                                                  Font('assets/fonts/arial.ttf', 25))
 
-        self.build_menu = BuildMenu(self.bounds, self.resource_menu, self.local_action_sender,
-                                    self.local_player, self.camera, self.ecs)
+        self.build_menu = BuildMenu(self.resource_menu, self.local_action_sender, self.local_player, self.camera,
+                                    self.ecs)
         self.append_child(self.build_menu)
 
-        self.produce_menu = ProduceMenu(self.bounds, self.ecs, self.local_action_sender, self.camera,
-                                        self.local_player, self.resource_menu)
+        self.produce_menu = ProduceMenu(self.ecs, self.local_action_sender, self.camera, self.local_player,
+                                        self.resource_menu)
         self.append_child(self.produce_menu)
 
         self.unit_move_menu = UnitMoveMenu(

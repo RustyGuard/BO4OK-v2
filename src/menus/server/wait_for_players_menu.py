@@ -5,7 +5,6 @@ from multiprocessing import Manager, Process, Pipe
 from typing import Any
 
 import pygame
-from pygame import Rect
 
 from src.config import config
 from src.constants import color_name_to_pygame_color, HOST_PLAYER_ID
@@ -15,14 +14,14 @@ from src.elements.players_list import PlayersListElement
 from src.main_loop_state import set_main_element
 from src.menus.server.game_menu import ServerGameMenu
 from src.server.socket_threads import Connections, wait_for_new_connections, send_player_actions
-from src.ui import UIElement
+from src.ui import UIAnchor, UIElement
 from src.ui.clickable_label import ClickableLabel
 from src.ui.image import UIImage
 
 
 class WaitForPlayersMenu(UIElement):
     def __init__(self, server_socket: socket.socket, local_player_nick: str):
-        super().__init__(config.screen.rect, None)
+        super().__init__()
         self.available_player_colors = list(color_name_to_pygame_color.keys())
         random.shuffle(self.available_player_colors)
 
@@ -34,7 +33,7 @@ class WaitForPlayersMenu(UIElement):
         self.connected_players: list[ConnectedPlayer] = [
             ConnectedPlayer(HOST_PLAYER_ID, local_player_nick, self.available_player_colors.pop(), kickable=False)
         ]
-        self.append_child(UIImage(self.bounds, 'assets/background/faded_background.png'))
+        self.append_child(UIImage(image='assets/background/faded_background.png', size=config.screen.size))
 
         manager = Manager()
         self.manager = manager
@@ -54,8 +53,12 @@ class WaitForPlayersMenu(UIElement):
         self.append_child(self.players_list_element)
         self.players_list_element.update_players()
 
-        start_button = ClickableLabel(Rect((0, 0), (150, 75)), self.start, 'Начать', self.font,
-                                      center=config.screen.rect.move(0, 100).center)
+        start_button = ClickableLabel(position=config.screen.rect.move(0, 100).center,
+                                      size=(150, 75),
+                                      anchor=UIAnchor.CENTER,
+                                      on_click=self.start,
+                                      text='Начать',
+                                      text_font=self.font)
         self.append_child(start_button)
 
         self.append_child(PauseMenu())

@@ -1,19 +1,38 @@
-from typing import Callable
+from typing import Callable, Optional
 
-from src.ui import UIElement
+from pygame import Color
+
+from src.ui import UIElement, UIAnchor, BorderParams
 
 
 class UIButton(UIElement):
-    def __init__(self, bounds, color, callback_func,
+    def __init__(self, *,
+                 position: tuple[int, int] = (0, 0),
+                 size: tuple[int, int] = (0, 0),
+                 anchor: UIAnchor = UIAnchor.TOP_LEFT,
+
+                 color: Optional[Color] = None,
+                 border_params: Optional[BorderParams] = None,
+
+                 on_click: Callable[[], None] = None,
+
                  on_mouse_hover=None,
-                 on_mouse_exit=None,
-                 center: tuple[int, int] = None):
-        super().__init__(bounds, color, center=center)
-        self.callback_func: Callable = callback_func
+                 on_mouse_exit=None):
+
+        super().__init__(position=position,
+                         size=size,
+                         anchor=anchor,
+                         color=color,
+                         border_params=border_params)
+
+        self._callback_func = on_click
 
         self.hovered = False
         self.on_mouse_hover = on_mouse_hover or (lambda: None)
         self.on_mouse_exit = on_mouse_exit or (lambda: None)
+
+    def set_callback_function(self, func: Callable[[], None]):
+        self._callback_func = func
 
     def on_mouse_motion(self, mouse_position: tuple[int, int], relative_position: tuple[int, int]) -> None:
         if self.bounds.collidepoint(*mouse_position):
@@ -25,6 +44,6 @@ class UIButton(UIElement):
             self.on_mouse_exit()
 
     def on_mouse_press(self, mouse_position: tuple[int, int], button: int) -> bool | None:
-        if button == 1:
-            self.callback_func()
+        if self._callback_func and button == 1:
+            self._callback_func()
             return True

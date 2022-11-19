@@ -4,30 +4,30 @@ from pygame.font import Font
 from pygame.rect import Rect
 
 from src.core.types import PlayerInfo, RequiredCost
-from src.ui.text_label import TextLabel
 from src.ui import UIElement
+from src.ui.text_label import TextLabel
 
 
 class ResourceDisplayMenu(UIElement):
     COST_OFFSET = -32
 
     def __init__(self, player: PlayerInfo, bounds: Rect, font: Font):
-        super().__init__(bounds, None)
-        self.money_count = TextLabel(Rect(bounds.topleft, (500, 500)), Color('yellow'), font, '-')
+        super().__init__()
+        self.money_count = TextLabel(text='-', text_color=Color('yellow'), font=font, position=bounds.move(0, 0).topleft)
         self.append_child(self.money_count)
-        self.wood_count = TextLabel(Rect(bounds.move(105, 0).topleft, (500, 500)), Color('brown'), font, '-')
+        self.wood_count = TextLabel(text='-', text_color=Color('brown'), font=font, position=bounds.move(105, 0).topleft)
         self.append_child(self.wood_count)
-        self.meat_count = TextLabel(Rect(bounds.move(220, 0).topleft, (500, 500)), Color('pink'), font, '-/-')
+        self.meat_count = TextLabel(text='-/-', text_color=Color('pink'), font=font, position=bounds.move(220, 0).topleft)
         self.append_child(self.meat_count)
 
         self.cost_display = UIElement()
         self.append_child(self.cost_display)
 
-        self.money_cost = TextLabel(Rect(bounds.move(0, self.COST_OFFSET).topleft, (500, 500)), Color('black'), font, '-')
+        self.money_cost = TextLabel(text='-', text_color=Color('black'), font=font, position=bounds.move(0, self.COST_OFFSET).topleft)
         self.cost_display.append_child(self.money_cost)
-        self.wood_cost = TextLabel(Rect(bounds.move(105, self.COST_OFFSET).topleft, (500, 500)), Color('black'), font, '')
+        self.wood_cost = TextLabel(text='', text_color=Color('black'), font=font, position=bounds.move(105, self.COST_OFFSET).topleft)
         self.cost_display.append_child(self.wood_cost)
-        self.meat_cost = TextLabel(Rect(bounds.move(220, self.COST_OFFSET).topleft, (500, 500)), Color('black'), font, '')
+        self.meat_cost = TextLabel(text='', text_color=Color('black'), font=font, position=bounds.move(220, self.COST_OFFSET).topleft)
         self.cost_display.append_child(self.meat_cost)
 
         self.cost_display.enabled = False
@@ -63,25 +63,21 @@ class ResourceDisplayMenu(UIElement):
         return False
 
     def update_values(self) -> None:
-        self.money_count.set_color(Color('yellow'))
-        self.wood_count.set_color(Color('brown'))
-        self.meat_count.set_color(Color('pink'))
+        fields = (
+            ('money', 'money_count', 'yellow', '{0}', -1),
+            ('wood', 'wood_count', 'brown', '{0}', -1),
+            ('meat', 'meat_count', 'pink', f'{{0}}/{self.player.resources.max_meat}', 1),
+        )
+        for field_name, text_field_name, field_color, field_format, field_multiplier in fields:
+            text_field: TextLabel = getattr(self, text_field_name)
+            current_amount = getattr(self.player.resources, field_name)
+            if getattr(self.cost, field_name, False):
+                text_field.set_text_color(Color('red'))
+                text_field.set_text(field_format.format(current_amount +
+                                                        field_multiplier * getattr(self.cost, field_name)))
+            else:
+                text_field.set_text_color(Color(field_color))
+                text_field.set_text(field_format.format(current_amount))
 
-        if self.cost:
-            if self.cost.money:
-                self.money_count.set_color(Color('red'))
-            if self.cost.wood:
-                self.wood_count.set_color(Color('red'))
-            if self.cost.meat:
-                self.meat_count.set_color(Color('red'))
-
-            self.money_count.set_text(f'{self.player.resources.money - self.cost.money}')
-            self.wood_count.set_text(f'{self.player.resources.wood - self.cost.wood}')
-            self.meat_count.set_text(f'{self.player.resources.meat + self.cost.meat}/{self.player.resources.max_meat}')
-
-            if not self.player.has_enough(self.cost):
-                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_NO)
-        else:
-            self.money_count.set_text(f'{self.player.resources.money}')
-            self.wood_count.set_text(f'{self.player.resources.wood}')
-            self.meat_count.set_text(f'{self.player.resources.meat}/{self.player.resources.max_meat}')
+        if self.cost and not self.player.has_enough(self.cost):
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_NO)

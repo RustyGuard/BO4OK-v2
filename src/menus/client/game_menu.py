@@ -2,7 +2,6 @@ import socket
 from multiprocessing import Process
 from multiprocessing.connection import Connection
 
-from pygame import Color
 from pygame.font import Font
 from pygame.rect import Rect
 
@@ -42,7 +41,7 @@ from src.sound_player import play_music
 from src.systems.base.colliders import collider_system
 from src.systems.base.velocity import velocity_system
 from src.systems.chase import chase_system
-from src.ui import UIElement
+from src.ui import UIAnchor, UIElement
 from src.ui.fps_counter import FPSCounter
 from src.ui.image import UIImage
 
@@ -51,7 +50,7 @@ class ClientGameMenu(UIElement):
     def __init__(self, socket: socket.socket, received_actions: list[list], read_socket_process: Process,
                  write_action_connection: Connection, read_action_connection: Connection, send_process: Process,
                  players: dict[int, PlayerInfo], socket_id: int):
-        super().__init__(config.screen.rect, Color(93, 161, 48))
+        super().__init__()
 
         self.current_player = players[socket_id]
 
@@ -64,7 +63,7 @@ class ClientGameMenu(UIElement):
 
         fps_font = Font('assets/fonts/arial.ttf', 20)
 
-        self.append_child(FPSCounter(Rect(config.screen.size[0] - 100, 5, 0, 0), fps_font))
+        self.append_child(FPSCounter(position=(config.screen.size[0] - 100, 5), font=fps_font))
 
         self.action_sender = ClientActionSender(self.write_action)
 
@@ -96,18 +95,18 @@ class ClientGameMenu(UIElement):
         self.append_child(self.damage_indicators)
 
         self.minimap = Minimap(self.ecs, self.camera, self.current_player.color)
-        self.minimap_elem = UIImage(None, 'assets/ui/minimap.png')
-        self.minimap_elem.bounds.bottom = config.screen.height
+        self.minimap_elem = UIImage(image='assets/ui/minimap.png',
+                                    position=(0, config.screen.height),
+                                    anchor=UIAnchor.BOTTOM_LEFT)
 
         self.resource_menu = ResourceDisplayMenu(self.current_player,
                                                  Rect(self.minimap.bounds.move(0, -33).topleft, (0, 0)),
                                                  Font('assets/fonts/arial.ttf', 25))
 
-        self.build_menu = BuildMenu(self.bounds, self.resource_menu, self.action_sender,
-                                    self.current_player, self.camera, self.ecs)
+        self.build_menu = BuildMenu(self.resource_menu, self.action_sender, self.current_player, self.camera, self.ecs)
 
-        self.produce_menu = ProduceMenu(self.bounds, self.ecs, self.action_sender, self.camera,
-                                        self.current_player, self.resource_menu)
+        self.produce_menu = ProduceMenu(self.ecs, self.action_sender, self.camera, self.current_player,
+                                        self.resource_menu)
 
         self.minimap_elem.append_child(self.minimap)
         self.minimap_elem.append_child(self.resource_menu)
@@ -139,7 +138,7 @@ class ClientGameMenu(UIElement):
         self.action_handler.add_hook(ClientCommands.DEFEAT, self.on_defeat)
         self.action_handler.add_hook(ClientCommands.VICTORY, self.victory_screen.show_screen)
 
-        self.append_child(FPSCounter(Rect(0, 0, 150, 75), fps_font))
+        self.append_child(FPSCounter(font=fps_font))
 
         play_music('assets/music/game1.ogg')
 

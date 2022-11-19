@@ -2,7 +2,6 @@ import socket
 from multiprocessing import Manager, Process, Pipe
 
 from pygame.font import Font
-from pygame.rect import Rect
 
 from src.client.socket_threads import read_server_actions, send_function
 from src.config import config
@@ -18,11 +17,11 @@ from src.ui.image import UIImage
 
 class WaitForServerMenu(UIElement):
     def __init__(self, server_connection: socket, nick: str):
-        super().__init__(config.screen.rect, None)
+        super().__init__()
         fps_font = Font('assets/fonts/arial.ttf', 20)
-        self.append_child(UIImage(self.bounds, 'assets/background/faded_background.png'))
+        self.append_child(UIImage(image='assets/background/faded_background.png', size=config.screen.size))
 
-        self.append_child(FPSCounter(Rect(50, 50, 0, 0), fps_font))
+        self.append_child(FPSCounter(position=(50, 50), font=fps_font))
 
         self.sock = server_connection
 

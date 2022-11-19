@@ -2,8 +2,6 @@ from functools import partial
 
 import pygame
 from pygame import Color
-from pygame.font import Font
-from pygame.rect import Rect
 
 from src.client.action_sender import ClientActionSender
 from src.components.base.player_owner import PlayerOwnerComponent
@@ -14,18 +12,18 @@ from src.config import config
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, RequiredCost, EntityId
-from src.entities import entity_icons
 from src.elements.resources_display import ResourceDisplayMenu
-from src.ui.image import UIImage
+from src.entities import entity_icons
+from src.ui import UIElement, BorderParams, UIAnchor
 from src.ui.button import UIButton
+from src.ui.image import UIImage
 from src.ui.text_label import TextLabel
-from src.ui import UIElement
 
 
 class ProduceMenu(UIElement):
-    def __init__(self, bounds, ecs: EntityComponentSystem, action_sender: ClientActionSender, camera: Camera,
+    def __init__(self, ecs: EntityComponentSystem, action_sender: ClientActionSender, camera: Camera,
                  current_player: PlayerInfo, resource_menu: ResourceDisplayMenu):
-        super().__init__(bounds, None)
+        super().__init__()
         self.ecs = ecs
         self.selected_unit: EntityId | None = None
         self.action_sender = action_sender
@@ -41,24 +39,28 @@ class ProduceMenu(UIElement):
             print('unit can not produce')
             return
 
-        bottom_bar = UIElement(Rect(config.minimap.bounds[3] + config.minimap.bounds[1],
-                                    config.screen.size[1] - 120,
-                                    450,
-                                    120), Color(184, 187, 194),
-                               border_top_left_radius=15,
-                               border_top_right_radius=15)
-        bottom_bar.append_child(
-            TextLabel(Rect(5, 5, 5, 5).move(bottom_bar.bounds.x, bottom_bar.bounds.y), Color('black'), Font('assets/fonts/arial.ttf', 20), 'Создание юнитов'))
+        bottom_bar = UIElement(position=(config.minimap.bounds[3] + config.minimap.bounds[1],
+                                         config.screen.size[1]),
+                               size=(450, 120),
+                               anchor=UIAnchor.BOTTOM_LEFT,
+                               color=Color(184, 187, 194),
+                               border_params=BorderParams(
+                                   top_left_radius=15,
+                                   top_right_radius=15,
+                               ))
+        bottom_bar.append_child(TextLabel(text='Создание юнитов', text_color=Color('black'),
+                                          position=bottom_bar.bounds.move(5, 5).topleft))
         self.append_child(bottom_bar)
 
         for i, (unit_name, unit_cost) in enumerate(produce_component.producible_units.items()):
             icon_path = entity_icons[unit_name].format(color_name=self.current_player.color_name)
 
-            btn = UIButton(Rect(5 + 85 * i, 35, 80, 80).move(bottom_bar.bounds.x, bottom_bar.bounds.y), None,
-                           callback_func=partial(self.produce_unit, unit_name, unit_cost),
+            btn = UIButton(position=(bottom_bar.bounds.x + 5 + 85 * i, bottom_bar.bounds.y + 35),
+                           size=(80, 80),
+                           on_click=partial(self.produce_unit, unit_name, unit_cost),
                            on_mouse_hover=partial(self.resource_menu.display_cost, unit_cost),
                            on_mouse_exit=partial(self.resource_menu.hide_cost, unit_cost))
-            btn.append_child(UIImage(btn.bounds, None, pygame.image.load(icon_path)))
+            btn.append_child(UIImage(image=icon_path, position=btn.bounds.topleft, size=btn.bounds.size))
 
             bottom_bar.append_child(btn)
 
