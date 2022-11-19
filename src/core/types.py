@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import IntEnum
 from typing import Any, Type
 
 from pydantic import BaseModel
@@ -22,6 +23,12 @@ class PlayerResources(BaseModel):
     max_meat: int
 
 
+class PlayerState(IntEnum):
+    BATTLER = 0
+    SPECTATOR = 1
+    WINNER = 2
+
+
 class PlayerInfo(BaseModel):
     socket_id: int
     color_name: str
@@ -29,13 +36,21 @@ class PlayerInfo(BaseModel):
 
     resources: PlayerResources
 
+    current_state: PlayerState = PlayerState.BATTLER
+
     @property
     def color(self) -> Color:
         return color_name_to_pygame_color[self.color_name]
 
     def has_enough(self, cost: RequiredCost) -> bool:
-        return self.resources.money >= cost.money and self.resources.wood >= cost.wood and (
-                self.resources.meat + cost.meat <= self.resources.max_meat)
+        if self.current_state == PlayerState.SPECTATOR:
+            return False
+
+        return (
+                self.resources.money >= cost.money and
+                self.resources.wood >= cost.wood and
+                (cost.meat == 0 or self.resources.meat + cost.meat <= self.resources.max_meat)
+        )
 
     def play_not_enough_sound(self, cost: RequiredCost):
         if self.resources.money < cost.money:

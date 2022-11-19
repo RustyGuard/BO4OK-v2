@@ -15,6 +15,7 @@ from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
 from src.components.base.velocity import VelocityComponent
 from src.components.chase import ChaseComponent
+from src.components.core_building import CoreBuildingComponent
 from src.components.fighting.close_range_attack import CloseRangeAttackComponent
 from src.components.fighting.damage_on_contact import DamageOnContactComponent
 from src.components.fighting.enemy_finder import EnemyFinderComponent
@@ -32,7 +33,7 @@ from src.config import config
 from src.constants import HOST_PLAYER_ID
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
-from src.core.types import PlayerInfo, Component, EntityId
+from src.core.types import PlayerInfo, Component, EntityId, PlayerState
 from src.elements.building_place import BuildMenu
 from src.elements.camera_input import CameraInputHandler
 from src.elements.game_end.defeat_screen import DefeatScreen
@@ -120,6 +121,7 @@ class ServerGameMenu(UIElement):
         self.ecs.init_component(ResourceGathererComponent)
         self.ecs.init_component(UncompletedBuildingComponent)
         self.ecs.init_component(ColliderComponent)
+        self.ecs.init_component(CoreBuildingComponent)
 
         self.ecs.init_system(velocity_system)
         self.ecs.init_system(decay_system)
@@ -195,45 +197,66 @@ class ServerGameMenu(UIElement):
             WorkFinderComponent,
             ResourceGathererComponent,
             ResourceDepotComponent,
+            CoreBuildingComponent,
         )
         components = [component for component in components if type(component) not in components_to_exclude]
 
         self.action_sender.send_entity(entity_id, components)
 
     def is_defeated(self, player_id: int, entity_to_ignore: EntityId):
-        for entity, (owner,) in self.ecs.get_entities_with_components((PlayerOwnerComponent,)):
+        if self.players[player_id].current_state != PlayerState.BATTLER:
+            return False
+
+        for entity, (owner, _) in self.ecs.get_entities_with_components((PlayerOwnerComponent, CoreBuildingComponent)):
             if entity != entity_to_ignore and owner.socket_id == player_id:
                 return False
         return True
 
     def is_winner(self, player_id: int, entity_to_ignore: EntityId):
-        for entity, (owner,) in self.ecs.get_entities_with_components((PlayerOwnerComponent,)):
+        if self.players[player_id].current_state != PlayerState.BATTLER:
+            return False
+
+        for entity, (owner, _) in self.ecs.get_entities_with_components((PlayerOwnerComponent, CoreBuildingComponent)):
             if entity != entity_to_ignore and owner.socket_id != player_id:
-                print(f'{player_id} Not winner because of {entity} {owner.nick}')
                 return False
         return True
 
-    def show_defeat(self, player_id: int):
+    def mark_as_defeated(self, player_id: int):
+        if self.players[player_id].current_state != PlayerState.BATTLER:
+            return
+
+        self.players[player_id].current_state = PlayerState.SPECTATOR
+
         if player_id == HOST_PLAYER_ID:
             self.defeat_screen.show_screen()
             return
         self.action_sender.show_defeat(player_id)
 
-    def show_victory(self, player_id: int):
+    def mark_as_winner(self, player_id: int):
+        if self.players[player_id].current_state != PlayerState.BATTLER:
+            return
+
+        self.players[player_id].current_state = PlayerState.WINNER
+
         if player_id == HOST_PLAYER_ID:
             self.victory_screen.show_screen()
             return
         self.action_sender.show_victory(player_id)
 
     def check_for_game_over_on_death(self, entity_id: EntityId):
-        owner = self.ecs.get_component(entity_id, PlayerOwnerComponent)
-        if owner is None:
+        components = self.ecs.get_components(entity_id, (PlayerOwnerComponent, CoreBuildingComponent))
+        if components is None:
             return
 
+        owner, _ = components
+
         if self.is_defeated(owner.socket_id, entity_id):
-            self.show_defeat(owner.socket_id)
-        if self.is_winner(owner.socket_id, entity_id):
-            self.show_victory(owner.socket_id)
+            self.mark_as_defeated(owner.socket_id)
+
+        for player in self.players.values():
+            if self.is_winner(player.socket_id, entity_id):
+                self.mark_as_winner(player.socket_id)
+                break
 
     def drop_chase_targets(self, entity_id: EntityId):
         for chase_entity_id, (chase,) in self.ecs.get_entities_with_components((ChaseComponent,)):

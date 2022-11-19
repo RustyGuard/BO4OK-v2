@@ -2,6 +2,7 @@ from src.components.base.collider import ColliderComponent
 from src.components.base.player_owner import PlayerOwnerComponent
 from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
+from src.components.core_building import CoreBuildingComponent
 from src.components.fighting.health import HealthComponent
 from src.components.minimap_icon import MinimapIconComponent
 from src.components.unit_production import UnitProductionComponent
@@ -20,4 +21,5 @@ def create_fortress(x: float, y: float, player_owner: PlayerOwnerComponent):
         HealthComponent(max_amount=1000),
         ResourceDepotComponent(),
         ColliderComponent(radius=75, static=True),
+        CoreBuildingComponent(),
     ]
