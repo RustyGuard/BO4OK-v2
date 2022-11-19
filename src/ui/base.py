@@ -67,9 +67,6 @@ class UIElement:
 
         self.bounds = anchor.create_rect(position, size)
 
-    def move(self, x, y):
-        self.bounds.move_ip(x, y)
-
     def set_background_color(self, color: Color):
         self.background_color = color
 
