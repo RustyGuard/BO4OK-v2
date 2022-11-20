@@ -150,7 +150,7 @@ class ServerGameMenu(UIElement):
                                     anchor=UIAnchor.BOTTOM_LEFT)
         self.minimap_elem.append_child(self.minimap)
         self.resource_menu = ResourceDisplayMenu(self.local_player,
-                                                 Rect(self.minimap.bounds.move(0, -33).topleft, (0, 0)),
+                                                 Rect(self.minimap._bounds.move(0, -33).topleft, (0, 0)),
                                                  Font('assets/fonts/arial.ttf', 25))
 
         self.build_menu = BuildMenu(self.resource_menu, self.local_action_sender, self.local_player, self.camera,

@@ -39,7 +39,7 @@ class BuildMenu(UIElement):
             image = get_image(entity_icons[build_name].format(color_name=self.current_player.color_name))
             btn = UIButton(position=(5, i * 55 + 15), size=(50, 50),
                            on_click=partial(self.select_building, build_name, cost, image))
-            btn.append_child(UIImage(image=image, position=btn.bounds.topleft, size=btn.bounds.size))
+            btn.append_child(UIImage(image=image, position=btn._bounds.topleft, size=btn._bounds.size))
             self.append_child(btn)
 
     def draw(self, screen) -> None:

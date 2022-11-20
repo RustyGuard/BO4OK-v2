@@ -5,6 +5,7 @@ from pygame.font import Font
 
 from src.constants import EVENT_SEC
 from src.ui import UIAnchor, BorderParams
+from src.ui.types import PositionType
 from src.ui.text_label import TextLabel
 
 
@@ -13,7 +14,7 @@ class FPSCounter(TextLabel):
                  font: Font = None,
                  text_color: Color = Color('green'),
 
-                 position: tuple[int, int] = (0, 0),
+                 position: PositionType = (0, 0),
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
                  background_color: Optional[Color] = None,

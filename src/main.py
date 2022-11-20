@@ -38,7 +38,7 @@ def main():
     from src.menus.main_menu import MainMenu
 
     pygame.init()
-    screen = pygame.display.set_mode(config.screen.size, pygame.FULLSCREEN if config.screen.fullscreen else 0)
+    screen = config.screen.update_display_mode()
 
     set_main_element(MainMenu())
 

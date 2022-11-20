@@ -6,6 +6,7 @@ from pygame import Color, Surface
 from pygame.font import Font
 
 from src.ui import UIElement, UIAnchor, BorderParams
+from src.ui.types import PositionType
 
 
 class TextLabel(UIElement):
@@ -14,7 +15,7 @@ class TextLabel(UIElement):
                  font: Font = None,
                  text_color: Color = Color('black'),
 
-                 position: tuple[int, int] = (0, 0),
+                 position: PositionType = (0, 0),
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
                  background_color: Optional[Color] = None,
@@ -34,7 +35,7 @@ class TextLabel(UIElement):
 
     def update_text(self):
         self.text_image = self.font.render(self.text, True, self.text_color)
-        self.bounds.size = self.text_image.get_size()
+        self._bounds.size = self.text_image.get_size()
 
     def set_text(self, text: str):
         if self.text != text:
@@ -48,4 +49,4 @@ class TextLabel(UIElement):
 
     def draw(self, screen: Surface):
         super().draw(screen)
-        screen.blit(self.text_image, self.bounds)
+        screen.blit(self.text_image, self._bounds)

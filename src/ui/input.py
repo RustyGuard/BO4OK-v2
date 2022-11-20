@@ -6,6 +6,7 @@ from pygame import Color, Surface
 from pygame.font import Font
 
 from src.ui import UIAnchor, BorderParams, UIElement
+from src.ui.types import PositionType, SizeType
 from src.ui.text_label import TextLabel
 
 
@@ -18,8 +19,8 @@ class UIInput(UIElement):
                  focused: bool = False,
                  max_length: int = 10,
 
-                 position: tuple[int, int] = (0, 0),
-                 size: tuple[int, int] = None,
+                 position: PositionType = (0, 0),
+                 size: SizeType = None,
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
                  background_color: Optional[Color] = None,
@@ -30,7 +31,7 @@ class UIInput(UIElement):
         self.value = ''
 
         self.value_display = TextLabel(text='', text_color=text_color, font=font,
-                                       position=self.bounds.move(5, 0).midleft, anchor=UIAnchor.MIDDLE_LEFT)
+                                       position=self._bounds.move(5, 0).midleft, anchor=UIAnchor.MIDDLE_LEFT)
         self.append_child(self.value_display)
 
         self.cursor_blink = self.CURSOR_BLINK_FRAMES
@@ -45,8 +46,8 @@ class UIInput(UIElement):
         super().draw(screen)
 
         if self.focused and self.cursor_visible:
-            pygame.draw.line(screen, Color('white'), self.value_display.bounds.topright,
-                             self.value_display.bounds.bottomright, 2)
+            pygame.draw.line(screen, Color('white'), self.value_display._bounds.topright,
+                             self.value_display._bounds.bottomright, 2)
 
     def on_key_press(self, key: int, unicode: str, mod: int, scancode: int) -> bool | None:
         if key == pygame.K_BACKSPACE:

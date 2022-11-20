@@ -100,7 +100,7 @@ class ClientGameMenu(UIElement):
                                     anchor=UIAnchor.BOTTOM_LEFT)
 
         self.resource_menu = ResourceDisplayMenu(self.current_player,
-                                                 Rect(self.minimap.bounds.move(0, -33).topleft, (0, 0)),
+                                                 Rect(self.minimap._bounds.move(0, -33).topleft, (0, 0)),
                                                  Font('assets/fonts/arial.ttf', 25))
 
         self.build_menu = BuildMenu(self.resource_menu, self.action_sender, self.current_player, self.camera, self.ecs)

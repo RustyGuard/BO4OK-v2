@@ -1,50 +1,18 @@
-from dataclasses import dataclass
-from enum import Enum
 from typing import Optional
 
 import pygame
 from pygame import Color, Surface
 from pygame.event import Event
-from pygame.rect import Rect
 
 from src.constants import EVENT_UPDATE, EVENT_SEC
-
-
-@dataclass
-class BorderParams:
-    top_left_radius: int = -1
-    top_right_radius: int = -1
-    bottom_left_radius: int = -1
-    bottom_right_radius: int = -1
-
-    width: int = 1
-    color: Color = Color('black')
-
-
-class UIAnchor(Enum):
-    TOP_LEFT = 'topleft'
-    TOP_RIGHT = 'topright'
-    TOP_MIDDLE = 'midtop'
-
-    CENTER = 'center'
-
-    BOTTOM_LEFT = 'bottomleft'
-    BOTTOM_RIGHT = 'bottomright'
-    BOTTOM_MIDDLE = 'midbottom'
-
-    MIDDLE_LEFT = 'midleft'
-    MIDDLE_RIGHT = 'midright'
-
-    def create_rect(self, position: tuple[int, int], size: tuple[int, int] | None):
-        rect = Rect((0, 0), size or (0, 0))
-        setattr(rect, self.value, position)
-        return rect
+from src.ui import BorderParams, UIAnchor
+from src.ui.types import PositionType, SizeType
 
 
 class UIElement:
     def __init__(self, *,
-                 position: tuple[int, int] = (0, 0),
-                 size: tuple[int, int] = None,
+                 position: PositionType = (0, 0),
+                 size: SizeType = None,
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
                  background_color: Optional[Color] = None,
@@ -61,11 +29,26 @@ class UIElement:
         self.focusable = focusable
         self.focused = focused and focusable
 
-        self.size = size
-        self.position = position
-        self.anchor = anchor
+        self._size = size
+        self._position = position
+        self._anchor = anchor
 
-        self.bounds = anchor.create_rect(position, size)
+        self._bounds = anchor.create_rect(position, size)
+
+    def set_position(self, position: PositionType):
+        self._position = position
+        self._update_bounds()
+
+    def set_size(self, size: SizeType):
+        self._size = size
+        self._update_bounds()
+
+    def set_anchor(self, anchor: UIAnchor):
+        self._anchor = anchor
+        self._update_bounds()
+
+    def _update_bounds(self):
+        self._bounds = self._anchor.create_rect(self._position, self._size)
 
     def set_background_color(self, color: Color):
         self.background_color = color
@@ -84,7 +67,7 @@ class UIElement:
         elif event.type == pygame.MOUSEBUTTONUP:
             if self.on_mouse_button_up(event.pos, event.button):
                 return True
-            if self.bounds.collidepoint(*event.pos):
+            if self._bounds.collidepoint(*event.pos):
                 if self.focusable:
                     self.focused = True
 
@@ -150,7 +133,7 @@ class UIElement:
 
     def draw(self, screen: Surface):
         if self.background_color is not None:
-            pygame.draw.rect(screen, self.background_color, self.bounds,
+            pygame.draw.rect(screen, self.background_color, self._bounds,
                              border_top_left_radius=(
                                  self.border_params.top_left_radius if self.border_params else -1),
                              border_top_right_radius=(
@@ -161,7 +144,7 @@ class UIElement:
                                  self.border_params.bottom_right_radius if self.border_params else -1),
                              )
         if self.border_params and self.border_params.width:
-            pygame.draw.rect(screen, self.border_params.color, self.bounds,
+            pygame.draw.rect(screen, self.border_params.color, self._bounds,
                              width=self.border_params.width,
                              border_top_left_radius=self.border_params.top_left_radius,
                              border_top_right_radius=self.border_params.top_right_radius,

@@ -6,7 +6,7 @@ from pygame import Color
 from src.config import config
 from src.main_loop_state import set_main_element
 from src.menus.server.wait_for_players_menu import WaitForPlayersMenu
-from src.ui import UIAnchor, UIElement
+from src.ui import UIAnchor, UIElement, UIButton
 from src.ui.clickable_label import ClickableLabel
 from src.ui.image import UIImage
 from src.ui.input import UIInput
@@ -16,7 +16,7 @@ from src.ui.text_label import TextLabel
 class HostGame(UIElement):
     def __init__(self):
         super().__init__()
-        font = pygame.font.SysFont('Comic Sans MS', 20)
+        font = pygame.font.SysFont('Comic Sans MS', 30)
 
         self.background = UIImage(image='assets/background/faded_background.png', size=config.screen.size)
         self.append_child(self.background)
@@ -55,6 +55,16 @@ class HostGame(UIElement):
         connect_button = ClickableLabel(text='Создать', text_font=font, position=config.screen.rect.move(0, 15).center,
                                         size=(150, 75), anchor=UIAnchor.CENTER, on_click=self.connect)
         self.append_child(connect_button)
+
+        back_button = UIButton(position=(5, 5), size=(75, 75), on_click=self.go_back)
+        back_button.append_child(UIImage(image='assets/ui/left-arrow.png',
+                                         position=back_button._bounds.topleft,
+                                         size=back_button._bounds.size))
+        self.append_child(back_button)
+
+    def go_back(self):
+        from src.menus.main_menu import MainMenu
+        set_main_element(MainMenu())
 
     def connect(self):
         if self.nick_input.value == '':

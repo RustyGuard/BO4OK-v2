@@ -1,8 +1,8 @@
 import pathlib
-from functools import cached_property
 
+import pygame
 from pydantic import BaseModel
-from pygame import Rect
+from pygame import Rect, Surface
 
 config_path: str = 'config.json'
 
@@ -32,7 +32,7 @@ def upload_config_to_disc():
 class MinimapConfig(BaseModel):
     bounds: tuple[int, int, int, int] = (45, 142,
                                          249, 247)
-    mark_size: int = 10
+    marksize: int = 10
 
 
 class WorldConfig(BaseModel):
@@ -44,8 +44,7 @@ class WorldConfig(BaseModel):
 
 
 class ScreenConfig(BaseModel):
-    size: tuple[int, int] = (1280, 720)
-    fullscreen: bool = False
+    size: tuple[int, int] = (0, 0)
 
     @property
     def width(self):
@@ -58,6 +57,12 @@ class ScreenConfig(BaseModel):
     @property
     def rect(self):
         return Rect((0, 0), self.size)
+
+    def update_display_mode(self) -> Surface:
+        if self.size == (0, 0):
+            info_object = pygame.display.Info()
+            self.size = (info_object.current_w, info_object.current_h)
+        return pygame.display.set_mode(self.size, pygame.FULLSCREEN)
 
 
 class CameraConfig(BaseModel):

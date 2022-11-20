@@ -25,7 +25,7 @@ class WaitForPlayersMenu(UIElement):
         self.available_player_colors = list(color_name_to_pygame_color.keys())
         random.shuffle(self.available_player_colors)
 
-        self.font = pygame.font.SysFont('Comic Sans MS', 20)
+        self.font = pygame.font.SysFont('Comic Sans MS', 30)
 
         self.socket = server_socket
         self.local_player_nick = local_player_nick
@@ -140,7 +140,7 @@ def main():
     from src.main_loop_state import set_main_element
 
     pygame.init()
-    screen = pygame.display.set_mode(config.screen.size)
+    screen = config.screen.update_display_mode()
 
     host_ip = 'localhost:9090'
 

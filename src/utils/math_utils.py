@@ -31,3 +31,11 @@ def rotation_direction(angle: int, required_angle: int) -> int:
     diff = convert_to_main_angle(diff)
 
     return -1 if diff < 180 else 1
+
+
+def clamp(value, min_value, max_value):
+    if value < min_value:
+        return min_value
+    if value > max_value:
+        return max_value
+    return value

@@ -3,12 +3,13 @@ from typing import Callable, Optional
 from pygame import Color
 
 from src.ui import UIElement, UIAnchor, BorderParams
+from src.ui.types import PositionType, SizeType
 
 
 class UIButton(UIElement):
     def __init__(self, *,
-                 position: tuple[int, int] = (0, 0),
-                 size: tuple[int, int] = (0, 0),
+                 position: PositionType = (0, 0),
+                 size: SizeType = (0, 0),
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
                  background_color: Optional[Color] = None,
@@ -31,7 +32,7 @@ class UIButton(UIElement):
         self._callback_func = func
 
     def on_mouse_motion(self, mouse_position: tuple[int, int], relative_position: tuple[int, int]) -> None:
-        if self.bounds.collidepoint(*mouse_position):
+        if self._bounds.collidepoint(*mouse_position):
             if not self.hovered:
                 self.hovered = True
                 self.on_mouse_hover()

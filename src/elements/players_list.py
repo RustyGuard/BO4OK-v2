@@ -34,10 +34,10 @@ class PlayersListElement(UIElement):
 
         offset_y = -125
         for i, player in enumerate(self.connected_players):
-            player_box = UIElement(position=config.screen.rect.move(0, offset_y + i * 35).center, size=(500, 30),
+            player_box = UIElement(position=config.screen.rect.move(0, offset_y + i * 55).center, size=(500, 50),
                                    anchor=UIAnchor.CENTER, background_color=Color('gray'))
             self.append_child(player_box)
-            self.append_child(UIElement(position=player_box.bounds.move(15, 0).midleft,
+            self.append_child(UIElement(position=player_box._bounds.move(15, 0).midleft,
                                         size=(24, 24),
                                         anchor=UIAnchor.CENTER,
                                         background_color=player.color,
@@ -46,15 +46,15 @@ class PlayersListElement(UIElement):
                                         )))
             self.append_child(TextLabel(text=player.nick,
                                         font=self.font,
-                                        position=player_box.bounds.move(35, 0).midleft,
+                                        position=player_box._bounds.move(35, -5).midleft,
                                         anchor=UIAnchor.MIDDLE_LEFT))
 
             if (self.kick_player is not None) and player.kickable:
-                remove_button = UIButton(position=player_box.bounds.move(-15, 0).midright, size=(24, 24),
+                remove_button = UIButton(position=player_box._bounds.move(-15, 0).midright, size=(24, 24),
                                          anchor=UIAnchor.CENTER, on_click=partial(self.kick_player, player))
                 self.append_child(remove_button)
                 self.append_child(UIImage(image='assets/ui/cross.png',
-                                          position=remove_button.bounds.topleft,
-                                          size=remove_button.bounds.size))
+                                          position=remove_button._bounds.topleft,
+                                          size=remove_button._bounds.size))
                 remove_button.on_mouse_hover = partial(remove_button.set_background_color, Color('darkred'))
                 remove_button.on_mouse_exit = partial(remove_button.set_background_color, None)

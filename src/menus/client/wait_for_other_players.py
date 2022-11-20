@@ -39,7 +39,7 @@ class WaitForServerMenu(UIElement):
 
         self.connected_players: list[ConnectedPlayer] = []
 
-        font = SysFont('Comic Sans MS', 20)
+        font = SysFont('Comic Sans MS', 30)
 
         self.players_list_element = PlayersListElement(font, self.connected_players)
         self.append_child(self.players_list_element)

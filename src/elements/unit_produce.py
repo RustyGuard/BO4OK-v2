@@ -46,17 +46,17 @@ class ProduceMenu(UIElement):
                 top_right_radius=15,
             ))
         bottom_bar.append_child(TextLabel(text='Создание юнитов', text_color=Color('black'),
-                                          position=bottom_bar.bounds.move(5, 5).topleft))
+                                          position=bottom_bar._bounds.move(5, 5).topleft))
         self.append_child(bottom_bar)
 
         for i, (unit_name, unit_cost) in enumerate(produce_component.producible_units.items()):
             icon_path = entity_icons[unit_name].format(color_name=self.current_player.color_name)
 
-            btn = UIButton(position=(bottom_bar.bounds.x + 5 + 85 * i, bottom_bar.bounds.y + 35), size=(80, 80),
+            btn = UIButton(position=(bottom_bar._bounds.x + 5 + 85 * i, bottom_bar._bounds.y + 35), size=(80, 80),
                            on_click=partial(self.produce_unit, unit_name, unit_cost),
                            on_mouse_hover=partial(self.resource_menu.display_cost, unit_cost),
                            on_mouse_exit=partial(self.resource_menu.hide_cost, unit_cost))
-            btn.append_child(UIImage(image=icon_path, position=btn.bounds.topleft, size=btn.bounds.size))
+            btn.append_child(UIImage(image=icon_path, position=btn._bounds.topleft, size=btn._bounds.size))
 
             bottom_bar.append_child(btn)
 

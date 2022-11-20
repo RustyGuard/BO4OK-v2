@@ -5,14 +5,16 @@ from pygame import Color
 from pygame.surface import Surface
 
 from src.ui import UIElement, UIAnchor, BorderParams
+from src.ui.types import PositionType, SizeType
+from src.utils.image import get_image
 
 
 class UIImage(UIElement):
     def __init__(self, *,
                  image: str | Surface,
 
-                 position: tuple[int, int] = (0, 0),
-                 size: tuple[int, int] = None,
+                 position: PositionType = (0, 0),
+                 size: SizeType = None,
                  anchor: UIAnchor = UIAnchor.TOP_LEFT,
 
                  background_color: Optional[Color] = None,
@@ -20,7 +22,7 @@ class UIImage(UIElement):
         if isinstance(image, Surface):
             self.image = image
         else:
-            self.image = pygame.image.load(image)
+            self.image = get_image(image)
 
         if size is None:
             size = self.image.get_size()
@@ -31,4 +33,4 @@ class UIImage(UIElement):
                          border_params=border_params)
 
     def draw(self, screen: Surface):
-        screen.blit(self.image, self.bounds.topleft)
+        screen.blit(self.image, self._bounds.topleft)
