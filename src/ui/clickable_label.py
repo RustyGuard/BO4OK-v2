@@ -35,3 +35,10 @@ class ClickableLabel(UIButton):
             self.set_size(self.label._size)
         self.on_mouse_hover = partial(self.label.set_text_color, mouse_hover_text_color)
         self.on_mouse_exit = partial(self.label.set_text_color, mouse_exit_text_color)
+
+    def set_mouse_hover_text_color(self, color: Color):
+        self.on_mouse_hover = partial(self.label.set_text_color, color)
+
+    def set_mouse_exit_text_color(self, color: Color):
+        self.on_mouse_exit = partial(self.label.set_text_color, color)
+

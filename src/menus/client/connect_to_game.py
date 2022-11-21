@@ -71,9 +71,15 @@ class ConnectToGame(UIElement):
             return
 
         host_ip = self.host_input.value or 'localhost:9090'
-        host, port = host_ip.split(':')
+        try:
+            host, port = host_ip.split(':')
+            port = int(port)
+        except TypeError:
+            host, port = host_ip, 9090
+        except ValueError:
+            print(f'Can not parse port of {host_ip}')
+            return
         sock = socket.socket()
-        print(socket.gethostbyname('localhost'))
         try:
             sock.connect((socket.gethostbyname(host), int(port)))
         except ConnectionRefusedError:

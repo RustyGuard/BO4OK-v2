@@ -5,6 +5,7 @@ from multiprocessing import Manager, Process, Pipe
 from typing import Any
 
 import pygame
+from pygame import Color
 
 from src.config import config
 from src.constants import color_name_to_pygame_color, HOST_PLAYER_ID
@@ -53,15 +54,22 @@ class WaitForPlayersMenu(UIElement):
         self.append_child(self.players_list_element)
         self.players_list_element.update_players()
 
-        start_button = ClickableLabel(text='Начать', text_font=self.font,
-                                      position=config.screen.rect.move(0, 100).center, size=(150, 75),
-                                      anchor=UIAnchor.CENTER, on_click=self.start)
-        self.append_child(start_button)
+        self.start_button = ClickableLabel(text='Начать',
+                                           text_font=self.font,
+                                           mouse_hover_text_color=Color('lightgray'),
+                                           mouse_exit_text_color=Color('lightgray'),
+                                           position=config.screen.rect.move(0, 100).center,
+                                           size=(150, 75),
+                                           anchor=UIAnchor.CENTER,
+                                           on_click=self.start)
+        self.append_child(self.start_button)
 
         self.append_child(PauseMenu())
 
     def update_player_list_for_clients(self):
-        self.write_action_connection.send((['players', [dataclasses.asdict(player) for player in self.connected_players]], None))
+        self.write_action_connection.send((['players',
+                                            [dataclasses.asdict(player) for player in self.connected_players]],
+                                           None))
 
     def kick_player(self, player: ConnectedPlayer):
         self.connected_players.remove(player)
@@ -87,11 +95,15 @@ class WaitForPlayersMenu(UIElement):
                     nick=msg[1],
                     color_name=self.available_player_colors.pop(),
                 ))
+                self.start_button.set_mouse_hover_text_color(Color('antiquewhite'))
+                self.start_button.set_mouse_exit_text_color(Color('white'))
             self.clean_disconnected_players()
             self.update_player_list_for_clients()
             self.players_list_element.update_players()
 
     def start(self):
+        if len(self.connected_players) == 1:
+            return
         self.connection_process.terminate()
 
         players = self.get_players()

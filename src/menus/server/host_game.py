@@ -72,15 +72,22 @@ class HostGame(UIElement):
 
         host_ip = self.host_input.value or 'localhost:9090'
 
-        host, port = host_ip.split(':')
-        port = int(port)
+        try:
+            host, port = host_ip.split(':')
+            port = int(port)
+        except TypeError:
+            host, port = host_ip, 9090
+        except ValueError:
+            print(f'Can not parse port of {host_ip}')
+            return
+
         sock = socket.socket()
         sock.bind((host, port))
 
         try:
             sock.listen()
         except ConnectionRefusedError:
-            print('Not connected')
+            print(f'Not connected to {host_ip}')
             return
 
         set_main_element(WaitForPlayersMenu(sock,
