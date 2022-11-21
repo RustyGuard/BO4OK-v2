@@ -11,17 +11,13 @@ from src.elements.players_list import PlayersListElement
 from src.main_loop_state import set_main_element
 from src.menus.client.game_menu import ClientGameMenu
 from src.ui import UIElement
-from src.ui.fps_counter import FPSCounter
 from src.ui.image import UIImage
 
 
 class WaitForServerMenu(UIElement):
     def __init__(self, server_connection: socket, nick: str):
         super().__init__()
-        fps_font = Font('assets/fonts/arial.ttf', 20)
         self.append_child(UIImage(image='assets/background/faded_background.png', size=config.screen.size))
-
-        self.append_child(FPSCounter(font=fps_font, position=(50, 50)))
 
         self.sock = server_connection
 

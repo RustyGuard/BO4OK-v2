@@ -42,7 +42,6 @@ from src.systems.base.colliders import collider_system
 from src.systems.base.velocity import velocity_system
 from src.systems.chase import chase_system
 from src.ui import UIAnchor, UIElement
-from src.ui.fps_counter import FPSCounter
 from src.ui.image import UIImage
 
 
@@ -60,10 +59,6 @@ class ClientGameMenu(UIElement):
         self.write_action_connection = write_action_connection
         self.read_action_connection = read_action_connection
         self.send_process = send_process
-
-        fps_font = Font('assets/fonts/arial.ttf', 20)
-
-        self.append_child(FPSCounter(font=fps_font, position=(config.screen.size[0] - 100, 5)))
 
         self.action_sender = ClientActionSender(self.write_action)
 
@@ -137,8 +132,6 @@ class ClientGameMenu(UIElement):
         self.action_handler.add_hook(ClientCommands.DEAD, self.handle_death)
         self.action_handler.add_hook(ClientCommands.DEFEAT, self.on_defeat)
         self.action_handler.add_hook(ClientCommands.VICTORY, self.victory_screen.show_screen)
-
-        self.append_child(FPSCounter(font=fps_font))
 
         play_music('assets/music/game1.ogg')
 

@@ -19,7 +19,7 @@ class FPSCounter(TextLabel):
 
                  background_color: Optional[Color] = None,
                  border_params: Optional[BorderParams] = None):
-        super().__init__(text='FPS:',
+        super().__init__(text='FPS: 00',
                          font=font,
                          text_color=text_color,
                          position=position,

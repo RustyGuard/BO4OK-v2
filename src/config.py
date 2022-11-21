@@ -32,7 +32,6 @@ def upload_config_to_disc():
 class MinimapConfig(BaseModel):
     bounds: tuple[int, int, int, int] = (45, 142,
                                          249, 247)
-    marksize: int = 10
 
 
 class WorldConfig(BaseModel):
@@ -41,6 +40,8 @@ class WorldConfig(BaseModel):
     start_money: int = 2500
     start_meat: int = 0
     base_meat: int = 25
+
+    show_debug_info: bool = False
 
 
 class ScreenConfig(BaseModel):

@@ -65,7 +65,6 @@ from src.systems.worker.building_completion import building_completion_system
 from src.systems.worker.resource_gathering import working_system
 from src.systems.worker.work_finder import work_finder_system
 from src.ui import UIAnchor, UIElement
-from src.ui.fps_counter import FPSCounter
 from src.ui.image import UIImage
 
 
@@ -75,10 +74,6 @@ class ServerGameMenu(UIElement):
         super().__init__()
 
         self.players = players
-
-        fps_font = Font('assets/fonts/arial.ttf', 20)
-
-        self.append_child(FPSCounter(font=fps_font, position=(50, 50)))
 
         self.socket = server_socket
         self.connections = connections
