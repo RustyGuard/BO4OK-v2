@@ -15,9 +15,15 @@ class UIButton(UIElement):
                  background_color: Optional[Color] = None,
                  border_params: Optional[BorderParams] = None,
 
+                 hover_color: Color = None,
+
                  on_click: Callable[[], None] = None,
                  on_mouse_hover=None,
                  on_mouse_exit=None):
+        if hover_color is None:
+            hover_color = background_color
+        self.hover_color = hover_color
+        self.main_color = background_color
 
         super().__init__(position=position, size=size, anchor=anchor, background_color=background_color,
                          border_params=border_params)
@@ -35,9 +41,11 @@ class UIButton(UIElement):
         if self._bounds.collidepoint(*mouse_position):
             if not self.hovered:
                 self.hovered = True
+                self.set_background_color(self.hover_color)
                 self.on_mouse_hover()
         elif self.hovered:
             self.hovered = False
+            self.set_background_color(self.main_color)
             self.on_mouse_exit()
 
     def on_mouse_press(self, mouse_position: tuple[int, int], button: int) -> bool | None:

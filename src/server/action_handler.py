@@ -53,6 +53,7 @@ class ServerActionHandler:
 
         if producing_component.add_to_queue(unit_name, player):
             self.action_sender.update_resource_info(player)
+            self.action_sender.update_component_info(build_entity_id, producing_component)
 
     def handle_place(self, player: PlayerInfo, build_name: str, position_x: float, position_y: float):
         if player.current_state == PlayerState.SPECTATOR:

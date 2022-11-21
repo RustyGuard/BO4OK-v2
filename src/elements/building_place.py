@@ -1,7 +1,8 @@
 from functools import partial
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 import pygame
+from pygame import Color
 from pygame.surface import Surface
 
 from src.client.action_sender import ClientActionSender
@@ -10,11 +11,12 @@ from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import RequiredCost, PlayerInfo
 from src.elements.resources_display import ResourceDisplayMenu
-from src.entities import buildings, entity_icons
+from src.entities import buildings, entity_icons, entity_labels
 from src.sound_player import play_sound
-from src.ui import UIElement
+from src.ui import UIElement, TextLabel, UIAnchor, BorderParams
 from src.ui.button import UIButton
 from src.ui.image import UIImage
+from src.ui.types import PositionType, SizeType
 from src.utils.collision import can_be_placed
 from src.utils.image import get_image
 
@@ -37,10 +39,32 @@ class BuildMenu(UIElement):
         self.ecs = ecs
         for i, (build_name, cost) in enumerate(buildings.items()):
             image = get_image(entity_icons[build_name].format(color_name=self.current_player.color_name))
-            btn = UIButton(position=(5, i * 55 + 15), size=(50, 50),
+            btn = UIButton(position=(5, i * 55 + 15),
+                           size=(200, 50),
+                           background_color=Color('lightgray'),
+                           hover_color=Color('gray'),
+
+                           border_params=BorderParams(
+                               width=2,
+
+                               bottom_left_radius=5,
+                               bottom_right_radius=5,
+                               top_left_radius=5,
+                               top_right_radius=5,
+                           ),
+
                            on_click=partial(self.select_building, build_name, cost, image))
-            btn.append_child(UIImage(image=image, position=btn._bounds.topleft, size=btn._bounds.size))
+            btn.append_child(UIImage(image=image,
+                                     position=btn._bounds.move(5, 0).midleft,
+                                     size=(40, 40),
+                                     anchor=UIAnchor.MIDDLE_LEFT))
             self.append_child(btn)
+
+            label = TextLabel(text=entity_labels[build_name],
+                              position=btn._bounds.move(-15, 0).midright,
+                              anchor=UIAnchor.MIDDLE_RIGHT,
+                              )
+            self.append_child(label)
 
     def draw(self, screen) -> None:
         if self.selected:

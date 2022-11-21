@@ -1,8 +1,9 @@
 import pygame.draw
-from pygame import Surface, Color, Rect
+from pygame import Surface, Color
 from pygame.event import Event
 
 from src.config import config
+from src.constants import EVENT_UPDATE
 from src.elements.settings import SettingsElement
 from src.main_loop_state import set_main_element
 from src.ui import UIAnchor, UIElement
@@ -31,7 +32,7 @@ class PauseMenu(UIElement):
                                          on_click=self.exit_game,
                                          mouse_hover_text_color=Color('beige'),
                                          mouse_exit_text_color=Color('white'))
-        pause_label = TextLabel(text='Пауза',
+        pause_label = TextLabel(text='Игра продолжается',
                                 text_color=Color('slategray'),
                                 font=font,
                                 position=config.screen.rect.move(0, -250).center,
@@ -61,6 +62,8 @@ class PauseMenu(UIElement):
         super().render(screen)
 
     def update(self, event: Event):
+        if event.type == EVENT_UPDATE:
+            return False
         if self.opened:
             super().update(event)
         if event.type == pygame.KEYUP:

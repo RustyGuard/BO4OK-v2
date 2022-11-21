@@ -1,4 +1,6 @@
+import math
 from functools import partial
+from typing import Optional
 
 import pygame
 from pygame import Color
@@ -13,11 +15,60 @@ from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, RequiredCost, EntityId
 from src.elements.resources_display import ResourceDisplayMenu
-from src.entities import entity_icons
+from src.entities import entity_icons, entity_labels
 from src.ui import UIElement, BorderParams, UIAnchor
 from src.ui.button import UIButton
 from src.ui.image import UIImage
 from src.ui.text_label import TextLabel
+from src.ui.types import PositionType, SizeType
+
+
+class QueueIcon(UIElement):
+    def __init__(self, *,
+                 current_unit_amount: int,
+                 countdown_delay: int,
+
+                 position: PositionType = (0, 0),
+                 size: SizeType = (5, 5),
+                 anchor: UIAnchor = UIAnchor.TOP_LEFT,
+
+                 border_params: Optional[BorderParams] = None,
+                 ):
+        super().__init__(
+            position=position,
+            size=size,
+            anchor=anchor,
+            background_color=Color('lightblue'),
+            border_params=border_params,
+        )
+        self.unit_amount = current_unit_amount
+        self.frames = 0
+        self.base_size = size
+        self.countdown_delay = countdown_delay
+
+        self.count_label = TextLabel(text=str(self.unit_amount), position=position, anchor=anchor)
+        self.append_child(self.count_label)
+
+    def add_unit(self):
+        self.unit_amount += 1
+        self.count_label.set_text(str(self.unit_amount))
+        self.count_label.set_position(self._position)
+
+    def pop_unit(self):
+        self.unit_amount -= 1
+        self.count_label.set_text(str(self.unit_amount))
+        self.count_label.set_position(self._position)
+
+    def on_update(self):
+        additional_size = -math.cos(math.pi * self.frames / self.countdown_delay)
+        self.set_size((self.base_size[0] + int(6 * additional_size), self.base_size[1] + int(6 * additional_size)))
+        if not self.unit_amount:
+            return
+
+        self.frames += 1
+        if self.frames >= self.countdown_delay:
+            self.pop_unit()
+            self.frames = 0
 
 
 class ProduceMenu(UIElement):
@@ -40,23 +91,65 @@ class ProduceMenu(UIElement):
             return
 
         bottom_bar = UIElement(position=(config.minimap.bounds[3] + config.minimap.bounds[1],
-                                         config.screen.size[1]), size=(450, 120), anchor=UIAnchor.BOTTOM_LEFT,
+                                         config.screen.size[1]),
+                               size=(330, 60 * len(produce_component.producible_units) + 80),
+                               anchor=UIAnchor.BOTTOM_LEFT,
                                background_color=Color(184, 187, 194), border_params=BorderParams(
                 top_left_radius=15,
                 top_right_radius=15,
             ))
-        bottom_bar.append_child(TextLabel(text='Создание юнитов', text_color=Color('black'),
-                                          position=bottom_bar._bounds.move(5, 5).topleft))
+        bottom_bar.append_child(
+            TextLabel(text=f'Создание юнитов  Задержка: {produce_component.delay / 60:.0f}с', text_color=Color('black'),
+                      position=bottom_bar._bounds.move(5, 5).topleft))
+        queue_label = TextLabel(text=f'В очереди: ', text_color=Color('black'),
+                      position=bottom_bar._bounds.move(5, 35).topleft)
+        bottom_bar.append_child(queue_label)
+        queue_icon = QueueIcon(countdown_delay=produce_component.delay,
+                               current_unit_amount=len(produce_component.unit_queue),
+                               position=queue_label._bounds.move(15, 0).midright,
+                               size=(35, 35),
+                               anchor=UIAnchor.CENTER,
+
+                               border_params=BorderParams(
+                                   width=2,
+
+                                   bottom_left_radius=5,
+                                   bottom_right_radius=5,
+                                   top_left_radius=5,
+                                   top_right_radius=5,
+                               ))
+        bottom_bar.append_child(queue_icon)
         self.append_child(bottom_bar)
 
         for i, (unit_name, unit_cost) in enumerate(produce_component.producible_units.items()):
             icon_path = entity_icons[unit_name].format(color_name=self.current_player.color_name)
 
-            btn = UIButton(position=(bottom_bar._bounds.x + 5 + 85 * i, bottom_bar._bounds.y + 35), size=(80, 80),
-                           on_click=partial(self.produce_unit, unit_name, unit_cost),
+            btn = UIButton(position=(bottom_bar._bounds.x + 15, config.screen.rect.bottom - 15 - 60 * i),
+                           size=(300, 50),
+                           anchor=UIAnchor.BOTTOM_LEFT,
+
+                           background_color=Color('lightgray'),
+                           hover_color=Color('gray'),
+
+                           border_params=BorderParams(
+                               width=2,
+
+                               bottom_left_radius=5,
+                               bottom_right_radius=5,
+                               top_left_radius=5,
+                               top_right_radius=5,
+                           ),
+                           on_click=partial(self.produce_unit, unit_name, unit_cost, queue_icon),
                            on_mouse_hover=partial(self.resource_menu.display_cost, unit_cost),
                            on_mouse_exit=partial(self.resource_menu.hide_cost, unit_cost))
-            btn.append_child(UIImage(image=icon_path, position=btn._bounds.topleft, size=btn._bounds.size))
+            icon = UIImage(image=icon_path,
+                           position=btn._bounds.move(5, 0).midleft,
+                           anchor=UIAnchor.MIDDLE_LEFT,
+                           size=(40, 40))
+            btn.append_child(icon)
+            btn.append_child(TextLabel(text=entity_labels[unit_name],
+                                       position=icon._bounds.move(15, 0).midright,
+                                       anchor=UIAnchor.MIDDLE_LEFT))
 
             bottom_bar.append_child(btn)
 
@@ -66,12 +159,13 @@ class ProduceMenu(UIElement):
         self.children.clear()
         self.selected_unit = None
 
-    def produce_unit(self, unit_name: str, unit_cost: RequiredCost) -> None:
+    def produce_unit(self, unit_name: str, unit_cost: RequiredCost, queue_icon: QueueIcon) -> bool:
         if not self.current_player.has_enough(unit_cost):
             self.current_player.play_not_enough_sound(unit_cost)
-            return
+            return False
 
         self.action_sender.produce_unit(self.selected_unit, unit_name)
+        queue_icon.add_unit()
 
     def draw(self, screen) -> None:
         super().draw(screen)

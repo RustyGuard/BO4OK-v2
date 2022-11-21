@@ -11,23 +11,25 @@ from src.ui.text_label import TextLabel
 class ResourceDisplayMenu(UIElement):
     COST_OFFSET = -32
 
-    def __init__(self, player: PlayerInfo, bounds: Rect, font: Font):
+    def __init__(self, player: PlayerInfo, bounds: Rect, big_font: Font, small_font: Font):
         super().__init__()
-        self.money_count = TextLabel(text='-', text_color=Color('yellow'), font=font, position=bounds.move(0, 0).topleft)
+        self.big_font = big_font
+        self.small_font = small_font
+        self.money_count = TextLabel(text='-', text_color=Color('yellow'), font=big_font, position=bounds.move(0, 0).topleft)
         self.append_child(self.money_count)
-        self.wood_count = TextLabel(text='-', text_color=Color('brown'), font=font, position=bounds.move(105, 0).topleft)
+        self.wood_count = TextLabel(text='-', text_color=Color('brown'), font=big_font, position=bounds.move(105, 0).topleft)
         self.append_child(self.wood_count)
-        self.meat_count = TextLabel(text='-/-', text_color=Color('pink'), font=font, position=bounds.move(220, 0).topleft)
+        self.meat_count = TextLabel(text='-/-', text_color=Color('pink'), font=big_font, position=bounds.move(220, 0).topleft)
         self.append_child(self.meat_count)
 
         self.cost_display = UIElement()
         self.append_child(self.cost_display)
 
-        self.money_cost = TextLabel(text='-', text_color=Color('black'), font=font, position=bounds.move(0, self.COST_OFFSET).topleft)
+        self.money_cost = TextLabel(text='-', text_color=Color('black'), font=big_font, position=bounds.move(0, self.COST_OFFSET).topleft)
         self.cost_display.append_child(self.money_cost)
-        self.wood_cost = TextLabel(text='', text_color=Color('black'), font=font, position=bounds.move(105, self.COST_OFFSET).topleft)
+        self.wood_cost = TextLabel(text='', text_color=Color('black'), font=big_font, position=bounds.move(105, self.COST_OFFSET).topleft)
         self.cost_display.append_child(self.wood_cost)
-        self.meat_cost = TextLabel(text='', text_color=Color('black'), font=font, position=bounds.move(220, self.COST_OFFSET).topleft)
+        self.meat_cost = TextLabel(text='', text_color=Color('black'), font=big_font, position=bounds.move(220, self.COST_OFFSET).topleft)
         self.cost_display.append_child(self.meat_cost)
 
         self.cost_display.enabled = False
@@ -72,12 +74,17 @@ class ResourceDisplayMenu(UIElement):
             text_field: TextLabel = getattr(self, text_field_name)
             current_amount = getattr(self.player.resources, field_name)
             if getattr(self.cost, field_name, False):
-                text_field.set_text_color(Color('red'))
-                text_field.set_text(field_format.format(current_amount +
-                                                        field_multiplier * getattr(self.cost, field_name)))
+                color = Color('red')
+                text = field_format.format(current_amount + field_multiplier * getattr(self.cost, field_name))
             else:
-                text_field.set_text_color(Color(field_color))
-                text_field.set_text(field_format.format(current_amount))
+                color = Color(field_color)
+                text = field_format.format(current_amount)
+            text_field.set_text_color(color)
+            text_field.set_text(text)
+            if len(text) > 6:
+                text_field.set_font(self.small_font)
+            else:
+                text_field.set_font(self.big_font)
 
         if self.cost and not self.player.has_enough(self.cost):
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_NO)

@@ -14,7 +14,7 @@ def create_casern(x: float, y: float, player_owner: PlayerOwnerComponent):
         TextureComponent.create_from_filepath(f'assets/building/casern/{player_owner.color_name}.png'),
         MinimapIconComponent('circle', player_owner.color_name),
         player_owner,
-        UnitProductionComponent(delay=60, producible_units={'archer': RequiredCost(money=1, wood=5, meat=1),
+        UnitProductionComponent(delay=5.5 * 60, producible_units={'archer': RequiredCost(money=1, wood=5, meat=1),
                                                             'warrior': RequiredCost(money=2, meat=2)}),
         HealthComponent(max_amount=300),
         ColliderComponent(radius=50, static=True),

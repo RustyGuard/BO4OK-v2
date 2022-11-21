@@ -21,6 +21,18 @@ entity_icons = {
     'worker': 'assets/unit/worker/{color_name}.png'
 }
 
+entity_labels = {
+    'fortress': 'База',
+    'arrow': 'Стрела',
+    'archer': 'Лучник',
+    'warrior': 'Воин',
+    'casern': 'Казарма',
+    'farm': 'Ферма',
+    'workshop': 'Мастерская',
+    'ballista': 'Баллиста',
+    'worker': 'Рабочий',
+}
+
 unit_production_factories = {
     'archer': create_archer,
     'warrior': create_warrior,

@@ -31,9 +31,6 @@ def setup_level(ecs: EntityComponentSystem, players: dict[int, PlayerInfo]):
         ecs.create_entity(create_mine(math.cos(i * angle_step) * distance_from_center * 0.75,
                                       math.sin(i * angle_step) * distance_from_center * 0.75))
 
-        for _ in range(5 if player.socket_id == HOST_PLAYER_ID else 2):
-            ecs.create_entity(create_worker(*spread_position(fortress_position, 250), owner))
-
     for i in range(300):
         while True:
             tree_position = spread_position((0, 0), config.world.size)

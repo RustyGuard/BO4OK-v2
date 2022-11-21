@@ -36,11 +36,16 @@ class TextLabel(UIElement):
     def update_text(self):
         self.text_image = self.font.render(self.text, True, self.text_color)
         self._bounds.size = self.text_image.get_size()
+        self._size = self.text_image.get_size()
 
     def set_text(self, text: str):
         if self.text != text:
             self.text = text
             self.update_text()
+
+    def set_font(self, font: Font):
+        self.font = font
+        self.update_text()
 
     def set_text_color(self, color: Color):
         if self.text_color != color:
