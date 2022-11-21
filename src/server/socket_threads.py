@@ -52,12 +52,11 @@ def send_player_actions(connections: Connections, read_connection: Connection):
         if socket_id is not None:
             try:
                 connections[socket_id][0].send((json.dumps(task, cls=PydanticEncoder) + ';').encode('utf8'))
-            except IndexError:
+            except KeyError:
                 print(f'No player with id: {socket_id}')
         else:
             for i, client in list(connections.items()):
                 try:
-                    print(json.dumps(task))
                     client[0].send((json.dumps(task) + ';').encode('utf8'))
                 except Exception as ex:
                     connections.pop(i)

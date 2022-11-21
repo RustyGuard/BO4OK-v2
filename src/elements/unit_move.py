@@ -48,7 +48,6 @@ class UnitMoveMenu(UIElement):
 
     def on_death(self, entity_id: EntityId):
         if entity_id is self.selected_entities:
-            print(entity_id, 'removed')
             self.selected_entities.remove(entity_id)
 
     def update(self, event: pygame.event.Event):

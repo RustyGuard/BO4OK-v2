@@ -26,7 +26,8 @@ class PlayersListElement(UIElement):
     def update_players(self):
         self.children.clear()
 
-        self.players_count = TextLabel(text=self.PLAYER_AMOUNT_MASK.format(current_amount=1), text_color=Color('white'),
+        self.players_count = TextLabel(text=self.PLAYER_AMOUNT_MASK.format(current_amount=len(self.connected_players)),
+                                       text_color=Color('white'),
                                        font=self.font,
                                        position=config.screen.rect.move(0, -175).center,
                                        anchor=UIAnchor.CENTER)

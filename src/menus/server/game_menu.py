@@ -195,9 +195,9 @@ class ServerGameMenu(UIElement):
             WorkFinderComponent,
             ResourceGathererComponent,
             ResourceDepotComponent,
-            CoreBuildingComponent,
         )
         components = [component for component in components if type(component) not in components_to_exclude]
+        self.camera.check_if_fortress_appeared(self.ecs, self.local_player)
 
         self.action_sender.send_entity(entity_id, components)
 

@@ -21,7 +21,6 @@ def load_config_from_disc():
             server=ServerConfig(),
             sound=SoundConfig(),
         )
-    print(config)
 
 
 def upload_config_to_disc():

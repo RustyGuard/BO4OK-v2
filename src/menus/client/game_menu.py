@@ -14,6 +14,7 @@ from src.components.base.position import PositionComponent
 from src.components.base.texture import TextureComponent
 from src.components.base.velocity import VelocityComponent
 from src.components.chase import ChaseComponent
+from src.components.core_building import CoreBuildingComponent
 from src.components.fighting.health import HealthComponent
 from src.components.minimap_icon import MinimapIconComponent
 from src.components.unit_production import UnitProductionComponent
@@ -23,7 +24,7 @@ from src.config import config
 from src.constants import ClientCommands
 from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
-from src.core.types import PlayerInfo, EntityId
+from src.core.types import PlayerInfo, EntityId, Component
 from src.elements.building_place import BuildMenu
 from src.elements.camera_input import CameraInputHandler
 from src.elements.damage_indicators import DamageIndicators
@@ -62,7 +63,7 @@ class ClientGameMenu(UIElement):
 
         self.action_sender = ClientActionSender(self.write_action)
 
-        self.ecs = EntityComponentSystem()
+        self.ecs = EntityComponentSystem(on_create=self.on_create)
 
         self.ecs.init_component(PositionComponent)
         self.ecs.init_component(VelocityComponent)
@@ -76,6 +77,7 @@ class ClientGameMenu(UIElement):
         self.ecs.init_component(ResourceComponent)
         self.ecs.init_component(UncompletedBuildingComponent)
         self.ecs.init_component(ColliderComponent)
+        self.ecs.init_component(CoreBuildingComponent)
 
         self.ecs.init_system(velocity_system)
         self.ecs.init_system(chase_system)
@@ -134,6 +136,9 @@ class ClientGameMenu(UIElement):
         self.action_handler.add_hook(ClientCommands.VICTORY, self.victory_screen.show_screen)
 
         play_music('assets/music/game1.ogg')
+
+    def on_create(self, entity_id, components: list[Component]):
+        self.camera.check_if_fortress_appeared(self.ecs, self.current_player)
 
     def disable_player_actions(self):
         self.children.remove(self.build_menu)

@@ -3,7 +3,8 @@ import math
 import pygame
 
 from src.config import config
-from src.constants import EVENT_UPDATE
+from src.core.entity_component_system import EntityComponentSystem
+from src.core.types import PlayerInfo
 
 
 class Camera:
@@ -11,6 +12,7 @@ class Camera:
         self.offset_x = config.screen.size[0] / 2
         self.offset_y = config.screen.size[1] / 2
         self.speed = 1
+        self.initial_position_set = False
 
     def move(self, x, y):
         self.offset_x += x * self.speed
@@ -48,4 +50,19 @@ class Camera:
         return pos[0] + self.offset_x, pos[1] + self.offset_y
 
     def distance_to(self, position: tuple[float, float]):
-        return math.sqrt((position[0] + self.offset_x - config.screen.width / 2) ** 2 + (position[1] + self.offset_y - config.screen.height / 2) ** 2)
+        return math.sqrt((position[0] + self.offset_x - config.screen.width / 2) ** 2 + (
+                position[1] + self.offset_y - config.screen.height / 2) ** 2)
+
+    def check_if_fortress_appeared(self, ecs: EntityComponentSystem, player_owner: PlayerInfo):
+        if self.initial_position_set:
+            return
+        from src.components.base.player_owner import PlayerOwnerComponent
+        from src.components.base.position import PositionComponent
+        from src.components.core_building import CoreBuildingComponent
+
+        for _, (_, position, owner) in ecs.get_entities_with_components((CoreBuildingComponent,
+                                                                    PositionComponent,
+                                                                    PlayerOwnerComponent)):
+            if owner.socket_id == player_owner.socket_id:
+                self.set_center((-position.x, -position.y))
+                self.initial_position_set = True
