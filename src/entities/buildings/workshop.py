@@ -16,5 +16,5 @@ def create_workshop(x: float, y: float, player_owner: PlayerOwnerComponent):
         player_owner,
         UnitProductionComponent(delay=15 * 60, producible_units={'ballista': RequiredCost(money=100, wood=500, meat=2)}),
         HealthComponent(max_amount=500),
-        ColliderComponent(radius=80, static=True),
+        ColliderComponent(radius=60, static=True),
     ]

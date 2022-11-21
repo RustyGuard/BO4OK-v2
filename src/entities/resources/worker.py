@@ -21,5 +21,5 @@ def create_worker(x: float, y: float, player_owner: PlayerOwnerComponent):
         WorkFinderComponent(),
         HealthComponent(max_amount=75),
         ResourceGathererComponent(60, 5, 50, 50),
-        ColliderComponent(5),
+        ColliderComponent(7),
     ]

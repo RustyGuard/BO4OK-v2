@@ -20,6 +20,6 @@ def create_fortress(x: float, y: float, player_owner: PlayerOwnerComponent):
                                 producible_units={'worker': RequiredCost(money=1, wood=1, meat=1)}),
         HealthComponent(max_amount=1000),
         ResourceDepotComponent(),
-        ColliderComponent(radius=75, static=True),
+        ColliderComponent(radius=85, static=True),
         CoreBuildingComponent(),
     ]
