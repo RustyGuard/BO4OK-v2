@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from pygame import Color
@@ -13,7 +13,7 @@ class BorderParams:
     bottom_right_radius: int = -1
 
     width: int = 1
-    color: Color = Color('black')
+    color: Color = field(default_factory=lambda: Color('black'))
 
 
 class UIAnchor(Enum):

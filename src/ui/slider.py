@@ -1,5 +1,4 @@
-import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, Callable
 
 from pygame import Color
@@ -12,7 +11,7 @@ from src.utils.math_utils import clamp
 @dataclass(slots=True, frozen=True)
 class SliderThumbParams:
     size: SizeType = (5, 5)
-    color: Color = Color('white')
+    color: Color = field(default_factory=lambda: Color('white'))
 
     border: BorderParams = None
 
