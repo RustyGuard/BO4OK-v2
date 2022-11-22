@@ -13,17 +13,17 @@ class EntityComponentSystem:
     def __init__(self, on_create: Callable[[EntityId, list[Component]], None] = None,
                  on_remove: Callable[[EntityId], None] = None):
         self.systems: dict[Callable, StoredSystem] = {}
-        self.components: dict[Type[Component], dict[EntityId, Component]] = {}
-        self.entities: list[EntityId] = []
-        self.vars = {}
+        self._components: dict[Type[Component], dict[EntityId, Component]] = {}
+        self._entities: list[EntityId] = []
+        self._vars = {}
         self.on_create = on_create
         self.on_remove = on_remove
 
-    def _get_component(self, entity_id: str, component_class: Type[Component]) -> Component:
-        return self.components[component_class][entity_id]
+    def _unsafe_get_component(self, entity_id: str, component_class: Type[Component]) -> Component:
+        return self._components[component_class][entity_id]
 
     def init_component(self, component_class: Type[Component]) -> None:
-        self.components[component_class] = {}
+        self._components[component_class] = {}
 
     def init_system(self, system: Callable):
         stored_system = StoredSystem(
@@ -37,53 +37,51 @@ class EntityComponentSystem:
         for param_name, param in system_params.items():
             if param_name == 'entity_id':
                 stored_system.has_entity_id_argument = True
-                continue
-            if param_name == 'ecs':
+
+            elif param_name == 'ecs':
                 stored_system.has_ecs_argument = True
-                continue
 
-            if param.annotation in self.components:
+            elif param.annotation in self._components:
                 stored_system.components[param_name] = param.annotation
-                continue
 
-            if param_name in self.vars:
-                stored_system.variables[param_name] = self.vars[param_name]
-                continue
+            elif param_name in self._vars:
+                stored_system.variables[param_name] = self._vars[param_name]
 
-            raise Exception(f'Wrong argument: {param_name}')
+            else:
+                raise Exception(f'Wrong argument: {param_name}')
 
         self.systems[system] = stored_system
 
     def add_variable(self, variable_name: str, variable_value: Any) -> None:
-        self.vars[variable_name] = variable_value
+        self._vars[variable_name] = variable_value
 
     def create_entity(self, components: list[Component], entity_id=None) -> EntityId:
         if entity_id is None:
             entity_id = UniqueIdGenerator.generate_id()
         else:
-            assert entity_id not in self.entities
+            assert entity_id not in self._entities, f"Entity with id {entity_id} already exists"
 
         for component in components:
-            self.components[component.__class__][entity_id] = component
-        self.entities.append(entity_id)
+            self._components[component.__class__][entity_id] = component
+        self._entities.append(entity_id)
 
-        if self.on_create is not None:
+        if self.on_create:
             self.on_create(entity_id, components)
 
         return entity_id
 
     def get_entity_ids_with_components(self, component_classes: tuple[Type[Component], ...]) -> set[EntityId]:
         if not component_classes:
-            return set(self.entities)
+            return set(self._entities)
 
         entities = set.intersection(
-            *[set(self.components[component_class]) for component_class in component_classes])
+            *[set(self._components[component_class]) for component_class in component_classes])
         return entities
 
-    def get_entities_with_components(self, component_classes: list[Type[Component]]) -> Iterator[tuple[
-        EntityId, list[Component]]]:
+    def get_entities_with_components(self, component_classes: list[Type[Component]]) -> \
+            Iterator[tuple[EntityId, list[Component]]]:
         for entity_id in self.get_entity_ids_with_components(component_classes):
-            components = tuple(self.components[component_class][entity_id] for component_class in component_classes)
+            components = tuple(self._components[component_class][entity_id] for component_class in component_classes)
             yield entity_id, components
 
     def update(self) -> None:
@@ -94,23 +92,25 @@ class EntityComponentSystem:
                     special_args['ecs'] = self
                 if system.has_entity_id_argument:
                     special_args['entity_id'] = entity_id
-                system_function(**{param: self._get_component(entity_id, component_name) for param, component_name in
-                                   system.components.items()} | system.variables | special_args)
+                system_function(
+                    **{param: self._unsafe_get_component(entity_id, component_name) for param, component_name in
+                       system.components.items()} | system.variables | special_args)
 
     def remove_entity(self, entity_id: EntityId):
         if self.on_remove is not None:
             self.on_remove(entity_id)
-        for components in self.components.values():
+        for components in self._components.values():
             components.pop(entity_id, None)
-        self.entities.remove(entity_id)
+        self._entities.remove(entity_id)
 
     def get_component(self, entity_id: EntityId, component_class: Type[Component]):
-        return self.components[component_class].get(entity_id, None)
+        return self._components[component_class].get(entity_id, None)
 
     def get_components(self, entity_id: EntityId,
                        component_classes):
         try:
-            return tuple(self.components[component_class][entity_id] for component_class in component_classes)
+            return tuple(
+                self._unsafe_get_component(entity_id, component_class) for component_class in component_classes)
         except KeyError:
             return None
 
@@ -136,8 +136,9 @@ def test():
 
     ecs.update()
 
-    print(*ecs.get_entities_with_components((BComponent,)))
-    print(*ecs.get_entities_with_components((BComponent, CComponent)))
+    assert sorted(ecs.get_entities_with_components((BComponent,))) == [('3', (BComponent(value=42),)),
+                                                                       ('4', (BComponent(value=42),))]
+    assert next(ecs.get_entities_with_components((BComponent, CComponent))) == ('4', (BComponent(value=42), CComponent(value=69)))
 
 
 if __name__ == '__main__':

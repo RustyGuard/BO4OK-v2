@@ -10,10 +10,10 @@ Component4 = TypeVar('Component4')
 
 class EntityComponentSystem(Protocol):
     systems: dict[Callable, StoredSystem]
-    components: dict[Type[Component], dict[EntityId, Component]]
-    entities: list[EntityId]
+    _components: dict[Type[Component], dict[EntityId, Component]]
+    _entities: list[EntityId]
 
-    vars: dict[str, Any]
+    _vars: dict[str, Any]
     on_create: Callable[[EntityId, list[Component]], None]
     on_remove: Callable[[EntityId], None]
 
@@ -21,7 +21,7 @@ class EntityComponentSystem(Protocol):
                  on_remove: Callable[[EntityId], None] = None): ...
 
     @overload
-    def _get_component(self, entity_id: str, component_class: Type[Component1]) -> Component1: ...
+    def _unsafe_get_component(self, entity_id: str, component_class: Type[Component1]) -> Component1: ...
 
     @overload
     def init_component(self, component_class: Type[Component1]) -> None: ...

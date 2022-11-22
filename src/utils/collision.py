@@ -9,7 +9,7 @@ from src.core.entity_component_system import EntityComponentSystem
 
 def is_close_to_target(ecs: EntityComponentSystem,
                        chase: ChaseComponent, collider: ColliderComponent, position: PositionComponent):
-    if chase.entity_id not in ecs.entities:
+    if chase.entity_id not in ecs._entities:
         return False
 
     enemy_collider = ecs.get_component(chase.entity_id, ColliderComponent)

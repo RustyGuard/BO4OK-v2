@@ -46,7 +46,7 @@ class ClientActionHandler:
         components = []
         for component_json in entity_json['components']:
             component_class_name = component_json.pop('component_class')
-            component_class = next(component_class for component_class in self.ecs.components if
+            component_class = next(component_class for component_class in self.ecs._components if
                                    component_class.__name__ == component_class_name)
             component = component_class(**component_json)
             if hasattr(component, 'assemble_on_client'):
@@ -62,12 +62,12 @@ class ClientActionHandler:
             setattr(self.current_player.resources, field, value)
 
     def handle_update_component_info(self, entity_id: EntityId, component_class_name: str, component_json):
-        component_class = next(component_class for component_class in self.ecs.components if
+        component_class = next(component_class for component_class in self.ecs._components if
                                component_class.__name__ == component_class_name)
         component = component_class(**component_json)
         if hasattr(component, 'assemble_on_client'):
             component.assemble_on_client(self.ecs)
-        self.ecs.components[component_class][entity_id] = component
+        self.ecs._components[component_class][entity_id] = component
 
     def handle_play_sound(self, sound_name: str, sound_position: tuple[float, float] | None):
         volume = 1
