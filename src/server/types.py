@@ -17,7 +17,10 @@ class ConnectionInfo:
         self.client_connection.send((json.dumps(task, cls=PydanticEncoder) + ';').encode('utf8'))
 
     def close(self):
-        self.send_task(['disconnect'])
+        try:
+            self.send_task(['disconnect'])
+        except ConnectionResetError:
+            pass
         self.client_connection.close()
 
         subprocess.run(f'taskkill /PID {self.action_listener_pid} /f', stdout=subprocess.DEVNULL)

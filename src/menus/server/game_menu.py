@@ -3,9 +3,6 @@ from multiprocessing import Process
 from multiprocessing.connection import Connection
 from typing import Any
 
-from pygame.font import Font
-from pygame.rect import Rect
-
 from src.client.action_sender import ClientActionSender
 from src.components.base.collider import ColliderComponent
 from src.components.base.decay import DecayComponent
@@ -28,23 +25,10 @@ from src.components.worker.resource import ResourceComponent
 from src.components.worker.resource_gatherer import ResourceGathererComponent
 from src.components.worker.uncompleted_building import UncompletedBuildingComponent
 from src.components.worker.work_finder import WorkFinderComponent
-from src.config import config
 from src.constants import HOST_PLAYER_ID
-from src.core.camera import Camera
 from src.core.entity_component_system import EntityComponentSystem
 from src.core.types import PlayerInfo, Component, EntityId, PlayerState
-from src.elements.building_place import BuildMenu
-from src.elements.camera_input import CameraInputHandler
-from src.elements.damage_indicators import DamageIndicators
-from src.elements.game_end.defeat_screen import DefeatScreen
-from src.elements.game_end.victory_screen import VictoryScreen
-from src.elements.minimap import Minimap
-from src.elements.pause_menu import PauseMenu
-from src.elements.renderers.entities_renderer import EntitiesRenderer
-from src.elements.renderers.grass_background import GrassBackground
-from src.elements.resources_display import ResourceDisplayMenu
-from src.elements.unit_move import UnitMoveMenu
-from src.elements.unit_produce import ProduceMenu
+from src.elements.game_composer import GameComposer
 from src.server.action_handler import ServerActionHandler
 from src.server.action_sender import ServerActionSender
 from src.server.level_setup import setup_level
@@ -64,36 +48,13 @@ from src.systems.unit_production import unit_production_system
 from src.systems.worker.building_completion import building_completion_system
 from src.systems.worker.resource_gathering import working_system
 from src.systems.worker.work_finder import work_finder_system
-from src.ui import UIAnchor, UIElement
-from src.ui.image import UIImage
+from src.ui import UIElement
 
 
 class ServerGameMenu(UIElement):
-    def __init__(self, server_socket: socket.socket, connections: Connections, received_actions: list[tuple[int, Any]],
-                 write_action_connection: Connection, send_process: Process, players: dict[int, PlayerInfo]):
-        super().__init__()
-
-        self.players = players
-
-        self.socket = server_socket
-        self.connections = connections
-        self.received_actions = received_actions
-        self.write_action_connection = write_action_connection
-        self.send_process = send_process
-
-        self.camera = Camera()
-
-        self.damage_indicators = DamageIndicators(self.camera)
-
-        self.action_sender = ServerActionSender(self.write_action_connection, self.camera, self.damage_indicators)
-
-        self.local_action_sender = ClientActionSender(self.write_local_action)
-        self.local_player = players[-1]
-
-        self.ecs = EntityComponentSystem(self.on_create, self.on_remove)
-
-        self.ecs.add_variable('action_sender', self.action_sender)
-        self.ecs.add_variable('players', self.players)
+    def _init_ecs(self):
+        self.game_composer.ecs.add_variable('action_sender', self.action_sender)
+        self.game_composer.ecs.add_variable('players', self.players)
 
         self.ecs.init_component(PositionComponent)
         self.ecs.init_component(VelocityComponent)
@@ -133,51 +94,34 @@ class ServerGameMenu(UIElement):
         self.ecs.init_system(building_completion_system)
         self.ecs.init_system(collider_system)
 
-        self.action_handler = ServerActionHandler(self.ecs, self.players, self.action_sender)
+    def __init__(self, server_socket: socket.socket, connections: Connections, received_actions: list[tuple[int, Any]],
+                 write_action_connection: Connection, send_process: Process, players: dict[int, PlayerInfo]):
+        super().__init__()
 
-        self.append_child(GrassBackground(self.camera))
-        self.append_child(EntitiesRenderer(self.ecs, self.camera))
-        self.append_child(self.damage_indicators)
+        self.players = players
 
-        self.minimap = Minimap(self.ecs, self.camera, self.local_player.color)
-        self.minimap_elem = UIImage(image='assets/ui/minimap.png',
-                                    position=(0, config.screen.height),
-                                    anchor=UIAnchor.BOTTOM_LEFT)
-        self.minimap_elem.append_child(self.minimap)
-        self.resource_menu = ResourceDisplayMenu(self.local_player,
-                                                 Rect(self.minimap._bounds.move(0, -33).topleft, (0, 0)),
-                                                 Font('assets/fonts/arial.ttf', 25),
-                                                 Font('assets/fonts/arial.ttf', 20))
+        self.socket = server_socket
+        self.connections = connections
+        self.received_actions = received_actions
+        self.write_action_connection = write_action_connection
+        self.send_process = send_process
 
-        self.build_menu = BuildMenu(self.resource_menu, self.local_action_sender, self.local_player, self.camera,
-                                    self.ecs)
-        self.append_child(self.build_menu)
+        self.ecs = EntityComponentSystem(self.on_create, self.on_remove)
+        self.local_action_sender = ClientActionSender(self.write_local_action)
+        self.local_player = players[-1]
 
-        self.produce_menu = ProduceMenu(self.ecs, self.local_action_sender, self.camera, self.local_player,
-                                        self.resource_menu)
-        self.append_child(self.produce_menu)
+        self.game_composer = GameComposer(self.ecs, self.local_player, self.local_action_sender)
+        self.append_child(self.game_composer)
 
-        self.unit_move_menu = UnitMoveMenu(
-            self.ecs,
-            self.local_action_sender,
-            self.camera,
-            self.local_player,
-        )
+        self.action_sender = ServerActionSender(self.write_action_connection,
+                                                self.game_composer.camera,
+                                                self.game_composer.damage_indicators)
 
-        self.minimap_elem.append_child(self.resource_menu)
-        self.append_child(self.unit_move_menu)
-        self.append_child(self.minimap_elem)
+        self.action_handler = ServerActionHandler(self.game_composer.ecs, self.players, self.action_sender)
 
-        self.append_child(CameraInputHandler(self.camera))
-        self.append_child(PauseMenu())
+        self._init_ecs()
 
-        setup_level(self.ecs, self.players)
-
-        self.defeat_screen = DefeatScreen()
-        self.append_child(self.defeat_screen)
-
-        self.victory_screen = VictoryScreen()
-        self.append_child(self.victory_screen)
+        setup_level(self.game_composer.ecs, self.players)
 
         play_music('assets/music/game1.ogg')
 
@@ -198,7 +142,7 @@ class ServerGameMenu(UIElement):
             ResourceDepotComponent,
         )
         components = [component for component in components if type(component) not in components_to_exclude]
-        self.camera.check_if_fortress_appeared(self.ecs, self.local_player)
+        self.game_composer.camera.check_if_fortress_appeared(self.ecs, self.local_player)
 
         self.action_sender.send_entity(entity_id, components)
 
@@ -206,7 +150,7 @@ class ServerGameMenu(UIElement):
         if self.players[player_id].current_state != PlayerState.BATTLER:
             return False
 
-        for entity, (owner, _) in self.ecs.get_entities_with_components((PlayerOwnerComponent, CoreBuildingComponent)):
+        for entity, (owner, _) in self.game_composer.ecs.get_entities_with_components((PlayerOwnerComponent, CoreBuildingComponent)):
             if entity != entity_to_ignore and owner.socket_id == player_id:
                 return False
         return True
@@ -215,15 +159,10 @@ class ServerGameMenu(UIElement):
         if self.players[player_id].current_state != PlayerState.BATTLER:
             return False
 
-        for entity, (owner, _) in self.ecs.get_entities_with_components((PlayerOwnerComponent, CoreBuildingComponent)):
+        for entity, (owner, _) in self.game_composer.ecs.get_entities_with_components((PlayerOwnerComponent, CoreBuildingComponent)):
             if entity != entity_to_ignore and owner.socket_id != player_id:
                 return False
         return True
-
-    def disable_player_actions(self):
-        self.children.remove(self.build_menu)
-        self.children.remove(self.produce_menu)
-        self.children.remove(self.unit_move_menu)
 
     def mark_as_defeated(self, player_id: int):
         if self.players[player_id].current_state != PlayerState.BATTLER:
@@ -232,8 +171,7 @@ class ServerGameMenu(UIElement):
         self.players[player_id].current_state = PlayerState.SPECTATOR
 
         if player_id == HOST_PLAYER_ID:
-            self.disable_player_actions()
-            self.defeat_screen.show_screen()
+            self.game_composer.show_defeat_screen()
             return
         self.action_sender.show_defeat(player_id)
 
@@ -244,12 +182,12 @@ class ServerGameMenu(UIElement):
         self.players[player_id].current_state = PlayerState.WINNER
 
         if player_id == HOST_PLAYER_ID:
-            self.victory_screen.show_screen()
+            self.game_composer.show_victory_screen()
             return
         self.action_sender.show_victory(player_id)
 
     def check_for_game_over_on_death(self, entity_id: EntityId):
-        components = self.ecs.get_components(entity_id, (PlayerOwnerComponent, CoreBuildingComponent))
+        components = self.game_composer.ecs.get_components(entity_id, (PlayerOwnerComponent, CoreBuildingComponent))
         if components is None:
             return
 
@@ -264,13 +202,13 @@ class ServerGameMenu(UIElement):
                 break
 
     def drop_chase_targets(self, entity_id: EntityId):
-        for chase_entity_id, (chase,) in self.ecs.get_entities_with_components((ChaseComponent,)):
+        for chase_entity_id, (chase,) in self.game_composer.ecs.get_entities_with_components((ChaseComponent,)):
             if chase.entity_id == entity_id:
                 chase.drop_target()
 
     def on_remove(self, entity_id: EntityId):
-        self.produce_menu.on_death(entity_id)
-        self.unit_move_menu.on_death(entity_id)
+        self.game_composer.produce_menu.on_death(entity_id)
+        self.game_composer.unit_move_menu.on_death(entity_id)
 
         self.drop_chase_targets(entity_id)
         self.check_for_game_over_on_death(entity_id)
@@ -282,8 +220,7 @@ class ServerGameMenu(UIElement):
             sender, (command, *args) = self.received_actions.pop(0)
             self.action_handler.handle_action(command, args, sender)
 
-        self.ecs.update()
-        self.resource_menu.update_values()
+        self.game_composer.resource_menu.update_values()
 
     def shutdown(self) -> None:
         self.send_process.terminate()
