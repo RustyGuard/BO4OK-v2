@@ -288,4 +288,6 @@ class ServerGameMenu(UIElement):
     def shutdown(self) -> None:
         self.send_process.terminate()
         self.write_action_connection.close()
+        for connection in self.connections.values():
+            connection.close()
         self.socket.close()

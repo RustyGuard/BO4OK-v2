@@ -16,7 +16,7 @@ class SliderThumbParams:
     border: BorderParams = None
 
 
-class SliderThumb(UIElement):
+class _SliderThumb(UIElement):
     def __init__(self, *,
                  thumb_params: SliderThumbParams = SliderThumbParams(),
 
@@ -68,13 +68,13 @@ class UISlider(UIElement):
             background_color=background_color,
             border_params=border_params,
         )
-        assert min_value < max_value
+        assert min_value < max_value, "Неверно указаны крайние значения"
         self.min_value = min_value
         self._value = value
         self.max_value = max_value
         self.on_release = on_release
 
-        self.thumb = SliderThumb(
+        self.thumb = _SliderThumb(
             thumb_params=thumb_params,
 
             anchor=UIAnchor.CENTER,
