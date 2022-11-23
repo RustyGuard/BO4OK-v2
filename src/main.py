@@ -1,5 +1,6 @@
+import sys
+sys.path = ['', '..'] + sys.path[1:]
 import pygame
-from pygame.rect import Rect
 from pygame.surface import Surface
 from pygame.time import Clock
 
