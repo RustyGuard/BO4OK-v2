@@ -59,6 +59,10 @@ class UIElement:
         self.background_color = color
 
     def update(self, event: Event):
+        """
+        Возвращение True из этого метода перехватывает событие у других элементов
+        Это сделано, чтобы избежать случаев, когда один клик провоцирует два действия у двух разных элементов
+        """
         if event.type == EVENT_UPDATE:
             self.on_update()
 

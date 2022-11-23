@@ -66,9 +66,9 @@ class ResourceDisplayMenu(UIElement):
 
     def update_values(self) -> None:
         fields = (
-            ('money', 'money_count', 'yellow', '{0}', -1),
-            ('wood', 'wood_count', 'brown', '{0}', -1),
-            ('meat', 'meat_count', 'pink', f'{{0}}/{self._player.resources.max_meat}', 1),
+            ('money', '_money_count', 'yellow', '{0}', -1),
+            ('wood', '_wood_count', 'brown', '{0}', -1),
+            ('meat', '_meat_count', 'pink', f'{{0}}/{self._player.resources.max_meat}', 1),
         )
         for field_name, text_field_name, field_color, field_format, field_multiplier in fields:
             text_field: TextLabel = getattr(self, text_field_name)

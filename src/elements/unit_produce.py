@@ -180,7 +180,20 @@ class ProduceMenu(UIElement):
         if self._selected_unit == entity_id:
             self.unselect()
 
-    def on_mouse_button_up(self, mouse_position: tuple[int, int], button: int) -> bool | None:
+    def update(self, event) -> bool:
+        if super().update(event):
+            return True
+
+        if event.type == pygame.MOUSEBUTTONUP and self.on_mouse_click(event.button):
+            return True
+
+        return False
+
+    def on_mouse_click(self, button: int) -> bool | None:
+        if button != pygame.BUTTON_LEFT:
+            self.unselect()
+            return
+
         mouse_pos = self._camera.get_in_game_mouse_position()
 
         for entity_id, components in self._ecs.get_entities_with_components((UnitProductionComponent,

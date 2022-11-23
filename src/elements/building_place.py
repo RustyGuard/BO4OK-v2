@@ -3,6 +3,7 @@ from typing import NamedTuple
 
 import pygame
 from pygame import Color
+from pygame.event import Event
 from pygame.surface import Surface
 
 from src.client.action_sender import ClientActionSender
@@ -72,7 +73,14 @@ class BuildMenu(UIElement):
             screen.blit(self._selected.image, r)
         super().draw(screen)
 
-    def on_mouse_button_up(self, mouse_position: tuple[int, int], button: int) -> bool | None:
+    def update(self, event: Event):
+        if super().update(event):
+            return True
+
+        if event.type == pygame.MOUSEBUTTONUP and self.on_mouse_click(event.button):
+            return True
+
+    def on_mouse_click(self, button: int) -> bool | None:
         if not self._selected:
             return
 
@@ -80,9 +88,8 @@ class BuildMenu(UIElement):
             self.place_building(self._camera.get_in_game_mouse_position())
             return True
 
-        if button == pygame.BUTTON_RIGHT:
-            self.unselect_building()
-            return True
+        self.unselect_building()
+        return True
 
     def select_building(self, build_name: str, cost: RequiredCost, image: Surface):
         self._selected = _SelectedBuilding(build_name, cost, image)
