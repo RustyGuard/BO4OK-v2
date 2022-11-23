@@ -22,7 +22,8 @@ from src.ui import UIElement, UIImage, UIAnchor
 
 
 class GameComposer(UIElement):
-    def __init__(self, ecs: EntityComponentSystem, current_player: PlayerInfo, action_sender: ClientActionSender):
+    def __init__(self, ecs: EntityComponentSystem, current_player: PlayerInfo, action_sender: ClientActionSender,
+                 players: dict[int, PlayerInfo]):
         super().__init__()
 
         self.ecs = ecs
@@ -34,7 +35,7 @@ class GameComposer(UIElement):
         self.damage_indicators = DamageIndicators(self.camera)
 
         self.append_child(GrassBackground(self.camera))
-        self.append_child(EntitiesRenderer(self.ecs, self.camera))
+        self.append_child(EntitiesRenderer(self.ecs, self.camera, players))
         self.append_child(self.damage_indicators)
 
         self.minimap = Minimap(self.ecs, self.camera, self.current_layer.color)

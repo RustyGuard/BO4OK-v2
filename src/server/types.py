@@ -1,7 +1,10 @@
 import json
+import os
 import socket
 import subprocess
+import sys
 from dataclasses import dataclass
+from signal import Signals
 
 from src.utils.json_utils import PydanticEncoder
 
@@ -23,7 +26,10 @@ class ConnectionInfo:
             pass
         self.client_connection.close()
 
-        subprocess.run(f'taskkill /PID {self.action_listener_pid} /f', stdout=subprocess.DEVNULL)
+        if sys.platform == 'win32':
+            subprocess.run(f'taskkill /PID {self.action_listener_pid} /f', stdout=subprocess.DEVNULL)
+        elif sys.platform == 'linux':
+            os.kill(self.action_listener_pid, Signals.SIGKILL)
 
 
 SocketId = int

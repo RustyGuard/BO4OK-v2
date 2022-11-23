@@ -68,12 +68,13 @@ class ClientGameMenu(UIElement):
         self.ecs = EntityComponentSystem(on_create=self.on_create)
         self._init_ecs()
 
-        self.game_composer = GameComposer(self.ecs, self.current_player, self.action_sender)
+        self.game_composer = GameComposer(self.ecs, self.current_player, self.action_sender, players)
         self.append_child(self.game_composer)
 
         self.action_handler = ClientActionHandler(self.ecs, self.current_player, self.game_composer.camera)
         self.action_handler.add_hook(ClientCommands.POPUP, self.handle_show_label)
-        self.action_handler.add_hook(ClientCommands.RESOURCE_INFO, lambda *_: self.game_composer.resource_menu.update_values())
+        self.action_handler.add_hook(ClientCommands.RESOURCE_INFO,
+                                     lambda *_: self.game_composer.resource_menu.update_values())
         self.action_handler.add_hook(ClientCommands.DEAD, self.handle_death)
         self.action_handler.add_hook(ClientCommands.DEFEAT, self.game_composer.show_defeat_screen)
         self.action_handler.add_hook(ClientCommands.VICTORY, self.game_composer.show_victory_screen)

@@ -110,7 +110,7 @@ class ServerGameMenu(UIElement):
         self.local_action_sender = ClientActionSender(self.write_local_action)
         self.local_player = players[-1]
 
-        self.game_composer = GameComposer(self.ecs, self.local_player, self.local_action_sender)
+        self.game_composer = GameComposer(self.ecs, self.local_player, self.local_action_sender, players)
         self.append_child(self.game_composer)
 
         self.action_sender = ServerActionSender(self.write_action_connection,

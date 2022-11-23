@@ -84,7 +84,7 @@ class HostGame(UIElement):
         sock = socket.socket()
         try:
             sock.bind((host, port))
-        except socket.gaierror:
+        except (socket.gaierror, PermissionError):
             print(f'Not connected to {host_ip}')
             return
 
