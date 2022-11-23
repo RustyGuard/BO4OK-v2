@@ -8,7 +8,7 @@ from src.components.chase import ChaseComponent
 from src.components.fighting.close_range_attack import CloseRangeAttackComponent
 from src.components.fighting.enemy_finder import EnemyFinderComponent
 from src.components.fighting.health import HealthComponent
-from src.components.minimap_icon import MinimapIconComponent
+from src.components.minimap_icon import MinimapIconComponent, MarkShape
 
 
 def create_warrior(x: float, y: float, player_owner: PlayerOwnerComponent):
@@ -23,5 +23,5 @@ def create_warrior(x: float, y: float, player_owner: PlayerOwnerComponent):
         HealthComponent(max_amount=75),
         CloseRangeAttackComponent(delay=30, damage=10),
         ColliderComponent(7),
-        MinimapIconComponent('circle', player_owner.color_name, icon_size=3),
+        MinimapIconComponent(MarkShape.CIRCLE, player_owner.color_name, icon_size=3),
     ]

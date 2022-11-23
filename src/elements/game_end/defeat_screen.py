@@ -13,7 +13,7 @@ from src.ui.image import UIImage
 class DefeatScreen(UIElement):
     def __init__(self):
         super().__init__()
-        self.opened = False
+        self._opened = False
 
         fade_image = pygame.Surface(config.screen.rect.size, pygame.SRCALPHA)
         fade_image.fill((0, 0, 0, 100))
@@ -42,23 +42,23 @@ class DefeatScreen(UIElement):
 
     def show_screen(self):
         play_music('assets/music/defeat.ogg')
-        self.opened = True
+        self._opened = True
 
     def close_screen(self):
         play_music('assets/music/game1.ogg')
-        self.opened = False
+        self._opened = False
 
     def exit_game(self):
         from src.menus.main_menu import MainMenu
         set_main_element(MainMenu())
 
     def render(self, screen: Surface):
-        if not self.opened:
+        if not self._opened:
             return
         super().render(screen)
 
     def update(self, event: Event):
-        if self.opened:
+        if self._opened:
             super().update(event)
 
-        return self.opened
+        return self._opened

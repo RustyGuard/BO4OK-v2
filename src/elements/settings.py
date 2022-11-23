@@ -1,11 +1,10 @@
 from typing import Callable
 
-import pygame
 from pygame import Color, mixer
 from pygame.font import Font
 
 from src.config import config, upload_config_to_disc
-from src.ui import UIElement, ClickableLabel, UIAnchor, BorderParams, UISlider, TextLabel, UICheckBox
+from src.ui import UIElement, UIAnchor, BorderParams, UISlider, TextLabel
 from src.ui.slider import SliderThumbParams
 from src.ui.types import PositionType
 
@@ -14,7 +13,7 @@ class SettingsElement(UIElement):
     def __init__(self, position: PositionType = None, on_apply: Callable[[], None] = None):
         if position is None:
             position = config.screen.rect.center
-        self.on_apply = on_apply
+        self._on_apply = on_apply
         super().__init__(position=position)
         menu_font = Font('assets/fonts/arial.ttf', 40)
 

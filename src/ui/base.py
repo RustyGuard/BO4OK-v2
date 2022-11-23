@@ -10,6 +10,11 @@ from src.ui.types import PositionType, SizeType
 
 
 class UIElement:
+    """
+    Инициализируется только как контейнер для хранения дочерних элементов
+    Для реализации сложного поведения следует наследоваться от этого класса
+    """
+
     def __init__(self, *,
                  position: PositionType = (0, 0),
                  size: SizeType = None,

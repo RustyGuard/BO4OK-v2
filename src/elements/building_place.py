@@ -1,5 +1,5 @@
 from functools import partial
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import pygame
 from pygame import Color
@@ -16,12 +16,11 @@ from src.sound_player import play_sound
 from src.ui import UIElement, TextLabel, UIAnchor, BorderParams
 from src.ui.button import UIButton
 from src.ui.image import UIImage
-from src.ui.types import PositionType, SizeType
 from src.utils.collision import can_be_placed
 from src.utils.image import get_image
 
 
-class SelectedBuilding(NamedTuple):
+class _SelectedBuilding(NamedTuple):
     build_name: str
     cost: RequiredCost
     image: Surface
@@ -31,14 +30,14 @@ class BuildMenu(UIElement):
     def __init__(self, resource_menu: ResourceDisplayMenu, action_sender: ClientActionSender,
                  current_player: PlayerInfo, camera: Camera, ecs: EntityComponentSystem):
         super().__init__()
-        self.camera = camera
-        self.current_player = current_player
-        self.selected: SelectedBuilding | None = None
-        self.resource_menu = resource_menu
-        self.action_sender = action_sender
-        self.ecs = ecs
+        self._camera = camera
+        self._current_player = current_player
+        self._selected: _SelectedBuilding | None = None
+        self._resource_menu = resource_menu
+        self._action_sender = action_sender
+        self._ecs = ecs
         for i, (build_name, cost) in enumerate(buildings.items()):
-            image = get_image(entity_icons[build_name].format(color_name=self.current_player.color_name))
+            image = get_image(entity_icons[build_name].format(color_name=self._current_player.color_name))
             btn = UIButton(position=(5, i * 55 + 15),
                            size=(200, 50),
                            background_color=Color('lightgray'),
@@ -67,46 +66,44 @@ class BuildMenu(UIElement):
             self.append_child(label)
 
     def draw(self, screen) -> None:
-        if self.selected:
-            r = self.selected.image.get_rect()
+        if self._selected:
+            r = self._selected.image.get_rect()
             r.center = pygame.mouse.get_pos()
-            screen.blit(self.selected.image, r)
+            screen.blit(self._selected.image, r)
         super().draw(screen)
 
-    def update(self, event) -> bool:
-        if super().update(event):
+    def on_mouse_button_up(self, mouse_position: tuple[int, int], button: int) -> bool | None:
+        if not self._selected:
+            return
+
+        if button == pygame.BUTTON_LEFT:
+            self.place_building(self._camera.get_in_game_mouse_position())
             return True
 
-        if self.selected:
-            if event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1:
-                    self.place_building(self.camera.get_in_game_mouse_position())
-                    return True
-                if event.button == 3:
-                    self.unselect_building()
-                    return True
-        return False
+        if button == pygame.BUTTON_RIGHT:
+            self.unselect_building()
+            return True
 
     def select_building(self, build_name: str, cost: RequiredCost, image: Surface):
-        self.selected = SelectedBuilding(build_name, cost, image)
-        self.resource_menu.display_cost(cost)
+        self._selected = _SelectedBuilding(build_name, cost, image)
+        self._resource_menu.display_cost(cost)
 
     def unselect_building(self):
-        self.resource_menu.hide_cost(self.selected.cost)
-        self.selected = None
+        self._resource_menu.hide_cost(self._selected.cost)
+        self._selected = None
 
     def place_building(self, position: tuple[float, float]):
-        if not self.current_player.has_enough(self.selected.cost):
-            self.current_player.play_not_enough_sound(self.selected.cost)
+        if not self._current_player.has_enough(self._selected.cost):
+            self._current_player.play_not_enough_sound(self._selected.cost)
             print('Not enough money')
             return
 
-        building_texture_path = entity_icons[self.selected.build_name].format(color_name=self.current_player.color_name)
+        building_texture_path = entity_icons[self._selected.build_name].format(color_name=self._current_player.color_name)
         building_texture = get_image(building_texture_path)
 
-        if not can_be_placed(self.ecs, position, building_texture.get_rect().size):
+        if not can_be_placed(self._ecs, position, building_texture.get_rect().size):
             print('Can not build on top of entity')
             play_sound(SoundCode.PLACE_OCCUPIED)
             return
 
-        self.action_sender.place_building(self.selected.build_name, position)
+        self._action_sender.place_building(self._selected.build_name, position)

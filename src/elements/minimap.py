@@ -4,7 +4,7 @@ from pygame.event import Event
 from pygame.rect import Rect
 
 from src.components.base.position import PositionComponent
-from src.components.minimap_icon import MinimapIconComponent
+from src.components.minimap_icon import MinimapIconComponent, MarkShape
 from src.config import config
 from src.constants import color_name_to_pygame_color
 from src.core.camera import Camera
@@ -14,33 +14,35 @@ from src.ui import UIElement
 
 class Minimap(UIElement):
     def __init__(self, ecs: EntityComponentSystem, camera: Camera, player_color: Color):
-        self.ecs = ecs
-        self.camera = camera
-        self.pressed = False
-        self.player_color = player_color
+        self._ecs = ecs
+        self._camera = camera
+        self._pressed = False
+        self._player_color = player_color
         super().__init__(position=config.minimap.bounds[:2], size=config.minimap.bounds[2:])
         self._bounds.bottom = config.screen.height
 
-    def update(self, event: Event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self._bounds.collidepoint(pygame.mouse.get_pos()):
-                self.pressed = True
-                return True
-        if event.type == pygame.MOUSEBUTTONUP and self.pressed:
-            self.pressed = False
-            if self._bounds.collidepoint(pygame.mouse.get_pos()):
-                self.move_to_mouse_click()
+    def on_mouse_button_down(self, mouse_position: tuple[int, int], button: int) -> bool | None:
+        if self._bounds.collidepoint(pygame.mouse.get_pos()):
+            self._pressed = True
             return True
+
+    def on_mouse_button_up(self, mouse_position: tuple[int, int], button: int) -> bool | None:
+        if not self._pressed:
+            return
+        self._pressed = False
+        if self._bounds.collidepoint(pygame.mouse.get_pos()):
+            self.move_to_mouse_click()
+        return True
 
     def move_to_mouse_click(self):
         mouse_pos = pygame.mouse.get_pos()
         relative_mouse_pos = mouse_pos[0] - self._bounds.x, mouse_pos[1] - self._bounds.y
-        self.camera.set_center(self.minimap_to_worldpos(*relative_mouse_pos))
+        self._camera.set_center(self.minimap_to_worldpos(*relative_mouse_pos))
 
     def draw(self, screen):
         super().draw(screen)
 
-        for _, (position, minimap_icon) in self.ecs.get_entities_with_components((PositionComponent, MinimapIconComponent)):
+        for _, (position, minimap_icon) in self._ecs.get_entities_with_components((PositionComponent, MinimapIconComponent)):
             mark_rect = Rect(0, 0, minimap_icon.icon_size, minimap_icon.icon_size)
             shape = minimap_icon.mark_shape
             team_color = color_name_to_pygame_color[minimap_icon.team_color_name]
@@ -49,24 +51,21 @@ class Minimap(UIElement):
             mark_rect.centerx = self._bounds.x + pos[0]
             mark_rect.centery = self._bounds.y + pos[1]
 
-            if shape == 'circle':
-                pygame.draw.ellipse(screen, team_color, mark_rect)
-                if minimap_icon.icon_border:
-                    pygame.draw.ellipse(screen, Color('white'), mark_rect, 1)
-            elif shape == 'square':
-                pygame.draw.rect(screen, team_color, mark_rect)
-                if minimap_icon.icon_border:
-                    pygame.draw.rect(screen, Color('white'), mark_rect, 1)
-            else:
-                print(f'Unknown marker shape: {shape}')
+            draw_methods = {
+                MarkShape.CIRCLE: pygame.draw.ellipse,
+                MarkShape.SQUARE: pygame.draw.rect,
+            }
+            draw_methods[shape](screen, team_color, mark_rect)
+            if minimap_icon.icon_border:
+                draw_methods[shape](screen, Color('white'), mark_rect, 1)
 
         camera_rect = Rect(
-            (config.world.size - self.camera.offset_x) * self.world_ratio_width,
-            (config.world.size - self.camera.offset_y) * self.world_ratio_height,
+            (config.world.size - self._camera.offset_x) * self.world_ratio_width,
+            (config.world.size - self._camera.offset_y) * self.world_ratio_height,
             config.screen.size[0] * self.world_ratio_width,
             config.screen.size[1] * self.world_ratio_height
         )
-        pygame.draw.rect(screen, self.player_color, camera_rect.move(self._bounds.x, self._bounds.y), 1)
+        pygame.draw.rect(screen, self._player_color, camera_rect.move(self._bounds.x, self._bounds.y), 1)
 
     def worldpos_to_minimap(self, x, y):
         return (x + config.world.size) * self.world_ratio_width, \

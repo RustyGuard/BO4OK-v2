@@ -23,7 +23,7 @@ from src.ui.text_label import TextLabel
 from src.ui.types import PositionType, SizeType
 
 
-class QueueIcon(UIElement):
+class _QueueIcon(UIElement):
     def __init__(self, *,
                  current_unit_amount: int,
                  countdown_delay: int,
@@ -75,17 +75,17 @@ class ProduceMenu(UIElement):
     def __init__(self, ecs: EntityComponentSystem, action_sender: ClientActionSender, camera: Camera,
                  current_player: PlayerInfo, resource_menu: ResourceDisplayMenu):
         super().__init__()
-        self.ecs = ecs
-        self.selected_unit: EntityId | None = None
-        self.action_sender = action_sender
-        self.camera = camera
-        self.current_player = current_player
-        self.resource_menu = resource_menu
+        self._ecs = ecs
+        self._selected_unit: EntityId | None = None
+        self._action_sender = action_sender
+        self._camera = camera
+        self._current_player = current_player
+        self._resource_menu = resource_menu
 
     def set_selected(self, build_entity_id: EntityId):
         self.children.clear()
 
-        produce_component = self.ecs.get_component(build_entity_id, UnitProductionComponent)
+        produce_component = self._ecs.get_component(build_entity_id, UnitProductionComponent)
         if produce_component is None:
             print('unit can not produce')
             return
@@ -104,13 +104,13 @@ class ProduceMenu(UIElement):
         queue_label = TextLabel(text=f'В очереди: ', text_color=Color('black'),
                       position=bottom_bar._bounds.move(5, 35).topleft)
         bottom_bar.append_child(queue_label)
-        queue_icon = QueueIcon(countdown_delay=produce_component.delay,
-                               current_unit_amount=len(produce_component.unit_queue),
-                               position=queue_label._bounds.move(15, 0).midright,
-                               size=(35, 35),
-                               anchor=UIAnchor.CENTER,
+        queue_icon = _QueueIcon(countdown_delay=produce_component.delay,
+                                current_unit_amount=len(produce_component.unit_queue),
+                                position=queue_label._bounds.move(15, 0).midright,
+                                size=(35, 35),
+                                anchor=UIAnchor.CENTER,
 
-                               border_params=BorderParams(
+                                border_params=BorderParams(
                                    width=2,
 
                                    bottom_left_radius=5,
@@ -122,7 +122,7 @@ class ProduceMenu(UIElement):
         self.append_child(bottom_bar)
 
         for i, (unit_name, unit_cost) in enumerate(produce_component.producible_units.items()):
-            icon_path = entity_icons[unit_name].format(color_name=self.current_player.color_name)
+            icon_path = entity_icons[unit_name].format(color_name=self._current_player.color_name)
 
             btn = UIButton(position=(bottom_bar._bounds.x + 15, config.screen.rect.bottom - 15 - 60 * i),
                            size=(300, 50),
@@ -140,8 +140,8 @@ class ProduceMenu(UIElement):
                                top_right_radius=5,
                            ),
                            on_click=partial(self.produce_unit, unit_name, unit_cost, queue_icon),
-                           on_mouse_hover=partial(self.resource_menu.display_cost, unit_cost),
-                           on_mouse_exit=partial(self.resource_menu.hide_cost, unit_cost))
+                           on_mouse_hover=partial(self._resource_menu.display_cost, unit_cost),
+                           on_mouse_exit=partial(self._resource_menu.hide_cost, unit_cost))
             icon = UIImage(image=icon_path,
                            position=btn._bounds.move(5, 0).midleft,
                            anchor=UIAnchor.MIDDLE_LEFT,
@@ -153,56 +153,50 @@ class ProduceMenu(UIElement):
 
             bottom_bar.append_child(btn)
 
-        self.selected_unit = build_entity_id
+        self._selected_unit = build_entity_id
 
     def unselect(self):
         self.children.clear()
-        self.selected_unit = None
+        self._selected_unit = None
 
-    def produce_unit(self, unit_name: str, unit_cost: RequiredCost, queue_icon: QueueIcon) -> bool:
-        if not self.current_player.has_enough(unit_cost):
-            self.current_player.play_not_enough_sound(unit_cost)
+    def produce_unit(self, unit_name: str, unit_cost: RequiredCost, queue_icon: _QueueIcon) -> bool:
+        if not self._current_player.has_enough(unit_cost):
+            self._current_player.play_not_enough_sound(unit_cost)
             return False
 
-        self.action_sender.produce_unit(self.selected_unit, unit_name)
+        self._action_sender.produce_unit(self._selected_unit, unit_name)
         queue_icon.add_unit()
 
     def draw(self, screen) -> None:
         super().draw(screen)
 
-        if self.selected_unit is not None:
-            position, texture = self.ecs.get_components(self.selected_unit, (PositionComponent, TextureComponent))
+        if self._selected_unit is not None:
+            position, texture = self._ecs.get_components(self._selected_unit, (PositionComponent, TextureComponent))
             rect = texture.texture.get_rect()
-            rect.center = position.x + self.camera.offset_x, position.y + self.camera.offset_y
-            pygame.draw.rect(screen, self.current_player.color, rect, 1, 15)
+            rect.center = position.x + self._camera.offset_x, position.y + self._camera.offset_y
+            pygame.draw.rect(screen, self._current_player.color, rect, 1, 15)
 
     def on_death(self, entity_id: EntityId):
-        if self.selected_unit == entity_id:
+        if self._selected_unit == entity_id:
             self.unselect()
 
-    def update(self, event) -> bool:
-        if super().update(event):
-            return True
+    def on_mouse_button_up(self, mouse_position: tuple[int, int], button: int) -> bool | None:
+        mouse_pos = self._camera.get_in_game_mouse_position()
 
-        if event.type == pygame.MOUSEBUTTONUP:
-            mouse_pos = self.camera.get_in_game_mouse_position()
+        for entity_id, components in self._ecs.get_entities_with_components((UnitProductionComponent,
+                                                                             PositionComponent,
+                                                                             TextureComponent,
+                                                                             PlayerOwnerComponent)):
+            unit_production, position, texture, owner = components
 
-            for entity_id, components in self.ecs.get_entities_with_components((UnitProductionComponent,
-                                                                                PositionComponent,
-                                                                                TextureComponent,
-                                                                                PlayerOwnerComponent)):
-                unit_production, position, texture, owner = components
+            if owner.socket_id != self._current_player.socket_id:
+                continue
 
-                if owner.socket_id != self.current_player.socket_id:
-                    continue
+            rect: pygame.Rect = texture.texture.get_rect()
+            rect.center = position.to_tuple()
 
-                rect: pygame.Rect = texture.texture.get_rect()
-                rect.center = position.to_tuple()
+            if rect.collidepoint(*mouse_pos):
+                self.set_selected(entity_id)
+                return True
 
-                if rect.collidepoint(*mouse_pos):
-                    self.set_selected(entity_id)
-                    return True
-
-            self.unselect()
-
-        return False
+        self.unselect()
